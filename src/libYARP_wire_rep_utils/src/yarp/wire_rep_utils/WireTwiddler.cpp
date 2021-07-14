@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include "WireTwiddler.h"
@@ -55,7 +52,9 @@ int WireTwiddler::configure(Bottle& desc, int offset, bool& ignored,
         return offset;
     }
     if (kind=="skip"||kind=="compute") {
-        if (kind=="compute") computing = true;
+        if (kind == "compute") {
+            computing = true;
+        }
         ignore = true;
         var = kind = desc.get(offset).asString();
         offset++;
@@ -81,7 +80,9 @@ int WireTwiddler::configure(Bottle& desc, int offset, bool& ignored,
     }
     int len = 1;
     bool data = false;
-    if (computing) data = true;
+    if (computing) {
+        data = true;
+    }
     if (is_vector||is_list) {
         Value v = desc.get(offset);
         offset++;
@@ -139,7 +140,7 @@ int WireTwiddler::configure(Bottle& desc, int offset, bool& ignored,
         tag = BOTTLE_TAG_FLOAT64;
         unit_length = 8;
     } else if (kind=="vocab") {
-        tag = BOTTLE_TAG_VOCAB;
+        tag = BOTTLE_TAG_VOCAB32;
         unit_length = 4;
     } else if (kind=="string") {
         tag = BOTTLE_TAG_STRING;
@@ -172,7 +173,9 @@ int WireTwiddler::configure(Bottle& desc, int offset, bool& ignored,
             buffer.push_back(BOTTLE_TAG_LIST);
             buffer.push_back(len);
         } else {
-            if (!item) buffer.push_back(tag);
+            if (!item) {
+                buffer.push_back(tag);
+            }
         }
     }
 
@@ -207,7 +210,9 @@ int WireTwiddler::configure(Bottle& desc, int offset, bool& ignored,
         while (i<len) {
             bool ign = false;
             offset = configure(desc,offset,ign,kind);
-            if (!ign) i++;
+            if (!ign) {
+                i++;
+            }
         }
     }
     return offset;
@@ -261,7 +266,9 @@ bool WireTwiddler::configure(const char *txt, const char *prompt) {
             gap.byte_length = 0;
         }
     }
-    if (dbg_flag) show();
+    if (dbg_flag) {
+        show();
+    }
     return at == desc.size();
 }
 
@@ -285,7 +292,7 @@ std::string nameThatCode(int code) {
     case BOTTLE_TAG_FLOAT64:
         return "float64";
         break;
-    case BOTTLE_TAG_VOCAB:
+    case BOTTLE_TAG_VOCAB32:
         return "vocab";
         break;
     case BOTTLE_TAG_STRING:
@@ -312,8 +319,12 @@ std::string WireTwiddler::fromTemplate(const yarp::os::Bottle& msg) {
     for (int i=0; i<len; i++) {
         Value&v = msg.get(i);
         int icode = v.getCode();
-        if (i==0) code = icode;
-        if (icode!=code) code = -1;
+        if (i == 0) {
+            code = icode;
+        }
+        if (icode != code) {
+            code = -1;
+        }
     }
     string codeName = nameThatCode(code);
     if (code == -1) {
@@ -323,7 +334,7 @@ std::string WireTwiddler::fromTemplate(const yarp::os::Bottle& msg) {
         result += codeName;
         result += " ";
     }
-    result += NetType::toString(len);
+    result += yarp::conf::numeric::to_string(len);
     result += " ";
     for (int i=0; i<len; i++) {
         Value&v = msg.get(i);
@@ -383,7 +394,9 @@ std::string WireTwiddler::toString() const {
             }
             item += buf;
         }
-        if (result!="") result += " ";
+        if (result != "") {
+            result += " ";
+        }
         result += item;
     }
     return result;
@@ -435,26 +448,26 @@ void WireTwiddlerReader::compute(const WireTwiddlerGap& gap) {
         std::string encoding = prop.find("encoding").asString();
         int bpp = 1;
         int translated_encoding = 0;
-        switch (Vocab::encode(encoding)) {
-        case yarp::os::createVocab('b','g','r','8'):
+        switch (Vocab32::encode(encoding)) {
+        case yarp::os::createVocab32('b','g','r','8'):
             bpp = 3;
             translated_encoding = VOCAB_PIXEL_BGR;
             break;
-        case yarp::os::createVocab('r','g','b','8'):
+        case yarp::os::createVocab32('r','g','b','8'):
             bpp = 3;
             translated_encoding = VOCAB_PIXEL_RGB;
             break;
-        case yarp::os::createVocab('3','2','F','C'):
+        case yarp::os::createVocab32('3','2','F','C'):
             yAssert(encoding=="32FC1");
             bpp = 4;
             translated_encoding = VOCAB_PIXEL_MONO_FLOAT;
             break;
-        case yarp::os::createVocab('1','6','U','C'):
+        case yarp::os::createVocab32('1','6','U','C'):
             yAssert(encoding=="16UC1");
             bpp = 2;
             translated_encoding = VOCAB_PIXEL_MONO16;
             break;
-        case yarp::os::createVocab('m','o','n','o'):
+        case yarp::os::createVocab32('m','o','n','o'):
             yAssert(encoding=="mono8"||encoding=="mono16");
             if (encoding == "mono8") {
                 bpp = 1;
@@ -464,13 +477,12 @@ void WireTwiddlerReader::compute(const WireTwiddlerGap& gap) {
                 translated_encoding = VOCAB_PIXEL_MONO16;
             }
             break;
-        case yarp::os::createVocab('b', 'a', 'y', 'e'):
+        case yarp::os::createVocab32('b', 'a', 'y', 'e'):
             bpp = 1;
             translated_encoding = VOCAB_PIXEL_MONO;
-            if (encoding == "bayer_grbg8")
+            if (encoding == "bayer_grbg8") {
                 translated_encoding = VOCAB_PIXEL_ENCODING_BAYER_GRBG8;
-            else
-            {
+            } else {
                 fprintf(stderr, "Warning automatic debayering not yet supported, keeping raw format.\n");
             }
 
@@ -552,7 +564,9 @@ yarp::conf::ssize_t WireTwiddlerReader::read(Bytes& b) {
             dbg_printf("LOOKING TO EXTERNAL\n");
             Bytes bytes(reinterpret_cast<char*>(&lengthBuffer), sizeof(NetInt32));
             int r = is.readFull(bytes);
-            if (r!=sizeof(NetInt32)) return -1;
+            if (r != sizeof(NetInt32)) {
+                return -1;
+            }
             dbg_printf("Read length %d\n", lengthBuffer);
             pending_length = sizeof(lengthBuffer);
             if (gap.length==-1) {
@@ -593,7 +607,9 @@ yarp::conf::ssize_t WireTwiddlerReader::read(Bytes& b) {
                 dbg_printf("Checking string length\n");
                 Bytes bytes(reinterpret_cast<char*>(&lengthBuffer), sizeof(NetInt32));
                 int r = is.readFull(bytes);
-                if (r!=sizeof(NetInt32)) return -1;
+                if (r != sizeof(NetInt32)) {
+                    return -1;
+                }
                 dbg_printf("Read length %d\n", lengthBuffer);
                 pending_string_length = sizeof(lengthBuffer);
                 pending_string_data = lengthBuffer;
@@ -631,7 +647,9 @@ yarp::conf::ssize_t WireTwiddlerReader::read(Bytes& b) {
             }
         }
         int extern_length = gap.length * gap.unit_length;
-        if (gap.unit_length<0||gap.length<0) extern_length = override_length;
+        if (gap.unit_length < 0 || gap.length < 0) {
+            extern_length = override_length;
+        }
         dbg_printf("extern_length %d\n", extern_length);
 
         if (extern_length>sent-consumed) {
@@ -723,7 +741,9 @@ bool WireTwiddlerWriter::update() {
     dbg_printf("Parent headers %zu blocks %zu\n", parent->headerLength(), parent->length());
 
     for (int i=0; i<twiddler->getGapCount(); i++) {
-        if (errorState) return false;
+        if (errorState) {
+            return false;
+        }
         std::string item;
         const WireTwiddlerGap& gap = twiddler->getGap(i);
         if (gap.buffer_length!=0) {
@@ -749,7 +769,9 @@ bool WireTwiddlerWriter::update() {
                     if (gap.unit_length!=gap.wire_unit_length) {
                         dbg_printf("Need to tweak length (not correct for neg numbers yet)...\n");
                         for (int i=0; i<gap.length; i++) {
-                            if (errorState) return false;
+                            if (errorState) {
+                                return false;
+                            }
                             transform(gap);
                         }
                     } else {
@@ -792,19 +814,25 @@ bool WireTwiddlerWriter::pad(size_t len) {
 bool WireTwiddlerWriter::readLengthAndPass(int unitLength,
                                            const WireTwiddlerGap *gap) {
     int len = readLength();
-    if (len==0) return false;
+    if (len == 0) {
+        return false;
+    }
     if (unitLength!=-1) {
         if (gap == nullptr || gap->wire_unit_length == unitLength) {
             advance(unitLength*len,true);
         } else {
             for (int i=0; i<len; i++) {
-                if (!transform(*gap)) return false;
+                if (!transform(*gap)) {
+                    return false;
+                }
             }
         }
     } else {
         for (int i=0; i<len; i++) {
             bool ok = readLengthAndPass(1,gap);
-            if (!ok) return false;
+            if (!ok) {
+                return false;
+            }
         }
     }
     return true;
@@ -844,8 +872,12 @@ int WireTwiddlerWriter::readLength() {
 bool WireTwiddlerWriter::advance(int length, bool shouldEmit,
                                  bool shouldAccum, bool shouldCheck) {
     accumOffset = 0;
-    if (length==0) return true;
-    if (length<0) return false;
+    if (length == 0) {
+        return true;
+    }
+    if (length < 0) {
+        return false;
+    }
     while (length>0) {
         if (blockPtr == nullptr) {
             blockPtr = parent->data(block);
@@ -864,7 +896,9 @@ bool WireTwiddlerWriter::advance(int length, bool shouldEmit,
             dbg_printf("  moved on to block %d\n",block);
             continue;
         }
-        if (rem>length) rem = length;
+        if (rem > length) {
+            rem = length;
+        }
         if (shouldCheck) {
             dbg_printf("Type check against %ld\n", (long int)activeCheck);
             int result = memcmp(activeCheck,blockPtr+offset,rem);

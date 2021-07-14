@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_IRANGEFINDER2D_H
@@ -16,12 +13,12 @@
 #include <vector>
 #include <string>
 
-constexpr yarp::conf::vocab32_t VOCAB_ILASER2D             = yarp::os::createVocab('i','l','a','s');
-constexpr yarp::conf::vocab32_t VOCAB_DEVICE_INFO          = yarp::os::createVocab('l','s','n','f');
-constexpr yarp::conf::vocab32_t VOCAB_LASER_DISTANCE_RANGE = yarp::os::createVocab('l','s','d','r');
-constexpr yarp::conf::vocab32_t VOCAB_LASER_ANGULAR_RANGE  = yarp::os::createVocab('l','s','a','r');
-constexpr yarp::conf::vocab32_t VOCAB_LASER_ANGULAR_STEP   = yarp::os::createVocab('l','s','a','s');
-constexpr yarp::conf::vocab32_t VOCAB_LASER_SCAN_RATE      = yarp::os::createVocab('l','s','s','r');
+constexpr yarp::conf::vocab32_t VOCAB_ILASER2D             = yarp::os::createVocab32('i','l','a','s');
+constexpr yarp::conf::vocab32_t VOCAB_DEVICE_INFO          = yarp::os::createVocab32('l','s','n','f');
+constexpr yarp::conf::vocab32_t VOCAB_LASER_DISTANCE_RANGE = yarp::os::createVocab32('l','s','d','r');
+constexpr yarp::conf::vocab32_t VOCAB_LASER_ANGULAR_RANGE  = yarp::os::createVocab32('l','s','a','r');
+constexpr yarp::conf::vocab32_t VOCAB_LASER_ANGULAR_STEP   = yarp::os::createVocab32('l','s','a','s');
+constexpr yarp::conf::vocab32_t VOCAB_LASER_SCAN_RATE      = yarp::os::createVocab32('l','s','s','r');
 
 namespace yarp {
     namespace dev {

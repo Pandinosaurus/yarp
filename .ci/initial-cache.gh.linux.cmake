@@ -1,8 +1,5 @@
-# Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
-# All rights reserved.
-#
-# This software may be modified and distributed under the terms of the
-# BSD-3-Clause license. See the accompanying LICENSE file for details.
+# SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+# SPDX-License-Identifier: BSD-3-Clause
 
 set(CMAKE_SKIP_INSTALL_RPATH ON CACHE BOOL "")
 set(YARP_COMPILE_EXAMPLES ON CACHE BOOL "")
@@ -23,12 +20,13 @@ set(ENABLE_yarpcar_mjpeg ON CACHE BOOL "")
 set(ENABLE_yarpcar_bayer ON CACHE BOOL "")
 set(ENABLE_yarpcar_priority ON CACHE BOOL "")
 set(ENABLE_yarpcar_portmonitor ON CACHE BOOL "")
-set(ENABLE_yarpcar_depthimage ON CACHE BOOL "")
-set(ENABLE_yarpcar_depthimage2 ON CACHE BOOL "")
-set(ENABLE_yarpcar_segmentationimage ON CACHE BOOL "")
+set(ENABLE_yarppm_depthimage_to_mono ON CACHE BOOL "")
+set(ENABLE_yarppm_depthimage_to_rgb ON CACHE BOOL "")
+set(ENABLE_yarppm_segmentationimage_to_rgb ON CACHE BOOL "")
 set(ENABLE_yarpcar_h264 ON CACHE BOOL "" ON CACHE BOOL "")
 set(ENABLE_yarpcar_unix_stream ON CACHE BOOL "")
-set(ENABLE_yarpcar_libffmpeg ON CACHE BOOL "")
+set(ENABLE_yarppm_image_compression_ffmpeg ON CACHE BOOL "")
+set(ENABLE_yarppm_sound_compression_mp3 ON CACHE BOOL "")
 
 set(ENABLE_yarpmod_AudioPlayerWrapper ON CACHE BOOL "")
 set(ENABLE_yarpmod_AudioRecorderWrapper ON CACHE BOOL "")
@@ -112,5 +110,6 @@ set(ENABLE_yarpmod_ServerSoundGrabber ON CACHE BOOL "")
 set(ENABLE_yarpmod_grabber ON CACHE BOOL "")
 set(ENABLE_yarpmod_test_segfault ON CACHE BOOL "")
 set(ENABLE_yarpmod_test_nop ON CACHE BOOL "")
+set(ENABLE_yarpcar_websocket ON CACHE BOOL "")
 
 include(${CMAKE_CURRENT_LIST_DIR}/bindings-cache.cmake)

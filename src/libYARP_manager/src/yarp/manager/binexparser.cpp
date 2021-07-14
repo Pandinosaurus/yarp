@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/manager/binexparser.h>
@@ -40,8 +37,9 @@ bool BinaryExpParser::parse(string _exp)
 {
     expression = _exp;
     string strexp = expression;
-    if(!checkExpression(strexp))
+    if (!checkExpression(strexp)) {
         return false;
+    }
 
     binTree.clear();
     operands.clear();
@@ -58,8 +56,9 @@ bool BinaryExpParser::parse(string _exp)
     {
         ErrorLogger* logger = ErrorLogger::Instance();
         string msg = "Invalid operands";
-        for(const auto& invalidOperand : invalidOperands)
+        for (const auto& invalidOperand : invalidOperands) {
             msg += " '" + invalidOperand + "'";
+        }
         logger->addError(msg);
         return false;
     }
@@ -70,8 +69,9 @@ bool BinaryExpParser::parse(string _exp)
     for(int x = 0; x < (1 << (n-1)); ++x)
     {
         auto itr = operands.begin();
-        for(int y = 0; y < (n-1); ++y)
+        for (int y = 0; y < (n - 1); ++y) {
             (*itr++).second = (truthTable[y][x] != 0);
+        }
         truthTable[n-1][x] = evalTree(root, operands);
     }
     //printTruthTable(leftOpr);
@@ -82,8 +82,9 @@ bool BinaryExpParser::exportDotGraph(const char* szFileName)
 {
     ofstream dot;
     dot.open(szFileName);
-    if(!dot.is_open())
+    if (!dot.is_open()) {
         return false;
+    }
 
     dot<<"digraph G {"<<endl;
     for(GraphIterator itr=binTree.begin(); itr!=binTree.end(); itr++)
@@ -220,8 +221,9 @@ bool BinaryExpParser::checkExpression(std::string& strexp)
             bError |= (dummy[n+1] == EXPAND);        // operator & after ~
             bError |= (dummy[n+1] == EXPOR);         // operand | after ~
         }
-        if(n != 0)
-            bError |= (dummy[n-1] != EXPAND) && (dummy[n-1] != EXPOR);  // an operand before ~
+        if (n != 0) {
+            bError |= (dummy[n - 1] != EXPAND) && (dummy[n - 1] != EXPOR); // an operand before ~
+        }
         if(bError)
         {
             msg<<"Incorrect expression format of '~' at "<<(int)n;
@@ -284,8 +286,9 @@ void BinaryExpParser::parseExpression(std::string &strexp, BinaryNodePtr& node)
 void BinaryExpParser::parseNot(std::string &strexp, BinaryNodePtr& node) {
     string op;
     BinaryNodePtr rightNode;
-    if(*strexp.begin() != EXPNOT)
+    if (*strexp.begin() != EXPNOT) {
         parseFactor(strexp, node);
+    }
     while(!strexp.empty() &&
           (*strexp.begin() == EXPNOT))
     {
@@ -306,9 +309,12 @@ void BinaryExpParser::parseFactor(std::string &strexp, BinaryNodePtr& node) {
         operands[op] = false;
         if(validOperands.size())
         {
-            if(std::find(validOperands.begin(),
-                         validOperands.end(), op) == validOperands.end())
+            if (std::find(validOperands.begin(),
+                          validOperands.end(),
+                          op)
+                == validOperands.end()) {
                 invalidOperands.push_back(op);
+            }
         }
     }
     else
@@ -323,27 +329,27 @@ void BinaryExpParser::parseFactor(std::string &strexp, BinaryNodePtr& node) {
 std::string BinaryExpParser::getNextOperand(std::string &strexp) {
         string token;
         std::string::iterator it;
-        for (it=strexp.begin(); it!=strexp.end(); ++it)
-            if((*it != EXPAND) && (*it != EXPOR) && (*it != EXPNOT) &&
-               (*it != ')') && (*it != '('))
+        for (it = strexp.begin(); it != strexp.end(); ++it) {
+            if ((*it != EXPAND) && (*it != EXPOR) && (*it != EXPNOT) && (*it != ')') && (*it != '(')) {
                 token.push_back(*it);
-            else
+            } else {
                 break;
+            }
+        }
         return token;
 }
 
 std::string BinaryExpParser::popNextOperand(std::string &strexp) {
         string token;
         std::string::iterator it;
-       for (it=strexp.begin(); it!=strexp.end(); ++it)
-            if((*it != EXPAND) && (*it != EXPOR) && (*it != EXPNOT) &&
-               (*it != ')') && (*it != '('))
+        for (it = strexp.begin(); it != strexp.end(); ++it) {
+            if ((*it != EXPAND) && (*it != EXPOR) && (*it != EXPNOT) && (*it != ')') && (*it != '(')) {
                 token.push_back(*it);
-            else
-            {
+            } else {
                 strexp.erase(strexp.begin(), it);
                 break;
             }
+        }
         return token;
 }
 
@@ -356,8 +362,9 @@ void BinaryExpParser::createTruthTable(const int n)
     truthTable.clear();
     // n input + one output
     truthTable.resize(n+1);
-    for(int i=0; i<n+1; i++)
+    for (int i = 0; i < n + 1; i++) {
         truthTable[i].resize(1 << n);
+    }
     int num_to_fill = 1 << (n - 1);
     for(int col = 0; col < n; ++col, num_to_fill >>= 1)
     {
@@ -377,17 +384,20 @@ void BinaryExpParser::printTruthTable(std::string lopr)
     yAssert(1 <= (INT_MAX >> (n-1)));
 
     map<string, bool>::iterator itr;
-    for(itr=operands.begin(); itr!=operands.end(); itr++)
-       cout<<(*itr).first<<"\t";
+    for (itr = operands.begin(); itr != operands.end(); itr++) {
+        cout << (*itr).first << "\t";
+    }
     cout<<lopr<<endl;
-    for(int i=0; i<(int)operands.size()*8+1; i++)
-        cout<<"-";
+    for (int i = 0; i < (int)operands.size() * 8 + 1; i++) {
+        cout << "-";
+    }
     cout<<endl;
 
     for(int x = 0; x < (1<<(n-1)); ++x)
     {
-        for(int y = 0; y < n; ++y)
-            std::cout<< truthTable[y][x] << "\t";
+        for (int y = 0; y < n; ++y) {
+            std::cout << truthTable[y][x] << "\t";
+        }
         std::cout<<std::endl;
     }
 }
@@ -412,15 +422,17 @@ bool LinkTrainer::train(const std::vector<std::vector<int> >&  truthTable)
             // computing output of one set
             double P = truthTable[n-1][x];
             double out = bias;
-            for(int y = 0; y < n-1; ++y)
+            for (int y = 0; y < n - 1; ++y) {
                 out = out + ((double)truthTable[y][x] * alphas[y]);
+            }
             out = (out>0) ? 1 : 0;
             double err = P - out;
             sumerr += fabs(err);
             //cout<<P<<"\t"<<out<<"\terr:"<<err<<endl;
             bias = bias + trainRate * err;
-            for(int y = 0; y < (n-1); ++y)
+            for (int y = 0; y < (n - 1); ++y) {
                 alphas[y] = alphas[y] + (trainRate * err * (double)truthTable[y][x]);
+            }
         }
         errors.push_back(sumerr);
     }

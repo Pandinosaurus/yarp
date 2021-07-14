@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_FAKEDEPTHCAMERADRIVER_H
@@ -15,7 +12,7 @@
 #include <yarp/sig/Matrix.h>
 #include <yarp/os/Stamp.h>
 #include <yarp/dev/IRGBDSensor.h>
-#include <yarp/dev/FrameGrabberInterfaces.h>
+#include <yarp/dev/IFrameGrabberImage.h>
 #include <yarp/dev/PolyDriver.h>
 
  /**
@@ -35,7 +32,7 @@ private:
 
 public:
     fakeDepthCameraDriver();
-    ~fakeDepthCameraDriver();
+    ~fakeDepthCameraDriver() override;
 
     // DeviceDriver
     bool open(yarp::os::Searchable& config) override;
@@ -67,13 +64,13 @@ public:
     bool   setDepthMirroring(bool mirror) override;
 
 
-    bool   getExtrinsicParam(yarp::sig::Matrix& extrinsic) override;
-    bool   getRgbImage(FlexImage& rgbImage, Stamp* timeStamp = NULL) override;
-    bool   getDepthImage(depthImage& depthImage, Stamp* timeStamp = NULL) override;
-    bool   getImages(FlexImage& colorFrame, depthImage& depthFrame, Stamp* colorStamp=NULL, Stamp* depthStamp=NULL) override;
+    bool getExtrinsicParam(yarp::sig::Matrix& extrinsic) override;
+    bool getRgbImage(FlexImage& rgbImage, Stamp* timeStamp = nullptr) override;
+    bool getDepthImage(depthImage& depthImage, Stamp* timeStamp = nullptr) override;
+    bool getImages(FlexImage& colorFrame, depthImage& depthFrame, Stamp* colorStamp = nullptr, Stamp* depthStamp = nullptr) override;
 
-    RGBDSensor_status     getSensorStatus() override;
-    std::string getLastErrorMsg(Stamp* timeStamp = NULL) override;
+    RGBDSensor_status getSensorStatus() override;
+    std::string getLastErrorMsg(Stamp* timeStamp = nullptr) override;
 
 private:
     double rgb_h{480};

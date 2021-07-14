@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef TEXTPARSER_H
@@ -35,7 +32,9 @@ public:
         if (key.empty())
         {
             war << "TextParser: empty key on variable setting..";
-            if (logger) logger->addWarning(war);
+            if (logger) {
+                logger->addWarning(war);
+            }
             return false;
         }
         variables[key] = parseText(value.c_str());
@@ -64,7 +63,7 @@ public:
                 std::string envName, envValue;
 
                 envName   = ret.substr(s + startKeyword.size(), e - s -startKeyword.size());
-                envValue  = yarp::conf::environment::getEnvironment(envName.c_str());
+                envValue  = yarp::conf::environment::get_string(envName);
                 ret       = ret.substr(0, s)+ envValue + ret.substr(e + endKeyword.size(), ret.size() - endKeyword.size());
                 return parseText(ret.c_str());
             }
@@ -88,7 +87,9 @@ public:
             if(badSymbol)
             {
                 war << "use of symbol '$' detected but no keyword understood.. possible use: ${foo} for internal variable or $ENV{foo} for environment variable";
-                if (logger) logger->addWarning(war);
+                if (logger) {
+                    logger->addWarning(war);
+                }
             }
         }
 

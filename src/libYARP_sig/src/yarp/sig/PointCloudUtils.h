@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_SIG_POINTCLOUDUTILS_H
@@ -22,6 +19,11 @@ namespace sig{
  */
 namespace utils
 {
+
+enum class OrganizationType{
+    Organized,
+    Unorganized
+};
 
 struct PCL_ROI
 {
@@ -72,7 +74,8 @@ YARP_sig_API yarp::sig::PointCloud<yarp::sig::DataXYZ> depthToPC(const yarp::sig
 template<typename T1, typename T2>
 yarp::sig::PointCloud<T1> depthRgbToPC(const yarp::sig::ImageOf<yarp::sig::PixelFloat>& depth,
                                        const yarp::sig::ImageOf<T2>& color,
-                                       const yarp::sig::IntrinsicParams& intrinsic);
+                                       const yarp::sig::IntrinsicParams& intrinsic,
+                                       const yarp::sig::utils::OrganizationType organizationType = yarp::sig::utils::OrganizationType::Organized);
 } // namespace utils
 } // namespace sig
 } // namespace yarp

@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/manager/physicresource.h>
@@ -68,12 +65,14 @@ Node* GPU::clone()
 
 bool GPU::satisfy(GenericResource* resource)
 {
-    if(!getAvailability() || getDisable())
+    if (!getAvailability() || getDisable()) {
         return false;
+    }
 
     GPU* gpu = dynamic_cast<GPU*>(resource);
-    if(!gpu)
+    if (!gpu) {
         return false;
+    }
     bool ret = (!strlen(gpu->getCompCompatibility()))? true : (compCompatibility == string(gpu->getCompCompatibility()));
     ret &= (cores >= gpu->getCores());
     ret &= (frequency >= gpu->getFrequency());

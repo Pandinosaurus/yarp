@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include "RGBDSensorWrapper.h"
@@ -12,10 +9,10 @@
 #include <cstring>
 #include <yarp/os/LogComponent.h>
 #include <yarp/os/LogStream.h>
-#include <yarp/dev/GenericVocabs.h>
 #include <yarp/rosmsg/impl/yarpRosHelper.h>
 #include "rosPixelCode.h"
 #include <RGBDRosConversionUtils.h>
+#include <yarp/proto/framegrabber/CameraVocabs.h>
 
 using namespace RGBDImpl;
 using namespace yarp::sig;
@@ -59,7 +56,7 @@ bool RGBDSensorParser::configure(IFrameGrabberControls *_fgCtrl)
 bool RGBDSensorParser::respond(const Bottle& cmd, Bottle& response)
 {
     bool ret = false;
-    int interfaceType = cmd.get(0).asVocab();
+    int interfaceType = cmd.get(0).asVocab32();
 
     response.clear();
     switch(interfaceType)
@@ -87,11 +84,11 @@ bool RGBDSensorParser::respond(const Bottle& cmd, Bottle& response)
 
         case VOCAB_RGBD_SENSOR:
         {
-            switch (cmd.get(1).asVocab())
+            switch (cmd.get(1).asVocab32())
             {
                 case VOCAB_GET:
                 {
-                    switch(cmd.get(2).asVocab())
+                    switch(cmd.get(2).asVocab32())
                     {
                         case VOCAB_EXTRINSIC_PARAM:
                         {
@@ -100,22 +97,22 @@ bool RGBDSensorParser::respond(const Bottle& cmd, Bottle& response)
                             if(ret)
                             {
                                 yarp::os::Bottle params_b;
-                                response.addVocab(VOCAB_RGBD_SENSOR);
-                                response.addVocab(VOCAB_EXTRINSIC_PARAM);
-                                response.addVocab(VOCAB_IS);
+                                response.addVocab32(VOCAB_RGBD_SENSOR);
+                                response.addVocab32(VOCAB_EXTRINSIC_PARAM);
+                                response.addVocab32(VOCAB_IS);
                                 ret &= Property::copyPortable(params, params_b);  // will it really work??
                                 response.append(params_b);
+                            } else {
+                                response.addVocab32(VOCAB_FAILED);
                             }
-                            else
-                                response.addVocab(VOCAB_FAILED);
                         }
                         break;
 
                         case VOCAB_ERROR_MSG:
                         {
-                            response.addVocab(VOCAB_RGBD_SENSOR);
-                            response.addVocab(VOCAB_ERROR_MSG);
-                            response.addVocab(VOCAB_IS);
+                            response.addVocab32(VOCAB_RGBD_SENSOR);
+                            response.addVocab32(VOCAB_ERROR_MSG);
+                            response.addVocab32(VOCAB_IS);
                             response.addString(iRGBDSensor->getLastErrorMsg());
                             ret = true;
                         }
@@ -123,9 +120,9 @@ bool RGBDSensorParser::respond(const Bottle& cmd, Bottle& response)
 
                         case VOCAB_RGBD_PROTOCOL_VERSION:
                         {
-                            response.addVocab(VOCAB_RGBD_SENSOR);
-                            response.addVocab(VOCAB_RGBD_PROTOCOL_VERSION);
-                            response.addVocab(VOCAB_IS);
+                            response.addVocab32(VOCAB_RGBD_SENSOR);
+                            response.addVocab32(VOCAB_RGBD_PROTOCOL_VERSION);
+                            response.addVocab32(VOCAB_IS);
                             response.addInt32(RGBD_INTERFACE_PROTOCOL_VERSION_MAJOR);
                             response.addInt32(RGBD_INTERFACE_PROTOCOL_VERSION_MINOR);
                         }
@@ -133,9 +130,9 @@ bool RGBDSensorParser::respond(const Bottle& cmd, Bottle& response)
 
                         case VOCAB_STATUS:
                         {
-                            response.addVocab(VOCAB_RGBD_SENSOR);
-                            response.addVocab(VOCAB_STATUS);
-                            response.addVocab(VOCAB_IS);
+                            response.addVocab32(VOCAB_RGBD_SENSOR);
+                            response.addVocab32(VOCAB_STATUS);
+                            response.addVocab32(VOCAB_IS);
                             response.addInt32(iRGBDSensor->getSensorStatus());
                         }
                         break;
@@ -143,7 +140,7 @@ bool RGBDSensorParser::respond(const Bottle& cmd, Bottle& response)
                         default:
                         {
                             yCError(RGBDSENSORWRAPPER) << "Interface parser received an unknown GET command. Command is " << cmd.toString();
-                            response.addVocab(VOCAB_FAILED);
+                            response.addVocab32(VOCAB_FAILED);
                         }
                         break;
                     }
@@ -153,7 +150,7 @@ bool RGBDSensorParser::respond(const Bottle& cmd, Bottle& response)
                 case VOCAB_SET:
                 {
                     yCError(RGBDSENSORWRAPPER) << "Interface parser received an unknown SET command. Command is " << cmd.toString();
-                    response.addVocab(VOCAB_FAILED);
+                    response.addVocab32(VOCAB_FAILED);
                 }
                 break;
             }
@@ -162,7 +159,7 @@ bool RGBDSensorParser::respond(const Bottle& cmd, Bottle& response)
 
         default:
         {
-            yCError(RGBDSENSORWRAPPER) << "Received a command for a wrong interface " << yarp::os::Vocab::decode(interfaceType);
+            yCError(RGBDSENSORWRAPPER) << "Received a command for a wrong interface " << yarp::os::Vocab32::decode(interfaceType);
             return DeviceResponder::respond(cmd,response);
         }
         break;
@@ -198,13 +195,19 @@ RGBDSensorWrapper::~RGBDSensorWrapper()
 
 bool RGBDSensorWrapper::open(yarp::os::Searchable &config)
 {
+    yCWarning(RGBDSENSORWRAPPER) << "The 'RGBDSensorWrapper' device is deprecated in favour of 'rgbdSensor_nws_yarp'.";
+    yCWarning(RGBDSENSORWRAPPER) << "The old device is no longer supported, and it will be deprecated in YARP 3.6 and removed in YARP 4.";
+    yCWarning(RGBDSENSORWRAPPER) << "Please update your scripts.";
+
 //     DeviceResponder::makeUsage();
 //     addUsage("[set] [bri] $fBrightness", "set brightness");
 //     addUsage("[set] [expo] $fExposure", "set exposure");
 //
     m_conf.fromString(config.toString());
-    if(verbose >= 5)
-        yCTrace(RGBDSENSORWRAPPER) << "\nParameters are: \n" << config.toString();
+    if (verbose >= 5) {
+        yCTrace(RGBDSENSORWRAPPER) << "\nParameters are: \n"
+                                   << config.toString();
+    }
 
     if(!fromConfig(config))
     {
@@ -238,8 +241,9 @@ bool RGBDSensorWrapper::open(yarp::os::Searchable &config)
     }
     else
     {
-        if(!openDeferredAttach(config))
+        if (!openDeferredAttach(config)) {
             return false;
+        }
     }
 
     return true;
@@ -249,17 +253,19 @@ bool RGBDSensorWrapper::fromConfig(yarp::os::Searchable &config)
 {
     if (!config.check("period", "refresh period of the broadcasted values in ms"))
     {
-        if(verbose >= 3)
+        if (verbose >= 3) {
             yCInfo(RGBDSENSORWRAPPER) << "Using default 'period' parameter of " << DEFAULT_THREAD_PERIOD << "s";
-    }
-    else
+        }
+    } else {
         period = config.find("period").asInt32() / 1000.0;
+    }
 
     Bottle &rosGroup = config.findGroup("ROS");
     if(rosGroup.isNull())
     {
-        if(verbose >= 3)
+        if (verbose >= 3) {
             yCInfo(RGBDSENSORWRAPPER) << "ROS configuration parameters are not set, skipping ROS topic initialization.";
+        }
         use_ROS  = false;
         use_YARP = true;
     }
@@ -533,8 +539,9 @@ bool RGBDSensorWrapper::attachAll(const PolyDriverList &device2attach)
 
     Idevice2attach->view(sensor_p);
     Idevice2attach->view(fgCtrl);
-    if(!attach(sensor_p))
+    if (!attach(sensor_p)) {
         return false;
+    }
 
     PeriodicThread::setPeriod(period);
     return PeriodicThread::start();
@@ -542,12 +549,14 @@ bool RGBDSensorWrapper::attachAll(const PolyDriverList &device2attach)
 
 bool RGBDSensorWrapper::detachAll()
 {
-    if (yarp::os::PeriodicThread::isRunning())
+    if (yarp::os::PeriodicThread::isRunning()) {
         yarp::os::PeriodicThread::stop();
+    }
 
     //check if we already instantiated a subdevice previously
-    if (isSubdeviceOwned)
+    if (isSubdeviceOwned) {
         return false;
+    }
 
     sensor_p = nullptr;
     return true;

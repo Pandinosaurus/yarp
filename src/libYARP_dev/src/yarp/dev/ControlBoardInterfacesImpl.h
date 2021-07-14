@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_CONTROLBOARDINTERFACESIMPL_H
@@ -17,7 +14,8 @@
 #include <yarp/dev/ImplementMotor.h>
 #include <yarp/dev/ImplementRemoteVariables.h>
 #include <yarp/dev/ImplementControlMode.h>
-#include <yarp/dev/ImplementControlMode2.h>
+#include <yarp/dev/ImplementPositionControl.h>
+#include <yarp/dev/ImplementVelocityControl.h>
 #include <yarp/dev/ImplementTorqueControl.h>
 #include <yarp/dev/ImplementCurrentControl.h>
 #include <yarp/dev/ImplementPWMControl.h>
@@ -27,8 +25,6 @@
 #include <yarp/dev/ImplementAmplifierControl.h>
 #include <yarp/dev/ImplementEncoders.h>
 #include <yarp/dev/ImplementPidControl.h>
-#include <yarp/dev/ImplementPositionControl2.h>
-#include <yarp/dev/ImplementVelocityControl2.h>
 #include <yarp/dev/ImplementControlLimits.h>
 #include <yarp/dev/ImplementPositionDirect.h>
 #include <yarp/dev/ImplementInteractionMode.h>

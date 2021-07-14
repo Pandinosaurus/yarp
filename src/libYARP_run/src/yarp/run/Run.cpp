@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/run/Run.h>
@@ -29,7 +26,6 @@
 #include <yarp/os/Time.h>
 
 #include <yarp/os/impl/NameClient.h>
-#include <yarp/os/impl/SplitString.h>
 #include <yarp/os/impl/PlatformSignal.h>
 #include <yarp/os/impl/PlatformStdio.h>
 
@@ -92,13 +88,15 @@ void sigstdio_handler(int sig)
     sprintf(msg, "SIGNAL %d", sig);
     RUNLOG(msg);
 
-    if (pTerminator) pTerminator->exit();
+    if (pTerminator) {
+        pTerminator->exit();
+    }
 }
 
 ////////////////////////////////////
 
 constexpr fs::value_type slash = fs::preferred_separator;
-constexpr fs::value_type sep   = fs::path_separator;
+constexpr auto sep = yarp::conf::environment::path_separator;
 ////// adapted from libYARP_OS: ResourceFinder.cpp
 static yarp::os::Bottle parsePaths(const std::string& txt)
 {
@@ -697,7 +695,7 @@ int yarp::run::Run::server()
             std::string fileName=msg.find("which").asString();
             if (fileName!="")
             {
-                yarp::os::Bottle possiblePaths = parsePaths(yarp::conf::environment::getEnvironment("PATH"));
+                yarp::os::Bottle possiblePaths = parsePaths(yarp::conf::environment::get_string("PATH"));
                 for (int i=0; i<possiblePaths.size(); ++i)
                 {
                     std::string guessString=possiblePaths.get(i).asString() +
@@ -792,12 +790,16 @@ int yarp::run::Run::readFromPipe(int fd, char* &data, int& buffsize)
     {
         r=read(fd, buff, c);
 
-        if (r<1) return -1;
+        if (r < 1) {
+            return -1;
+        }
 
         buff+=r;
     }
 
-    if (len<=0) return 0;
+    if (len <= 0) {
+        return 0;
+    }
 
     if (len>buffsize)
     {
@@ -811,7 +813,9 @@ int yarp::run::Run::readFromPipe(int fd, char* &data, int& buffsize)
     {
         r=read(fd, buff, c);
 
-        if (r<1) return -1;
+        if (r < 1) {
+            return -1;
+        }
 
         buff+=r;
     }
@@ -879,7 +883,9 @@ int yarp::run::Run::server()
         {
             yError() << "Yarprun failed to open port: " << mPortName.c_str();
 
-            if (mPortName[0]!='/') yError("Invalid port name '%s', it should start with '/'\n", mPortName.c_str());
+            if (mPortName[0] != '/') {
+                yError("Invalid port name '%s', it should start with '/'\n", mPortName.c_str());
+            }
             return YARPRUN_ERROR;
         }
         yarp::os::Bottle cmd, reply;
@@ -905,10 +911,14 @@ int yarp::run::Run::server()
         while (pServerPort)
         {
             RUNLOG("<<<port.read(msg, true)")
-            if (!port.read(msg, true)) break;
+            if (!port.read(msg, true)) {
+                break;
+            }
             RUNLOG(">>>port.read(msg, true)")
 
-            if (!pServerPort) break;
+            if (!pServerPort) {
+                break;
+            }
 
             if (msg.check("sysinfo"))
             {
@@ -922,7 +932,7 @@ int yarp::run::Run::server()
                 std::string fileName=msg.find("which").asString();
                 if (fileName!="")
                 {
-                    yarp::os::Bottle possiblePaths = parsePaths(yarp::conf::environment::getEnvironment("PATH"));
+                    yarp::os::Bottle possiblePaths = parsePaths(yarp::conf::environment::get_string("PATH"));
                     for (size_t i=0; i<possiblePaths.size(); ++i)
                     {
                         std::string guessString=possiblePaths.get(i).asString() + slash + fileName;
@@ -1009,7 +1019,9 @@ int yarp::run::Run::server()
         while (true)
         {
             RUNLOG("<<<readFromPipe")
-            if (readFromPipe(pipe_server2manager[READ_FROM_PIPE], msg_str, msg_size)<=0) break;
+            if (readFromPipe(pipe_server2manager[READ_FROM_PIPE], msg_str, msg_size) <= 0) {
+                break;
+            }
             RUNLOG(">>>readFromPipe")
 
             //printf("<<< %s >>>\n", msg_str);
@@ -1272,11 +1284,21 @@ int yarp::run::Run::client(yarp::os::Property& config)
         msg.addList()=config.findGroup("as");
         msg.addList()=config.findGroup("on");
 
-        if (config.check("workdir")) msg.addList()=config.findGroup("workdir");
-        if (config.check("geometry")) msg.addList()=config.findGroup("geometry");
-        if (config.check("hold")) msg.addList()=config.findGroup("hold");
-        if (config.check("env")) msg.addList()=config.findGroup("env");
-        if (config.check("log")) msg.addList()=config.findGroup("log");
+        if (config.check("workdir")) {
+            msg.addList() = config.findGroup("workdir");
+        }
+        if (config.check("geometry")) {
+            msg.addList() = config.findGroup("geometry");
+        }
+        if (config.check("hold")) {
+            msg.addList() = config.findGroup("hold");
+        }
+        if (config.check("env")) {
+            msg.addList() = config.findGroup("env");
+        }
+        if (config.check("log")) {
+            msg.addList() = config.findGroup("log");
+        }
         /*
         {
             yarp::os::Bottle log;
@@ -1290,9 +1312,13 @@ int yarp::run::Run::client(yarp::os::Property& config)
 
         yarp::os::Bottle response=sendMsg(msg, on);
 
-        if (!response.size()) return YARPRUN_ERROR;
+        if (!response.size()) {
+            return YARPRUN_ERROR;
+        }
 
-        if (response.get(0).asInt32()<=0) return 2;
+        if (response.get(0).asInt32() <= 0) {
+            return 2;
+        }
 
         return 0;
     }
@@ -1325,8 +1351,12 @@ int yarp::run::Run::client(yarp::os::Property& config)
         msg.addList()=config.findGroup("cmd");
         msg.addList()=config.findGroup("as");
 
-        if (config.check("workdir")) msg.addList()=config.findGroup("workdir");
-        if (config.check("log")) msg.addList()=config.findGroup("log");
+        if (config.check("workdir")) {
+            msg.addList() = config.findGroup("workdir");
+        }
+        if (config.check("log")) {
+            msg.addList() = config.findGroup("log");
+        }
         /*
         {
             yarp::os::Bottle log;
@@ -1335,13 +1365,19 @@ int yarp::run::Run::client(yarp::os::Property& config)
             msg.addList()=log;
         }
         */
-        if (config.check("env")) msg.addList()=config.findGroup("env");
+        if (config.check("env")) {
+            msg.addList() = config.findGroup("env");
+        }
 
         yarp::os::Bottle response=sendMsg(msg, config.find("on").asString());
 
-        if (!response.size()) return YARPRUN_ERROR;
+        if (!response.size()) {
+            return YARPRUN_ERROR;
+        }
 
-        if (response.get(0).asInt32()<=0) return 2;
+        if (response.get(0).asInt32() <= 0) {
+            return 2;
+        }
 
         return 0;
     }
@@ -1801,9 +1837,9 @@ int yarp::run::Run::executeCmdAndStdio(yarp::os::Bottle& msg, yarp::os::Bottle& 
     std::string cstrEnvName;
     if (msg.check("env"))
     {
-        yarp::os::impl::SplitString ss(msg.find("env").asString().c_str(), ';');
-        for(int i=0; i<ss.size(); i++) {
-            lstrcpy(lpNew, (LPTCH) ss.get(i));
+        auto ss = yarp::conf::string::split(msg.find("env").asString(), ';');
+        for (const auto& s : ss) {
+            lstrcpy(lpNew, (LPTCH) s.c_str());
             lpNew += lstrlen(lpNew) + 1;
         }
     }
@@ -2410,7 +2446,11 @@ void yarp::run::Run::CleanZombie(int pid)
 {
     bool bFound=mProcessVector && mProcessVector->CleanZombie(pid);
 
-    if (!bFound) if (mStdioVector)  mStdioVector->CleanZombie(pid);
+    if (!bFound) {
+        if (mStdioVector) {
+            mStdioVector->CleanZombie(pid);
+        }
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -2661,18 +2701,18 @@ int yarp::run::Run::executeCmdAndStdio(yarp::os::Bottle& msg, yarp::os::Bottle& 
 
                 // Set the YARP_IS_YARPRUN environment variable to 1, so that the child
                 // process will now that is running inside yarprun.
-                yarp::conf::environment::setEnvironment("YARP_IS_YARPRUN", "1");
+                yarp::conf::environment::set_string("YARP_IS_YARPRUN", "1");
 
                 // Set the YARPRUN_IS_FORWARDING_LOG environment variable to 1, so that
                 // the child process will now that yarprun is not logging the output.
-                yarp::conf::environment::setEnvironment("YARPRUN_IS_FORWARDING_LOG", "1");
+                yarp::conf::environment::set_string("YARPRUN_IS_FORWARDING_LOG", "1");
 
                 if (msg.check("env"))
                 {
-                    yarp::os::impl::SplitString ss(msg.find("env").asString().c_str(), ';');
-                    for(int i=0; i<ss.size(); i++) {
-                        char* szenv = new char[strlen(ss.get(i))+1];
-                        strcpy(szenv, ss.get(i));
+                    auto ss = yarp::conf::string::split(msg.find("env").asString(), ';');
+                    for (const auto& s : ss) {
+                        char* szenv = new char[s.size()+1];
+                        strcpy(szenv, s.c_str());
                         yarp::run::impl::putenv(szenv); // putenv doesn't make copy of the string
                     }
                     //delete [] szenv;
@@ -2710,7 +2750,9 @@ int yarp::run::Run::executeCmdAndStdio(yarp::os::Bottle& msg, yarp::os::Bottle& 
                 if (currWorkDir)
                 {
                     char **cwd_arg_str=new char*[nargs+1];
-                    for (int i=1; i<nargs; ++i) cwd_arg_str[i]=arg_str[i];
+                    for (int i = 1; i < nargs; ++i) {
+                        cwd_arg_str[i] = arg_str[i];
+                    }
                     cwd_arg_str[nargs]=nullptr;
                     cwd_arg_str[0]=new char[strlen(currWorkDir)+strlen(arg_str[0])+16];
 
@@ -2816,7 +2858,9 @@ int yarp::run::Run::executeCmdAndStdio(yarp::os::Bottle& msg, yarp::os::Bottle& 
 
                     while(true)
                     {
-                        if (!fgets(buff, 1024, in_from_child) || ferror(in_from_child) || feof(in_from_child)) break;
+                        if (!fgets(buff, 1024, in_from_child) || ferror(in_from_child) || feof(in_from_child)) {
+                            break;
+                        }
 
                         out+=std::string(buff);
                     }
@@ -3025,18 +3069,18 @@ int yarp::run::Run::executeCmdStdout(yarp::os::Bottle& msg, yarp::os::Bottle& re
 
                 // Set the YARP_IS_YARPRUN environment variable to 1, so that the child
                 // process will now that is running inside yarprun.
-                yarp::conf::environment::setEnvironment("YARP_IS_YARPRUN", "1");
+                yarp::conf::environment::set_string("YARP_IS_YARPRUN", "1");
 
                 // Set the YARPRUN_IS_FORWARDING_LOG environment variable to 1, so that
                 // the child process will now that yarprun is not logging the output.
-                yarp::conf::environment::setEnvironment("YARPRUN_IS_FORWARDING_LOG", "1");
+                yarp::conf::environment::set_string("YARPRUN_IS_FORWARDING_LOG", "1");
 
                 if (msg.check("env"))
                 {
-                    yarp::os::impl::SplitString ss(msg.find("env").asString().c_str(), ';');
-                    for(int i=0; i<ss.size(); i++) {
-                        char* szenv = new char[strlen(ss.get(i))+1];
-                        strcpy(szenv, ss.get(i));
+                    auto ss = yarp::conf::string::split(msg.find("env").asString(), ';');
+                    for (const auto& s : ss) {
+                        char* szenv = new char[s.size()+1];
+                        strcpy(szenv, s.c_str());
                         yarp::run::impl::putenv(szenv); // putenv doesn't make copy of the string
                     }
                     //delete [] szenv;
@@ -3074,7 +3118,9 @@ int yarp::run::Run::executeCmdStdout(yarp::os::Bottle& msg, yarp::os::Bottle& re
                 if (currWorkDir)
                 {
                     char **cwd_arg_str=new char*[nargs+1];
-                    for (int i=1; i<nargs; ++i) cwd_arg_str[i]=arg_str[i];
+                    for (int i = 1; i < nargs; ++i) {
+                        cwd_arg_str[i] = arg_str[i];
+                    }
                     cwd_arg_str[nargs]=nullptr;
                     cwd_arg_str[0]=new char[strlen(currWorkDir)+strlen(arg_str[0])+16];
 
@@ -3173,7 +3219,9 @@ int yarp::run::Run::executeCmdStdout(yarp::os::Bottle& msg, yarp::os::Bottle& re
 
                     while(true)
                     {
-                        if (!fgets(buff, 1024, in_from_child) || ferror(in_from_child) || feof(in_from_child)) break;
+                        if (!fgets(buff, 1024, in_from_child) || ferror(in_from_child) || feof(in_from_child)) {
+                            break;
+                        }
 
                         out+=std::string(buff);
                     }
@@ -3358,7 +3406,9 @@ int yarp::run::Run::userStdio(yarp::os::Bottle& msg, yarp::os::Bottle& result)
 
             while(true)
             {
-                if (!fgets(buff, 1024, in_from_child) || ferror(in_from_child) || feof(in_from_child)) break;
+                if (!fgets(buff, 1024, in_from_child) || ferror(in_from_child) || feof(in_from_child)) {
+                    break;
+                }
 
                 out+=std::string(buff);
             }
@@ -3467,18 +3517,18 @@ int yarp::run::Run::executeCmd(yarp::os::Bottle& msg, yarp::os::Bottle& result)
 
         // Set the YARP_IS_YARPRUN environment variable to 1, so that the child
         // process will now that is running inside yarprun.
-        yarp::conf::environment::setEnvironment("YARP_IS_YARPRUN", "1");
+        yarp::conf::environment::set_string("YARP_IS_YARPRUN", "1");
 
         // Set the YARPRUN_IS_FORWARDING_LOG environment variable to 0, so that
         // the child process will now that yarprun is not logging the output.
-        yarp::conf::environment::setEnvironment("YARPRUN_IS_FORWARDING_LOG", "0");
+        yarp::conf::environment::set_string("YARPRUN_IS_FORWARDING_LOG", "0");
 
         if (msg.check("env"))
         {
-            yarp::os::impl::SplitString ss(msg.find("env").asString().c_str(), ';');
-            for(int i=0; i<ss.size(); i++) {
-                char* szenv = new char[strlen(ss.get(i))+1];
-                strcpy(szenv, ss.get(i));
+            auto ss = yarp::conf::string::split(msg.find("env").asString(), ';');
+            for (const auto& s : ss) {
+                char* szenv = new char[s.size()+1];
+                strcpy(szenv, s.c_str());
                 yarp::run::impl::putenv(szenv); // putenv doesn't make copy of the string
             }
         }
@@ -3515,7 +3565,9 @@ int yarp::run::Run::executeCmd(yarp::os::Bottle& msg, yarp::os::Bottle& result)
         if (currWorkDir)
         {
             char **cwd_arg_str=new char*[nargs+1];
-            for (int i=1; i<nargs; ++i) cwd_arg_str[i]=arg_str[i];
+            for (int i = 1; i < nargs; ++i) {
+                cwd_arg_str[i] = arg_str[i];
+            }
             cwd_arg_str[nargs]=nullptr;
             cwd_arg_str[0]=new char[strlen(currWorkDir)+strlen(arg_str[0])+16];
 
@@ -3576,7 +3628,9 @@ int yarp::run::Run::executeCmd(yarp::os::Bottle& msg, yarp::os::Bottle& result)
     {
         auto* pInf = new YarpRunProcInfo(strAlias, mPortName, pid_cmd, nullptr, false);
         pInf->setCmd(strCmd);
-        if (msg.check("env")) pInf->setEnv(msg.find("env").asString());
+        if (msg.check("env")) {
+            pInf->setEnv(msg.find("env").asString());
+        }
         mProcessVector->Add(pInf);
         char pidstr[16];
         sprintf(pidstr, "%d", pid_cmd);
@@ -3595,7 +3649,9 @@ int yarp::run::Run::executeCmd(yarp::os::Bottle& msg, yarp::os::Bottle& result)
 
             while(true)
             {
-                if (!fgets(buff, 1024, in_from_child) || ferror(in_from_child) || feof(in_from_child)) break;
+                if (!fgets(buff, 1024, in_from_child) || ferror(in_from_child) || feof(in_from_child)) {
+                    break;
+                }
 
                 out+=std::string(buff);
             }
@@ -3777,7 +3833,9 @@ bool yarp::run::Run::isRunning(const std::string &node, std::string &keyv)
 
     response=sendMsg(msg, node);
 
-    if (!response.size()) return false;
+    if (!response.size()) {
+        return false;
+    }
 
     return response.get(0).asString()=="running";
 }

@@ -1,9 +1,6 @@
-# Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
-# Copyright (C) 2006-2010 RobotCub Consortium
-# All rights reserved.
-#
-# This software may be modified and distributed under the terms of the
-# BSD-3-Clause license. See the accompanying LICENSE file for details.
+# SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+# SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+# SPDX-License-Identifier: BSD-3-Clause
 
 # public libraries
 add_subdirectory(libYARP_conf)
@@ -32,12 +29,21 @@ add_subdirectory(libYARP_robottestingframework)
 
 # plugins
 add_subdirectory(carriers)
+add_subdirectory(portmonitors)
 add_subdirectory(devices)
 add_subdirectory(libYARP_init)
 
 if(YARP_COMPILE_EXECUTABLES)
     # idl compilers (thrift and ros)
-    add_subdirectory(idls)
+    add_subdirectory(yarpidl_thrift)
+    add_subdirectory(yarpidl_rosmsg)
+    if(NOT CREATE_SHARED_LIBS)
+        include(YarpInstallBasicPackageFiles)
+        yarp_install_basic_package_files(
+          YARP_idl_tools
+          INCLUDE_CONTENT "include(\"\\\${YARP_MODULE_DIR}/YarpIDL.cmake\")"
+        )
+    endif()
 
     # executables
     add_subdirectory(yarpserver)

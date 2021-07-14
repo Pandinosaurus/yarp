@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/Ping.h>
@@ -144,7 +141,7 @@ void Ping::connect()
     rpc.quiet = true;
     Bottle cmd;
     Bottle reply;
-    cmd.addVocab(Vocab::encode("ver"));
+    cmd.addVocab32("ver");
     bool ok = NetworkBase::write(c, cmd, reply, rpc);
     if (!ok) {
         yCError(PING, "Port did not respond as expected");

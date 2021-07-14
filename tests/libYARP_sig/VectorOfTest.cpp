@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/sig/Vector.h>
@@ -69,8 +66,9 @@ TEST_CASE("sig::VectorOfTest", "[yarp::sig]")
             {
                 for (unsigned int k = 0; k < vector.size(); k++)
                 {
-                    if (tmp[k] != vector[k])
+                    if (tmp[k] != vector[k]) {
                         success = false;
+                    }
                 }
             }
 
@@ -117,8 +115,9 @@ TEST_CASE("sig::VectorOfTest", "[yarp::sig]")
             {
                 for (unsigned int k = 0; k < vector.size(); k++)
                 {
-                    if (tmp2.get(k).asInt32() != vector[k])
+                    if (tmp2.get(k).asInt32() != vector[k]) {
                         success = false;
+                    }
                 }
             }
 

@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_RGBDSENSORWRAPPER_RGBDSENSORWRAPPER_H
@@ -30,8 +27,10 @@
 #include <yarp/dev/IMultipleWrapper.h>
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/dev/IRGBDSensor.h>
-#include <yarp/dev/IVisualParamsImpl.h>
-#include <yarp/dev/FrameGrabberControlImpl.h>
+
+#include <yarp/proto/framegrabber/FrameGrabberControls_Responder.h>
+#include <yarp/proto/framegrabber/RgbVisualParams_Responder.h>
+#include <yarp/proto/framegrabber/DepthVisualParams_Responder.h>
 
 // ROS stuff
 #include <yarp/os/Node.h>
@@ -57,7 +56,7 @@ namespace RGBDImpl
 
 // Following three definitions would fit better in a header file
 // shared between client and server ... where to place it?
-constexpr yarp::conf::vocab32_t VOCAB_PROTOCOL_VERSION = yarp::os::createVocab('p', 'r', 'o', 't');
+constexpr yarp::conf::vocab32_t VOCAB_PROTOCOL_VERSION = yarp::os::createVocab32('p', 'r', 'o', 't');
 #define RGBD_WRAPPER_PROTOCOL_VERSION_MAJOR 1
 #define RGBD_WRAPPER_PROTOCOL_VERSION_MINOR 0
 
@@ -68,9 +67,9 @@ class RGBDImpl::RGBDSensorParser :
 {
 private:
     yarp::dev::IRGBDSensor  *iRGBDSensor;
-    yarp::dev::Implement_RgbVisualParams_Parser  rgbParser;
-    yarp::dev::Implement_DepthVisualParams_Parser depthParser;
-    yarp::dev::FrameGrabberControls_Parser fgCtrlParsers;
+    yarp::proto::framegrabber::RgbVisualParams_Responder  rgbParser;
+    yarp::proto::framegrabber::DepthVisualParams_Responder depthParser;
+    yarp::proto::framegrabber::FrameGrabberControls_Responder fgCtrlParsers;
 
 public:
     RGBDSensorParser();
@@ -83,11 +82,11 @@ public:
 
 
 /**
- *  @ingroup dev_impl_wrapper
+ *  @ingroup dev_impl_wrapper dev_impl_deprecated
  *
  * \section RGBDSensorWrapper_device_parameters Description of input parameters
  *
- * \brief `RGBDSensorWrapper`: A Network grabber for kinect-like devices.
+ * \brief `RGBDSensorWrapper` *deprecated*: A Network grabber for kinect-like devices.
  *
  * This device will produce two streams of data through different ports, one for the color frame and the other one
  * for depth image following Framegrabber and IDepthSensor interfaces specification respectively.

@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_SIG_IMAGE_H
@@ -45,32 +42,32 @@ namespace yarp {
 enum YarpVocabPixelTypesEnum
 {
     VOCAB_PIXEL_INVALID = 0,
-    VOCAB_PIXEL_MONO = yarp::os::createVocab('m','o','n','o'),
-    VOCAB_PIXEL_MONO16 = yarp::os::createVocab('m','o','1','6'),
-    VOCAB_PIXEL_RGB = yarp::os::createVocab('r','g','b'),
-    VOCAB_PIXEL_RGBA = yarp::os::createVocab('r','g','b','a'),
-    VOCAB_PIXEL_BGRA = yarp::os::createVocab('b','g','r','a'),
-    VOCAB_PIXEL_INT = yarp::os::createVocab('i','n','t'),
-    VOCAB_PIXEL_HSV = yarp::os::createVocab('h','s','v'),
-    VOCAB_PIXEL_BGR = yarp::os::createVocab('b','g','r'),
-    VOCAB_PIXEL_MONO_SIGNED = yarp::os::createVocab('s','i','g','n'),
-    VOCAB_PIXEL_RGB_SIGNED = yarp::os::createVocab('r','g','b','-'),
-    VOCAB_PIXEL_RGB_INT = yarp::os::createVocab('r','g','b','i'),
-    VOCAB_PIXEL_MONO_FLOAT = yarp::os::createVocab('d','e','c'),
-    VOCAB_PIXEL_RGB_FLOAT = yarp::os::createVocab('r','g','b','.'),
-    VOCAB_PIXEL_HSV_FLOAT = yarp::os::createVocab('h','s','v','.'),
-    VOCAB_PIXEL_ENCODING_BAYER_GRBG8 = yarp::os::createVocab('g', 'r', 'b', 'g'),   //grbg8
-    VOCAB_PIXEL_ENCODING_BAYER_GRBG16 = yarp::os::createVocab('g', 'r', '1', '6'),  //grbg16
-    VOCAB_PIXEL_ENCODING_BAYER_BGGR8 = yarp::os::createVocab('b', 'g', 'g', 'r'),     //bggr8
-    VOCAB_PIXEL_ENCODING_BAYER_BGGR16 = yarp::os::createVocab('b', 'g', '1', '6'),  //bggr16
-    VOCAB_PIXEL_ENCODING_BAYER_GBRG8 = yarp::os::createVocab('g', 'b', 'r', 'g'),  //gbrg8
-    VOCAB_PIXEL_ENCODING_BAYER_GBRG16 = yarp::os::createVocab('g', 'b', '1', '6'),  //gbrg16
-    VOCAB_PIXEL_ENCODING_BAYER_RGGB8 = yarp::os::createVocab('r', 'g', 'g', 'b'),   //rggb8
-    VOCAB_PIXEL_ENCODING_BAYER_RGGB16 = yarp::os::createVocab('r', 'g', '1', '6'),  //rggb16
-    VOCAB_PIXEL_YUV_420 = yarp::os::createVocab('y','u','v','a'),
-    VOCAB_PIXEL_YUV_444 = yarp::os::createVocab('y','u','v','b'),
-    VOCAB_PIXEL_YUV_422 = yarp::os::createVocab('y','u','v','c'),
-    VOCAB_PIXEL_YUV_411 = yarp::os::createVocab('y','u','v','d')
+    VOCAB_PIXEL_MONO = yarp::os::createVocab32('m','o','n','o'),
+    VOCAB_PIXEL_MONO16 = yarp::os::createVocab32('m','o','1','6'),
+    VOCAB_PIXEL_RGB = yarp::os::createVocab32('r','g','b'),
+    VOCAB_PIXEL_RGBA = yarp::os::createVocab32('r','g','b','a'),
+    VOCAB_PIXEL_BGRA = yarp::os::createVocab32('b','g','r','a'),
+    VOCAB_PIXEL_INT = yarp::os::createVocab32('i','n','t'),
+    VOCAB_PIXEL_HSV = yarp::os::createVocab32('h','s','v'),
+    VOCAB_PIXEL_BGR = yarp::os::createVocab32('b','g','r'),
+    VOCAB_PIXEL_MONO_SIGNED = yarp::os::createVocab32('s','i','g','n'),
+    VOCAB_PIXEL_RGB_SIGNED = yarp::os::createVocab32('r','g','b','-'),
+    VOCAB_PIXEL_RGB_INT = yarp::os::createVocab32('r','g','b','i'),
+    VOCAB_PIXEL_MONO_FLOAT = yarp::os::createVocab32('d','e','c'),
+    VOCAB_PIXEL_RGB_FLOAT = yarp::os::createVocab32('r','g','b','.'),
+    VOCAB_PIXEL_HSV_FLOAT = yarp::os::createVocab32('h','s','v','.'),
+    VOCAB_PIXEL_ENCODING_BAYER_GRBG8 = yarp::os::createVocab32('g', 'r', 'b', 'g'),   //grbg8
+    VOCAB_PIXEL_ENCODING_BAYER_GRBG16 = yarp::os::createVocab32('g', 'r', '1', '6'),  //grbg16
+    VOCAB_PIXEL_ENCODING_BAYER_BGGR8 = yarp::os::createVocab32('b', 'g', 'g', 'r'),     //bggr8
+    VOCAB_PIXEL_ENCODING_BAYER_BGGR16 = yarp::os::createVocab32('b', 'g', '1', '6'),  //bggr16
+    VOCAB_PIXEL_ENCODING_BAYER_GBRG8 = yarp::os::createVocab32('g', 'b', 'r', 'g'),  //gbrg8
+    VOCAB_PIXEL_ENCODING_BAYER_GBRG16 = yarp::os::createVocab32('g', 'b', '1', '6'),  //gbrg16
+    VOCAB_PIXEL_ENCODING_BAYER_RGGB8 = yarp::os::createVocab32('r', 'g', 'g', 'b'),   //rggb8
+    VOCAB_PIXEL_ENCODING_BAYER_RGGB16 = yarp::os::createVocab32('r', 'g', '1', '6'),  //rggb16
+    VOCAB_PIXEL_YUV_420 = yarp::os::createVocab32('y','u','v','a'),
+    VOCAB_PIXEL_YUV_444 = yarp::os::createVocab32('y','u','v','b'),
+    VOCAB_PIXEL_YUV_422 = yarp::os::createVocab32('y','u','v','c'),
+    VOCAB_PIXEL_YUV_411 = yarp::os::createVocab32('y','u','v','d')
 };
 
 /**
@@ -144,6 +141,22 @@ public:
      * @param h target height for image
      */
     bool copy(const Image& alt, size_t w, size_t h);
+
+
+    /**
+     * move operator.
+     * Moves the content of another image.
+     * @param alt the image to move
+     */
+    bool move(Image&& alt) noexcept;
+
+
+    /**
+     * swap operator.
+     * Swap the content with another image.
+     * @param alt the image to swap with
+     */
+    bool swap(Image& alt);
 
 
     /**
@@ -349,9 +362,7 @@ public:
      * false if image has origin at bottom left.
      *
      */
-    void setTopIsLowIndex(bool flag) {
-        topIsLow = flag;
-    }
+    void setTopIsLowIndex(bool flag);
 
 
     /**
@@ -451,9 +462,9 @@ namespace yarp {
         YARP_BEGIN_PACK
         struct YARP_sig_API PixelRgb
         {
-            unsigned char r{0}; // NOLINT(misc-non-private-member-variables-in-classes)
-            unsigned char g{0}; // NOLINT(misc-non-private-member-variables-in-classes)
-            unsigned char b{0}; // NOLINT(misc-non-private-member-variables-in-classes)
+            unsigned char r{0};
+            unsigned char g{0};
+            unsigned char b{0};
 
             PixelRgb() = default;
             PixelRgb(unsigned char n_r,
@@ -485,10 +496,10 @@ namespace yarp {
             {
             }
 
-            unsigned char r{0}; // NOLINT(misc-non-private-member-variables-in-classes)
-            unsigned char g{0}; // NOLINT(misc-non-private-member-variables-in-classes)
-            unsigned char b{0}; // NOLINT(misc-non-private-member-variables-in-classes)
-            unsigned char a{0}; // NOLINT(misc-non-private-member-variables-in-classes)
+            unsigned char r{0};
+            unsigned char g{0};
+            unsigned char b{0};
+            unsigned char a{0};
         };
         YARP_END_PACK
 
@@ -498,10 +509,10 @@ namespace yarp {
         YARP_BEGIN_PACK
         struct YARP_sig_API PixelBgra
         {
-            unsigned char b{0}; // NOLINT(misc-non-private-member-variables-in-classes)
-            unsigned char g{0}; // NOLINT(misc-non-private-member-variables-in-classes)
-            unsigned char r{0}; // NOLINT(misc-non-private-member-variables-in-classes)
-            unsigned char a{0}; // NOLINT(misc-non-private-member-variables-in-classes)
+            unsigned char b{0};
+            unsigned char g{0};
+            unsigned char r{0};
+            unsigned char a{0};
 
             PixelBgra() = default;
             PixelBgra(unsigned char n_r,
@@ -523,9 +534,9 @@ namespace yarp {
         YARP_BEGIN_PACK
         struct YARP_sig_API PixelBgr
         {
-            unsigned char b{0}; // NOLINT(misc-non-private-member-variables-in-classes)
-            unsigned char g{0}; // NOLINT(misc-non-private-member-variables-in-classes)
-            unsigned char r{0}; // NOLINT(misc-non-private-member-variables-in-classes)
+            unsigned char b{0};
+            unsigned char g{0};
+            unsigned char r{0};
 
             PixelBgr() = default;
             PixelBgr(unsigned char n_r, unsigned char n_g, unsigned char n_b) :
@@ -577,9 +588,9 @@ namespace yarp {
         YARP_BEGIN_PACK
         struct YARP_sig_API PixelRgbFloat
         {
-            float r{0.0F}; // NOLINT(misc-non-private-member-variables-in-classes)
-            float g{0.0F}; // NOLINT(misc-non-private-member-variables-in-classes)
-            float b{0.0F}; // NOLINT(misc-non-private-member-variables-in-classes)
+            float r{0.0F};
+            float g{0.0F};
+            float b{0.0F};
 
             PixelRgbFloat() = default;
             PixelRgbFloat(float n_r,
@@ -599,9 +610,9 @@ namespace yarp {
         YARP_BEGIN_PACK
         struct YARP_sig_API PixelRgbInt
         {
-            yarp::os::NetInt32 r{0}; // NOLINT(misc-non-private-member-variables-in-classes)
-            yarp::os::NetInt32 g{0}; // NOLINT(misc-non-private-member-variables-in-classes)
-            yarp::os::NetInt32 b{0}; // NOLINT(misc-non-private-member-variables-in-classes)
+            yarp::os::NetInt32 r{0};
+            yarp::os::NetInt32 g{0};
+            yarp::os::NetInt32 b{0};
 
             PixelRgbInt() = default;
             PixelRgbInt(int n_r,

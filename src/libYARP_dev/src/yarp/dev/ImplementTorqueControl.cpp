@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include "yarp/dev/ControlBoardInterfacesImpl.h"
@@ -30,8 +27,9 @@ ImplementTorqueControl::~ImplementTorqueControl()
 
 bool ImplementTorqueControl::initialize(int size, const int *amap, const double *enc, const double *zos, const double *nw, const double* amps, const double* dutys, const double* bemfs, const double* ktaus)
 {
-    if (helper!=nullptr)
+    if (helper != nullptr) {
         return false;
+    }
 
     helper=(void *)(new ControlBoardHelper(size, amap, enc, zos, nw, amps, nullptr, dutys,bemfs,ktaus));
     yAssert (helper != nullptr);
@@ -157,8 +155,9 @@ bool ImplementTorqueControl::getTorques(double *t)
 
 bool ImplementTorqueControl::setRefTorques(const int n_joint, const int *joints, const double *t)
 {
-    if(!castToMapper(helper)->checkAxesIds(n_joint, joints))
+    if (!castToMapper(helper)->checkAxesIds(n_joint, joints)) {
         return false;
+    }
 
     yarp::dev::impl::Buffer<int> buffJoints =  intBuffManager->getBuffer();
     yarp::dev::impl::Buffer<double> buffValues = doubleBuffManager->getBuffer();

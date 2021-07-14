@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP2_WIREBOTTLE
@@ -41,13 +38,17 @@ public:
 
     size_t length(size_t index) const override {
         index += payload_index;
-        if (index==payload_index) return delegate->length(index)-payload_offset;
+        if (index == payload_index) {
+            return delegate->length(index) - payload_offset;
+        }
         return delegate->length(index);
     }
 
     const char *data(size_t index) const override {
         index += payload_index;
-        if (index==payload_index) return delegate->data(index)+payload_offset;
+        if (index == payload_index) {
+            return delegate->data(index) + payload_offset;
+        }
         return delegate->data(index);
     }
 

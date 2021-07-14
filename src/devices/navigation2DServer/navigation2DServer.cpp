@@ -1,19 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #define _USE_MATH_DEFINES
@@ -181,7 +168,7 @@ bool navigation2DServer::parse_respond_string(const yarp::os::Bottle& command, y
 
     if (command.get(0).asString() == "help")
     {
-        reply.addVocab(Vocab::encode("many"));
+        reply.addVocab32("many");
         reply.addString("Navigation2DServer does not support rpc commands in plain text format, only vocabs.");
         reply.addString("Please use the rpc port of Navigation2DClient.");
     }
@@ -194,21 +181,21 @@ bool navigation2DServer::parse_respond_string(const yarp::os::Bottle& command, y
 
 bool navigation2DServer::parse_respond_vocab(const yarp::os::Bottle& command, yarp::os::Bottle& reply)
 {
-    if (command.get(0).isVocab() == false)
+    if (command.get(0).isVocab32() == false)
     {
         yCError(NAVIGATION2DSERVER) << "General error in navigation2DServer::parse_respond_vocab()";
         return false;
     }
 
-    if (command.get(0).asVocab() != VOCAB_INAVIGATION ||
-        command.get(1).isVocab() == false)
+    if (command.get(0).asVocab32() != VOCAB_INAVIGATION ||
+        command.get(1).isVocab32() == false)
     {
         yCError(NAVIGATION2DSERVER) << "Invalid vocab received";
-        reply.addVocab(VOCAB_ERR);
+        reply.addVocab32(VOCAB_ERR);
         return true;
     }
 
-    int request = command.get(1).asVocab();
+    int request = command.get(1).asVocab32();
     if (request == VOCAB_NAV_GOTOABS)
     {
         Map2DLocation loc;
@@ -220,12 +207,12 @@ bool navigation2DServer::parse_respond_vocab(const yarp::os::Bottle& command, ya
         if (ret)
         {
             clear_current_goal_name();
-            reply.addVocab(VOCAB_OK);
+            reply.addVocab32(VOCAB_OK);
         }
         else
         {
             yCError(NAVIGATION2DSERVER) << "gotoTargetByAbsoluteLocation() failed";
-            reply.addVocab(VOCAB_ERR);
+            reply.addVocab32(VOCAB_ERR);
         }
     }
     else if (request == VOCAB_NAV_GOTOABS_AND_NAME)
@@ -240,12 +227,12 @@ bool navigation2DServer::parse_respond_vocab(const yarp::os::Bottle& command, ya
         if (ret)
         {
             set_current_goal_name(location_name);
-            reply.addVocab(VOCAB_OK);
+            reply.addVocab32(VOCAB_OK);
         }
         else
         {
             yCError(NAVIGATION2DSERVER) << "gotoTargetByAbsoluteLocation() failed";
-            reply.addVocab(VOCAB_ERR);
+            reply.addVocab32(VOCAB_ERR);
         }
     }
     else if (request == VOCAB_NAV_RECOMPUTE_PATH)
@@ -253,14 +240,14 @@ bool navigation2DServer::parse_respond_vocab(const yarp::os::Bottle& command, ya
         bool ret = iNav_ctrl->recomputeCurrentNavigationPath();
         if (ret)
         {
-            reply.addVocab(VOCAB_OK);
+            reply.addVocab32(VOCAB_OK);
         }
         else
         {
             yCError(NAVIGATION2DSERVER) << "recomputeCurrentNavigationPath() failed";
-            reply.addVocab(VOCAB_ERR);
+            reply.addVocab32(VOCAB_ERR);
         }
-        reply.addVocab(VOCAB_OK);
+        reply.addVocab32(VOCAB_OK);
     }
     else if (request == VOCAB_NAV_GOTOREL)
     {
@@ -273,12 +260,12 @@ bool navigation2DServer::parse_respond_vocab(const yarp::os::Bottle& command, ya
             if (ret)
             {
                 clear_current_goal_name();
-                reply.addVocab(VOCAB_OK);
+                reply.addVocab32(VOCAB_OK);
             }
             else
             {
                 yCError(NAVIGATION2DSERVER) << "gotoTargetByRelativeLocation() failed";
-                reply.addVocab(VOCAB_ERR);
+                reply.addVocab32(VOCAB_ERR);
             }
         }
         else if (command.size() == 4)
@@ -289,18 +276,18 @@ bool navigation2DServer::parse_respond_vocab(const yarp::os::Bottle& command, ya
             if (ret)
             {
                 clear_current_goal_name();
-                reply.addVocab(VOCAB_OK);
+                reply.addVocab32(VOCAB_OK);
             }
             else
             {
                 yCError(NAVIGATION2DSERVER) << "gotoTargetByRelativeLocation() failed";
-                reply.addVocab(VOCAB_ERR);
+                reply.addVocab32(VOCAB_ERR);
             }
         }
         else
         {
             yCError(NAVIGATION2DSERVER) << "Invalid number of params";
-            reply.addVocab(VOCAB_ERR);
+            reply.addVocab32(VOCAB_ERR);
         }
     }
     else if (request == VOCAB_NAV_VELOCITY_CMD)
@@ -313,17 +300,17 @@ bool navigation2DServer::parse_respond_vocab(const yarp::os::Bottle& command, ya
         if (ret)
         {
             clear_current_goal_name();
-            reply.addVocab(VOCAB_OK);
+            reply.addVocab32(VOCAB_OK);
         }
         else
         {
             yCError(NAVIGATION2DSERVER) << "applyVelocityCommand() failed";
-            reply.addVocab(VOCAB_ERR);
+            reply.addVocab32(VOCAB_ERR);
         }
     }
     else if (request == VOCAB_NAV_GET_NAME_TARGET)
     {
-        reply.addVocab(VOCAB_OK);
+        reply.addVocab32(VOCAB_OK);
         reply.addString(m_current_goal_name);
     }
     else if (request == VOCAB_NAV_GET_NAVIGATION_STATUS)
@@ -332,13 +319,13 @@ bool navigation2DServer::parse_respond_vocab(const yarp::os::Bottle& command, ya
         bool ret = iNav_ctrl->getNavigationStatus(nav_status);
         if (ret)
         {
-            reply.addVocab(VOCAB_OK);
+            reply.addVocab32(VOCAB_OK);
             reply.addInt32(nav_status);
         }
         else
         {
             yCError(NAVIGATION2DSERVER) << "getNavigationStatus() failed";
-            reply.addVocab(VOCAB_ERR);
+            reply.addVocab32(VOCAB_ERR);
         }
     }
     else if (request == VOCAB_NAV_STOP)
@@ -347,12 +334,12 @@ bool navigation2DServer::parse_respond_vocab(const yarp::os::Bottle& command, ya
         if (ret)
         {
             clear_current_goal_name();
-            reply.addVocab(VOCAB_OK);
+            reply.addVocab32(VOCAB_OK);
         }
         else
         {
             yCError(NAVIGATION2DSERVER) << "stopNavigation() failed";
-            reply.addVocab(VOCAB_ERR);
+            reply.addVocab32(VOCAB_ERR);
         }
     }
     else if (request == VOCAB_NAV_SUSPEND)
@@ -364,12 +351,12 @@ bool navigation2DServer::parse_respond_vocab(const yarp::os::Bottle& command, ya
             bool ret = iNav_ctrl->suspendNavigation(time);
             if (ret)
             {
-                reply.addVocab(VOCAB_OK);
+                reply.addVocab32(VOCAB_OK);
             }
             else
             {
                 yCError(NAVIGATION2DSERVER) << "suspendNavigation() failed";
-                reply.addVocab(VOCAB_ERR);
+                reply.addVocab32(VOCAB_ERR);
             }
         }
         else
@@ -377,12 +364,12 @@ bool navigation2DServer::parse_respond_vocab(const yarp::os::Bottle& command, ya
             bool ret = iNav_ctrl->suspendNavigation();
             if (ret)
             {
-                reply.addVocab(VOCAB_OK);
+                reply.addVocab32(VOCAB_OK);
             }
             else
             {
                 yCError(NAVIGATION2DSERVER) << "suspendNavigation() failed";
-                reply.addVocab(VOCAB_ERR);
+                reply.addVocab32(VOCAB_ERR);
             }
         }
     }
@@ -391,12 +378,12 @@ bool navigation2DServer::parse_respond_vocab(const yarp::os::Bottle& command, ya
         bool ret = iNav_ctrl->resumeNavigation();
         if (ret)
         {
-            reply.addVocab(VOCAB_OK);
+            reply.addVocab32(VOCAB_OK);
         }
         else
         {
             yCError(NAVIGATION2DSERVER) << "resumeNavigation failed()";
-            reply.addVocab(VOCAB_ERR);
+            reply.addVocab32(VOCAB_ERR);
         }
     }
     else if (request == VOCAB_NAV_GET_NAVIGATION_WAYPOINTS)
@@ -405,7 +392,7 @@ bool navigation2DServer::parse_respond_vocab(const yarp::os::Bottle& command, ya
         bool ret = iNav_ctrl->getAllNavigationWaypoints((yarp::dev::Nav2D::TrajectoryTypeEnum)(command.get(2).asInt32()), locs);
         if (ret)
         {
-            reply.addVocab(VOCAB_OK);
+            reply.addVocab32(VOCAB_OK);
             Bottle& waypoints = reply.addList();
             for (auto it = locs.begin(); it!=locs.end(); it++)
             {
@@ -419,7 +406,7 @@ bool navigation2DServer::parse_respond_vocab(const yarp::os::Bottle& command, ya
         else
         {
             yCError(NAVIGATION2DSERVER) << "getAllNavigationWaypoints() failed";
-            reply.addVocab(VOCAB_ERR);
+            reply.addVocab32(VOCAB_ERR);
         }
     }
     else if (request == VOCAB_NAV_GET_CURRENT_WAYPOINT)
@@ -428,7 +415,7 @@ bool navigation2DServer::parse_respond_vocab(const yarp::os::Bottle& command, ya
         bool ret = iNav_ctrl->getCurrentNavigationWaypoint(loc);
         if (ret)
         {
-            reply.addVocab(VOCAB_OK);
+            reply.addVocab32(VOCAB_OK);
             reply.addString(loc.map_id);
             reply.addFloat64(loc.x);
             reply.addFloat64(loc.y);
@@ -437,7 +424,7 @@ bool navigation2DServer::parse_respond_vocab(const yarp::os::Bottle& command, ya
         else
         {
             yCError(NAVIGATION2DSERVER) << "getCurrentNavigationWaypoint() failed";
-            reply.addVocab(VOCAB_ERR);
+            reply.addVocab32(VOCAB_ERR);
         }
     }
     else if (request == VOCAB_NAV_GET_NAV_MAP)
@@ -445,14 +432,14 @@ bool navigation2DServer::parse_respond_vocab(const yarp::os::Bottle& command, ya
         MapGrid2D map;
         if (iNav_ctrl->getCurrentNavigationMap((yarp::dev::Nav2D::NavigationMapTypeEnum)(command.get(2).asInt32()), map))
         {
-            reply.addVocab(VOCAB_OK);
+            reply.addVocab32(VOCAB_OK);
             yarp::os::Bottle& mapbot = reply.addList();
             Property::copyPortable(map, mapbot);
         }
         else
         {
             yCError(NAVIGATION2DSERVER) << "getCurrentNavigationMap() failed";
-            reply.addVocab(VOCAB_ERR);
+            reply.addVocab32(VOCAB_ERR);
         }
     }
     else if (request == VOCAB_NAV_GET_ABS_TARGET)
@@ -462,7 +449,7 @@ bool navigation2DServer::parse_respond_vocab(const yarp::os::Bottle& command, ya
         ret = iNav_target->getAbsoluteLocationOfCurrentTarget(loc);
         if (ret)
         {
-            reply.addVocab(VOCAB_OK);
+            reply.addVocab32(VOCAB_OK);
             reply.addString(loc.map_id);
             reply.addFloat64(loc.x);
             reply.addFloat64(loc.y);
@@ -471,7 +458,7 @@ bool navigation2DServer::parse_respond_vocab(const yarp::os::Bottle& command, ya
         else
         {
             yCError(NAVIGATION2DSERVER) << "getAbsoluteLocationOfCurrentTarget() failed";
-            reply.addVocab(VOCAB_ERR);
+            reply.addVocab32(VOCAB_ERR);
         }
     }
     else if (request == VOCAB_NAV_GET_REL_TARGET)
@@ -481,7 +468,7 @@ bool navigation2DServer::parse_respond_vocab(const yarp::os::Bottle& command, ya
         ret = iNav_target->getRelativeLocationOfCurrentTarget(loc.x, loc.y, loc.theta);
         if (ret)
         {
-            reply.addVocab(VOCAB_OK);
+            reply.addVocab32(VOCAB_OK);
             reply.addFloat64(loc.x);
             reply.addFloat64(loc.y);
             reply.addFloat64(loc.theta);
@@ -489,13 +476,13 @@ bool navigation2DServer::parse_respond_vocab(const yarp::os::Bottle& command, ya
         else
         {
             yCError(NAVIGATION2DSERVER) << "getRelativeLocationOfCurrentTarget() failed";
-            reply.addVocab(VOCAB_ERR);
+            reply.addVocab32(VOCAB_ERR);
         }
     }
     else
     {
-        yCError(NAVIGATION2DSERVER) << "Invalid vocab received:" << yarp::os::Vocab::decode(request);
-        reply.addVocab(VOCAB_ERR);
+        yCError(NAVIGATION2DSERVER) << "Invalid vocab received:" << yarp::os::Vocab32::decode(request);
+        reply.addVocab32(VOCAB_ERR);
     }
 
     return true;
@@ -506,7 +493,9 @@ bool navigation2DServer::read(yarp::os::ConnectionReader& connection)
     yarp::os::Bottle command;
     yarp::os::Bottle reply;
     bool ok = command.read(connection);
-    if (!ok) return false;
+    if (!ok) {
+        return false;
+    }
     reply.clear();
 
     //^^^^^^^^^^^^^^^^^ STRING SECTION
@@ -515,14 +504,14 @@ bool navigation2DServer::read(yarp::os::ConnectionReader& connection)
         parse_respond_string(command, reply);
     }
     //^^^^^^^^^^^^^^^^^ VOCAB SECTION
-    else if (command.get(0).isVocab())
+    else if (command.get(0).isVocab32())
     {
         parse_respond_vocab(command, reply);
     }
     else
     {
         yCError(NAVIGATION2DSERVER) << "Invalid command type";
-        reply.addVocab(VOCAB_ERR);
+        reply.addVocab32(VOCAB_ERR);
     }
 
     yarp::os::ConnectionWriter *returnToSender = connection.getWriter();
@@ -555,16 +544,27 @@ void navigation2DServer::run()
 
 std::string navigation2DServer::getStatusAsString(NavigationStatusEnum status)
 {
-    if (status == navigation_status_idle) return std::string("navigation_status_idle");
-    else if (status == navigation_status_moving) return std::string("navigation_status_moving");
-    else if (status == navigation_status_waiting_obstacle) return std::string("navigation_status_waiting_obstacle");
-    else if (status == navigation_status_goal_reached) return std::string("navigation_status_goal_reached");
-    else if (status == navigation_status_aborted) return std::string("navigation_status_aborted");
-    else if (status == navigation_status_failing) return std::string("navigation_status_failing");
-    else if (status == navigation_status_paused) return std::string("navigation_status_paused");
-    else if (status == navigation_status_preparing_before_move) return std::string("navigation_status_preparing_before_move");
-    else if (status == navigation_status_thinking) return std::string("navigation_status_thinking");
-    else if (status == navigation_status_error) return std::string("navigation_status_error");
+    if (status == navigation_status_idle) {
+        return std::string("navigation_status_idle");
+    } else if (status == navigation_status_moving) {
+        return std::string("navigation_status_moving");
+    } else if (status == navigation_status_waiting_obstacle) {
+        return std::string("navigation_status_waiting_obstacle");
+    } else if (status == navigation_status_goal_reached) {
+        return std::string("navigation_status_goal_reached");
+    } else if (status == navigation_status_aborted) {
+        return std::string("navigation_status_aborted");
+    } else if (status == navigation_status_failing) {
+        return std::string("navigation_status_failing");
+    } else if (status == navigation_status_paused) {
+        return std::string("navigation_status_paused");
+    } else if (status == navigation_status_preparing_before_move) {
+        return std::string("navigation_status_preparing_before_move");
+    } else if (status == navigation_status_thinking) {
+        return std::string("navigation_status_thinking");
+    } else if (status == navigation_status_error) {
+        return std::string("navigation_status_error");
+    }
     return std::string("navigation_status_error");
 }
 

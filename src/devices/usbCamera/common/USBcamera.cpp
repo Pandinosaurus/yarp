@@ -1,19 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 
@@ -31,7 +18,6 @@
 #include <yarp/os/Stamp.h>
 
 #include <yarp/dev/DeviceDriver.h>
-#include <yarp/dev/FrameGrabberInterfaces.h>
 
 using namespace yarp::os;
 using namespace yarp::dev;
@@ -81,20 +67,20 @@ bool USBCameraDriver::open(yarp::os::Searchable& config)
         return false;
     }
 
-    os_device->view(deviceRgb);
-    os_device->view(deviceRaw);
+    os_device->view(frameGrabberImage);
+    os_device->view(frameGrabberImageRaw);
     os_device->view(deviceControls);
     os_device->view(deviceTimed);
     os_device->view(deviceRgbVisualParam);
 
-    if (deviceRaw != nullptr) {
-        _width = deviceRaw->width();
-        _height = deviceRaw->height();
+    if (frameGrabberImage != nullptr) {
+        _width = frameGrabberImage->width();
+        _height = frameGrabberImage->height();
     }
 
-    if (deviceRgb != nullptr) {
-        _width = deviceRgb->width();
-        _height = deviceRgb->height();
+    if (frameGrabberImageRaw != nullptr) {
+        _width = frameGrabberImageRaw->width();
+        _height = frameGrabberImageRaw->height();
     }
     return true;
 }
@@ -109,42 +95,26 @@ bool USBCameraDriver::close()
 
 int USBCameraDriver::width() const
 {
-    if (deviceRaw != nullptr) {
-        return deviceRaw->width();
+    if (frameGrabberImage != nullptr) {
+        return frameGrabberImage->width();
     }
-    if (deviceRgb != nullptr) {
-        return deviceRgb->width();
-    } else {
-        return 0;
+    if (frameGrabberImageRaw != nullptr) {
+        return frameGrabberImageRaw->width();
     }
+
+    return 0;
 }
 
 int USBCameraDriver::height() const
 {
-    if (deviceRaw != nullptr) {
-        return deviceRaw->height();
+    if (frameGrabberImage != nullptr) {
+        return frameGrabberImage->height();
     }
-    if (deviceRgb != nullptr) {
-        return deviceRgb->height();
-    } else {
-        return 0;
+    if (frameGrabberImageRaw != nullptr) {
+        return frameGrabberImageRaw->height();
     }
-}
 
-
-bool USBCameraDriver::getRawBuffer(unsigned char* buff)
-{
-    return false;
-}
-
-int USBCameraDriver::getRawBufferSize()
-{
     return 0;
-}
-
-bool USBCameraDriver::getRgbBuffer(unsigned char* buff)
-{
-    return false;
 }
 
 yarp::os::Stamp USBCameraDriver::getLastInputStamp()
@@ -259,21 +229,12 @@ USBCameraDriverRgb::~USBCameraDriverRgb()
 
 bool USBCameraDriverRgb::getImage(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image)
 {
-    if ((image.width() != _width) || (image.height() != _height)) {
-        image.resize(_width, _height);
-    }
-    deviceRgb->getRgbBuffer(image.getRawImage());
-    return true;
+    return frameGrabberImage->getImage(image);
 }
 
 bool USBCameraDriverRgb::getImage(yarp::sig::ImageOf<yarp::sig::PixelMono>& image)
 {
-    if ((image.width() != _width) || (image.height() != _height)) {
-        image.resize(_width, _height);
-    }
-
-    deviceRaw->getRawBuffer(image.getRawImage());
-    return true;
+    return frameGrabberImageRaw->getImage(image);
 }
 
 int USBCameraDriverRgb::width() const
@@ -301,12 +262,7 @@ USBCameraDriverRaw::~USBCameraDriverRaw()
 
 bool USBCameraDriverRaw::getImage(yarp::sig::ImageOf<yarp::sig::PixelMono>& image)
 {
-    if ((image.width() != _width) || (image.height() != _height)) {
-        image.resize(_width, _height);
-    }
-
-    deviceRaw->getRawBuffer(image.getRawImage());
-    return true;
+    return frameGrabberImageRaw->getImage(image);
 }
 
 int USBCameraDriverRaw::width() const

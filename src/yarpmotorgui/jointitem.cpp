@@ -1,20 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "jointitem.h"
@@ -332,8 +319,9 @@ bool JointItem::eventFilter(QObject *obj, QEvent *event)
                 }
             }
 
-            if(slider == nullptr)
+            if (slider == nullptr) {
                 return false;
+            }
 
 
             if(keyEvent->type() == QEvent::KeyPress){
@@ -1345,7 +1333,9 @@ double JointItem::getTrajectoryPositionValue()
 {
     //this function is mainly used used by the sequencer
     double pos = (double)ui->sliderTrajectoryPosition->value() / ui->sliderTrajectoryPosition->getSliderStep();
-    if (fabs(pos) < 1e-6) pos = 0;
+    if (fabs(pos) < 1e-6) {
+        pos = 0;
+    }
     return pos;
 }
 
@@ -1353,7 +1343,9 @@ double JointItem::getTrajectoryVelocityValue()
 {
     //this function is mainly used used by the sequencer
     double vel = (double)ui->sliderTrajectoryVelocity->value() / ui->sliderTrajectoryVelocity->getSliderStep();
-    if (fabs(vel) < 1e-6) vel = 0;
+    if (fabs(vel) < 1e-6) {
+        vel = 0;
+    }
     return vel;
 }
 

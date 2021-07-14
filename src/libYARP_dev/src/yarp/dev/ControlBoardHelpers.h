@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_CONTROLBOARDHELPERS_H
@@ -27,7 +24,7 @@ typedef yarp::os::PortablePair <yarp::os::Bottle, yarp::sig::Vector> CommandMess
 inline bool CHECK_FAIL(bool ok, yarp::os::Bottle& response)
 {
     if (ok) {
-        if (response.get(0).isVocab() && response.get(0).asVocab() == VOCAB_FAILED) {
+        if (response.get(0).isVocab32() && response.get(0).asVocab32() == VOCAB_FAILED) {
             return false;
         }
     } else {

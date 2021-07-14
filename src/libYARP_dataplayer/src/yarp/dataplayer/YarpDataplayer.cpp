@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #if defined(_WIN32)
@@ -726,7 +723,8 @@ int DataplayerWorker::sendBottle(int part, int frame)
     outBot = tmp;
 
     //propagate timestamp
-    Stamp ts(frame, utilities->partDetails[part].timestamp[frame]);
+    std::string time = yarp::conf::numeric::to_string(utilities->partDetails[part].timestamp[frame]);
+    Bottle ts(time);
     the_port->setEnvelope(ts);
 
     if (utilities->sendStrict) {
@@ -756,7 +754,7 @@ int DataplayerWorker::sendImages(int part, int frame)
     if (tmp.size()>0) {
         tmp.erase(tmp.begin());
         tmp.erase(tmp.end()-1);
-        code = Vocab::encode(tmp);
+        code = Vocab32::encode(tmp);
     }
 
     tmpPath = tmpPath + tmpName;

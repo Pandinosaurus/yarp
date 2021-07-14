@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_VIRTUALANALOGWRAPPER_VIRTUALANALOGWRAPPER_H
@@ -125,7 +122,9 @@ public:
 
     void setTorque(int joint,double torque)
     {
-        if (joint<mMap0 || mMap1<joint) return;
+        if (joint < mMap0 || mMap1 < joint) {
+            return;
+        }
 
         mTorques[joint-mMap0]=torque;
     }
@@ -137,7 +136,9 @@ public:
 
     void flushTorques()
     {
-        if (mpSensor) mpSensor->updateVirtualAnalogSensorMeasure(mTorques);
+        if (mpSensor) {
+            mpSensor->updateVirtualAnalogSensorMeasure(mTorques);
+        }
     }
 
     const std::string& getKey(){ return mKey; }

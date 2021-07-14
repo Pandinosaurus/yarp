@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_MATH_TRANSFORM_H
@@ -17,12 +14,13 @@
 namespace yarp {
 namespace math {
 
-class YARP_math_API FrameTransform
+class YARP_math_API FrameTransform : public yarp::os::Portable
 {
 public:
     YARP_SUPPRESS_DLL_INTERFACE_WARNING_ARG(std::string) src_frame_id;
     YARP_SUPPRESS_DLL_INTERFACE_WARNING_ARG(std::string) dst_frame_id;
-    double timestamp;
+    double timestamp = 0;
+    bool   isStatic  = false;
 
     struct Translation_t
     {
@@ -67,7 +65,26 @@ public:
        rotation_as_matrix=1,
        rotation_as_rpy=2
     };
+
     std::string toString(display_transform_mode_t format= rotation_as_quaternion) const;
+
+    ///////// Serialization methods
+    /*
+    * Read data from a connection.
+    * return true iff data was read correctly
+    */
+    bool read(yarp::os::ConnectionReader& connection) override;
+
+    /**
+    * Write data to a connection.
+    * return true iff data was written correctly
+    */
+    bool write(yarp::os::ConnectionWriter& connection) const override;
+
+    yarp::os::Type getType() const override
+    {
+        return yarp::os::Type::byName("yarp/frameTransform");
+    }
 };
 
 } // namespace sig

@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_IMOTOR_H
@@ -161,11 +158,11 @@ public:
 };
 
 // interface IMotorEncoders gets
-constexpr yarp::conf::vocab32_t VOCAB_MOTORS_NUMBER        = yarp::os::createVocab('m','t','n','m');
-constexpr yarp::conf::vocab32_t VOCAB_TEMPERATURE          = yarp::os::createVocab('t','m','p');
-constexpr yarp::conf::vocab32_t VOCAB_GEARBOX_RATIO        = yarp::os::createVocab('g','b','x','r');
-constexpr yarp::conf::vocab32_t VOCAB_TEMPERATURES         = yarp::os::createVocab('t','m','p','s');
-constexpr yarp::conf::vocab32_t VOCAB_TEMPERATURE_LIMIT    = yarp::os::createVocab('t','m','p','l');
+constexpr yarp::conf::vocab32_t VOCAB_MOTORS_NUMBER        = yarp::os::createVocab32('m','t','n','m');
+constexpr yarp::conf::vocab32_t VOCAB_TEMPERATURE          = yarp::os::createVocab32('t','m','p');
+constexpr yarp::conf::vocab32_t VOCAB_GEARBOX_RATIO        = yarp::os::createVocab32('g','b','x','r');
+constexpr yarp::conf::vocab32_t VOCAB_TEMPERATURES         = yarp::os::createVocab32('t','m','p','s');
+constexpr yarp::conf::vocab32_t VOCAB_TEMPERATURE_LIMIT    = yarp::os::createVocab32('t','m','p','l');
 
 
 #endif // YARP_DEV_IMOTOR_H

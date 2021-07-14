@@ -1,19 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #ifndef YARP_DEV_AUDIORECORDERWRAPPER_H
@@ -35,6 +22,9 @@
 #include <yarp/os/Stamp.h>
 #include <yarp/os/Log.h>
 
+class AudioRecorderStatusThread;
+class AudioRecorderDataThread;
+
 /**
  * @ingroup dev_impl_wrapper
  *
@@ -50,24 +40,36 @@
  * | max_samples_over_network  | -   | int     | samples        |   11250                  | No                          | sends the network packet as soon as n samples have been collected          | the algorithm is implemented in AudioRecorderDeviceBase |
  * | max_samples_timeout  |  -       | float   | s              |   1.0                    | No                          | timeout for sample collection                                              | the algorithm is implemented in AudioRecorderDeviceBase |
  * | start          |      -         | bool    | -              |   false                  | No                          | automatically activates the recording when the device is started           | if false, the recording is enabled via rpc port |
+ *
+ * See \ref AudioDoc for additional documentation on YARP audio.
 */
 class AudioRecorderWrapper :
         public yarp::dev::DeviceDriver,
-        private yarp::os::PeriodicThread,
         public yarp::dev::IMultipleWrapper,
         public yarp::os::PortReader
 {
 private:
     yarp::dev::PolyDriver          m_driver;
-    yarp::dev::IAudioGrabberSound* m_mic; //The microphone device
+    yarp::dev::IAudioGrabberSound* m_mic = nullptr; //The microphone device
     double                         m_period;
     yarp::os::Port                 m_rpcPort;
     yarp::os::Port                 m_streamingPort;
+    yarp::os::Port                 m_statusPort;
     yarp::os::Stamp                m_stamp;
     size_t                         m_min_number_of_samples_over_network;
     size_t                         m_max_number_of_samples_over_network;
+    yarp::dev::AudioBufferSize     m_current_buffer_size;
+    yarp::dev::AudioBufferSize     m_max_buffer_size;
     double                         m_getSound_timeout;
-    bool                           m_isDeviceOwned;
+    bool                           m_isDeviceOwned =false;
+    bool                           m_isRecording=false;
+    AudioRecorderStatusThread*     m_statusThread = nullptr;
+    AudioRecorderDataThread*       m_dataThread =nullptr;
+    bool                           m_debug_enabled = false;
+
+private:
+    double                         m_debug_last_time=0;
+
 public:
     /**
      * Constructor.
@@ -88,11 +90,37 @@ public:
     void attach(yarp::dev::IAudioGrabberSound *igrab);
     void detach();
 
-    bool threadInit() override;
-    void threadRelease() override;
-    void run() override;
-
     bool read(yarp::os::ConnectionReader& connection) override;
+    friend class AudioRecorderStatusThread;
+    friend class AudioRecorderDataThread;
+};
+
+//----------------------------------------------------------------
+class AudioRecorderStatusThread : public yarp::os::PeriodicThread
+{
+public:
+    AudioRecorderWrapper* m_ARW = nullptr;
+
+public:
+    AudioRecorderStatusThread(AudioRecorderWrapper* mi) : PeriodicThread(0.010), m_ARW(mi) {}
+
+    bool threadInit() override { return true; }
+    void threadRelease() override { return; }
+    void run() override;
+};
+
+//----------------------------------------------------------------
+class AudioRecorderDataThread : public yarp::os::PeriodicThread
+{
+public:
+    AudioRecorderWrapper* m_ARW = nullptr;
+
+public:
+    AudioRecorderDataThread(AudioRecorderWrapper* mi) : PeriodicThread(0.010), m_ARW(mi) {}
+
+    bool threadInit() override { return true; }
+    void threadRelease() override { return; }
+    void run() override;
 };
 
 #endif // YARP_DEV_AUDIORECORDERWRAPPER_H

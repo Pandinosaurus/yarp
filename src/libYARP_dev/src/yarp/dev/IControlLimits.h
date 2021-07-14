@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_ICONTROLLIMITS_H
@@ -127,7 +124,7 @@ public:
 };
 
 // interface IControlLimits sets/gets
-constexpr yarp::conf::vocab32_t VOCAB_LIMITS     = yarp::os::createVocab('l','l','i','m');
-constexpr yarp::conf::vocab32_t VOCAB_VEL_LIMITS = yarp::os::createVocab('v','l','i','m');
+constexpr yarp::conf::vocab32_t VOCAB_LIMITS     = yarp::os::createVocab32('l','l','i','m');
+constexpr yarp::conf::vocab32_t VOCAB_VEL_LIMITS = yarp::os::createVocab32('v','l','i','m');
 
 #endif // YARP_DEV_ICONTROLLIMITS_H

@@ -1,20 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "mainwindow.h"
@@ -111,18 +98,23 @@ MainWindow::MainWindow(QWidget *parent) :
     for (size_t index = 0; index < ini.size(); ++index) {
         //Look for groups starting with "customPosition_"
         yarp::os::Value item = ini.get(index);
-        if (!item.isList()) continue;
+        if (!item.isList()) {
+            continue;
+        }
         yarp::os::Bottle *subElement = item.asList();
         //At least two elements and first should be string
         if (!subElement
             || subElement->size() < 2
-            || !subElement->get(0).isString())
+            || !subElement->get(0).isString()) {
             continue;
+        }
         //get first element
         std::string key = subElement->get(0).asString();
         std::string pattern = "customPosition_";
         size_t subStringPosition = key.find(pattern);
-        if (subStringPosition != 0) continue; //not starting or not found
+        if (subStringPosition != 0) {
+            continue; //not starting or not found
+        }
 
         std::string customPositionName = key.substr(pattern.size());
         customPositions.insert(std::map<std::string, yarp::os::Bottle>::value_type(customPositionName, subElement->tail()));
@@ -587,7 +579,9 @@ bool MainWindow::init(QStringList enabledParts,
         {
             robot_type r;
             r.robot_name_without_slash = cur_robot_name;
-            if (r.robot_name_without_slash[0]=='/') r.robot_name_without_slash.erase(0, 1);
+            if (r.robot_name_without_slash[0] == '/') {
+                r.robot_name_without_slash.erase(0, 1);
+            }
             r.tree_pointer = nullptr;
             robots[cur_robot_name]=r;
         }
@@ -595,7 +589,9 @@ bool MainWindow::init(QStringList enabledParts,
         p.partindex = i;
         p.complete_name = enabledParts.at(i).toStdString();
         p.part_name_without_slash = ss.substr(b2);
-        if (p.part_name_without_slash[0] == '/') p.part_name_without_slash.erase(0, 1);
+        if (p.part_name_without_slash[0] == '/') {
+            p.part_name_without_slash.erase(0, 1);
+        }
         p.robot_name = cur_robot_name;
         p.robot_name_without_slash = robots[cur_robot_name].robot_name_without_slash;
         parts[ss.substr(b2)] = p;

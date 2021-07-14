@@ -1,9 +1,6 @@
-# Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
-# Copyright (C) 2006-2010 RobotCub Consortium
-# All rights reserved.
-#
-# This software may be modified and distributed under the terms of the
-# BSD-3-Clause license. See the accompanying LICENSE file for details.
+# SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+# SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+# SPDX-License-Identifier: BSD-3-Clause
 
 
 #########################################################################
@@ -55,10 +52,12 @@ int main() {
 }
 ")
 
-  try_run(${_result_var}
-          _unused
-          "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}"
-          "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${_type_s}-is_iec559.cpp")
+  try_run(
+    ${_result_var}
+    _unused
+    "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}"
+    "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${_type_s}-is_iec559.cpp"
+  )
 endmacro()
 
 unset(YARP_FLOAT32)
@@ -132,10 +131,12 @@ int main()
         static_cast<int>(std::floor(std::log10(${_type}_MIN_EXP))) + 1);
 }
 ")
-  try_run(YARP_${_type}_EXP_DIG
-          _unused
-          "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}"
-          "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${_type}-exp-dig.cpp")
+  try_run(
+    YARP_${_type}_EXP_DIG
+    _unused
+    "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}"
+    "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${_type}-exp-dig.cpp"
+  )
 endmacro()
 
 check_floating_point_exponent_digits(FLT)
@@ -181,6 +182,11 @@ if(WIN32)
 
     # Traditionally, we add "d" postfix to debug libraries
     set(CMAKE_DEBUG_POSTFIX "d")
+
+    # Make __cplusplus definition accurate
+    if(MSVC_VERSION GREATER_EQUAL 1914)
+        add_compile_options(/Zc:__cplusplus)
+    endif()
   endif()
 else()
 

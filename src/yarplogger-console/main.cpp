@@ -1,19 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include <yarp/os/Network.h>
@@ -121,8 +108,9 @@ class logger_module : public yarp::os::RFModule
             std::list<MessageEntry> m;
             the_logger->get_messages_by_process(proc_name, m);
             std::list<MessageEntry>::iterator it;
-            for (it = m.begin(); it != m.end(); it++)
-                printf(" %s %d %s \n",it->yarprun_timestamp.c_str(), it->level.toInt(), it->text.c_str());
+            for (it = m.begin(); it != m.end(); it++) {
+                printf(" %s %d %s \n", it->yarprun_timestamp.c_str(), it->level.toInt(), it->text.c_str());
+            }
             reply.addString("ack");
         }
         else if (command.get(0).asString()=="ask_all")
@@ -130,8 +118,9 @@ class logger_module : public yarp::os::RFModule
              std::list<MessageEntry> m;
              the_logger->get_messages(m);
              std::list<MessageEntry>::iterator it;
-             for (it = m.begin(); it != m.end(); it++)
-                 printf(" %s %d %s \n",it->yarprun_timestamp.c_str(), it->level.toInt(), it->text.c_str());
+             for (it = m.begin(); it != m.end(); it++) {
+                 printf(" %s %d %s \n", it->yarprun_timestamp.c_str(), it->level.toInt(), it->text.c_str());
+             }
              reply.addString("ack");
         }
         else if (command.get(0).asString()=="discover")
@@ -155,10 +144,11 @@ class logger_module : public yarp::os::RFModule
              for (it = infos.begin(); it != infos.end(); it++)
              {
                  std::tm* tm = localtime(&it->last_update);
-                 if (tm)
-                 printf("%s %s hour:%d minute:%d sec:%d \n",it->port_prefix.c_str(), it->port_complete.c_str(), tm->tm_hour,tm->tm_min, tm->tm_sec);
-                 else
-                 printf("%s %s no data received yet \n",it->port_prefix.c_str(), it->port_complete.c_str());
+                 if (tm) {
+                     printf("%s %s hour:%d minute:%d sec:%d \n", it->port_prefix.c_str(), it->port_complete.c_str(), tm->tm_hour, tm->tm_min, tm->tm_sec);
+                 } else {
+                     printf("%s %s no data received yet \n", it->port_prefix.c_str(), it->port_complete.c_str());
+                 }
              }
              reply.addString("ack");
         }
@@ -175,7 +165,7 @@ int main(int argc, char *argv[])
     yarp::os::Network yarp(yarp::os::YARP_CLOCK_SYSTEM);
     if (!yarp.checkNetwork())
     {
-        fprintf(stderr,"ERROR: check Yarp network.\n");
+        fprintf(stderr,"ERROR: check YARP network.\n");
         return -1;
     }
 

@@ -1,11 +1,8 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * Copyright (C) 2006, 2008 Arjan Gijsberts
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-FileCopyrightText: 2006, 2008 Arjan Gijsberts
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/Bottle.h>
@@ -173,8 +170,8 @@ TEST_CASE("os::BottleTest", "[yarp::os]")
     {
         Bottle bot("[send] 10 20");
         CHECK(bot.size() == (size_t) 3); // "plausible parse"
-        CHECK(bot.get(0).isVocab()); // "vocab present"
-        CHECK(bot.get(0).asInt32() == yarp::os::createVocab('s', 'e', 'n', 'd')); // "vocab match"
+        CHECK(bot.get(0).isVocab32()); // "vocab present"
+        CHECK(bot.get(0).asVocab32() == yarp::os::createVocab32('s', 'e', 'n', 'd')); // "vocab match"
     }
 
 

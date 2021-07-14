@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_FAKEFRAMEGRABBER_FAKEFRAMEGRABBER_H
@@ -13,7 +10,8 @@
 
 #include <yarp/sig/ImageFile.h>
 #include <yarp/dev/DeviceDriver.h>
-#include <yarp/dev/FrameGrabberInterfaces.h>
+#include <yarp/dev/IFrameGrabberControls.h>
+#include <yarp/dev/IFrameGrabberImage.h>
 #include <yarp/dev/AudioVisualInterfaces.h>
 #include <yarp/dev/IPreciselyTimed.h>
 #include <yarp/os/Searchable.h>
@@ -22,7 +20,7 @@
 #include <yarp/os/Vocab.h>
 #include <yarp/os/Log.h>
 #include <yarp/os/Value.h>
-#include <yarp/dev/IVisualParams.h>
+#include <yarp/dev/IRgbVisualParams.h>
 
 #include <cstdio>
 #include <random>
@@ -37,14 +35,19 @@
  * interfaces.
  */
 class FakeFrameGrabber :
+#ifndef YARP_NO_DEPRECATED // Since YARP 3.5`
+        virtual public yarp::dev::DeviceDriver,
+#else
         public yarp::dev::DeviceDriver,
+#endif
         public yarp::dev::IFrameGrabberImage,
         public yarp::dev::IFrameGrabberImageRaw,
         public yarp::dev::IFrameGrabberControls,
         public yarp::dev::IPreciselyTimed,
         public yarp::dev::IAudioVisualStream,
         public yarp::dev::IRgbVisualParams,
-        public yarp::os::Thread
+        public yarp::os::Thread,
+        public yarp::os::PortReader
 {
 public:
     FakeFrameGrabber() = default;
@@ -74,6 +77,9 @@ public:
      * @return true iff the object could be configured.
      */
     bool open(yarp::os::Searchable& config) override;
+
+    // yarp::os::PortReader
+    bool read(yarp::os::ConnectionReader& connection) override;
 
     // yarp::os::Thread
     void run() override;
@@ -106,8 +112,14 @@ public:
     bool setRgbMirroring(bool mirror) override;
     //
     bool getImage(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image) override;
-
     bool getImage(yarp::sig::ImageOf<yarp::sig::PixelMono>& image) override;
+
+    bool getImageCrop(cropType_id_t cropType,
+                      yarp::sig::VectorOf<std::pair<int, int>> vertices,
+                      yarp::sig::ImageOf<yarp::sig::PixelRgb>& image) override;
+    bool getImageCrop(cropType_id_t cropType,
+                      yarp::sig::VectorOf<std::pair<int, int>> vertices,
+                      yarp::sig::ImageOf<yarp::sig::PixelMono>& image) override;
 
     yarp::os::Stamp getLastInputStamp() override;
 
@@ -153,6 +165,9 @@ private:
     static constexpr size_t default_freq = 30;
     static constexpr double default_snr = 0.5;
 
+    std::string        m_rpcPortName="/fakeFrameGrabber/rpc";
+    yarp::os::Port     m_rpcPort;
+
     size_t ct{0};
     size_t bx{0};
     size_t by{0};
@@ -168,10 +183,13 @@ private:
     bool have_bg{false};
     int mode{0};
     bool add_timestamp{false};
+    bool add_noise{false};
     double snr{default_snr};
     bool use_bayer{false};
     bool use_mono{false};
     bool mirror{false};
+    bool syncro{false};
+    bool topIsLow{true};
     yarp::os::Property intrinsic;
     yarp::sig::VectorOf<yarp::dev::CameraConfig> configurations;
 
@@ -180,11 +198,12 @@ private:
     std::uniform_int_distribution<int> udist{-1, 1};
     std::uniform_real_distribution<double> ucdist{0.0, 1.0};
 
+    std::mutex curr_buff_mutex;
     size_t curr_buff{1};
     yarp::sig::ImageOf<yarp::sig::PixelRgb> buffs[2];
     bool img_ready[2] {false, false};
     bool img_consumed[2] {true, true};
-    std::mutex mutex[2];
+    std::mutex mutex[2]; // FIXME C++17 perhaps use shared_mutex (check if this causes starvation)
     std::condition_variable img_ready_cv[2];
     std::condition_variable img_consumed_cv[2];
     double buff_ts[2];
@@ -202,11 +221,17 @@ private:
     void printTime(unsigned char* pixbuf, size_t pixbuf_w, size_t pixbuf_h, size_t x, size_t y, char* s, size_t size);
 };
 
-
-class TestFrameGrabber : public FakeFrameGrabber
+#ifndef YARP_NO_DEPRECATED // Since YARP 3.5
+/**
+ * @ingroup dev_impl_fake dev_impl_deprecated
+ * \brief `testFrameGrabber` *deprecated*
+ *
+ */
+class TestFrameGrabber :
+        public yarp::dev::DeprecatedDeviceDriver,
+        public FakeFrameGrabber
 {
-public:
-    bool open(yarp::os::Searchable& config) override;
 };
+#endif // YARP_NO_DEPRECATED
 
 #endif // YARP_FAKEFRAMEGRABBER_FAKEFRAMEGRABBER_H

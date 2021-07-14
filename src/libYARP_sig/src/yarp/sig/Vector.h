@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_SIG_VECTOR_H
@@ -390,8 +387,9 @@ public:
             }
         }
 
-        if (length()>=1)
-            return ret.substr(0, ret.length()-1);
+        if (length() >= 1) {
+            return ret.substr(0, ret.length() - 1);
+        }
         return ret;
     }
 
@@ -407,8 +405,9 @@ public:
         if ((first<=last)&&((int)last<(int)this->size()))
         {
             ret.resize(last-first+1);
-            for (unsigned int k=first; k<=last; k++)
-                ret[k-first]=(*this)[k];
+            for (unsigned int k = first; k <= last; k++) {
+                ret[k - first] = (*this)[k];
+            }
         }
         return ret;
     }
@@ -424,10 +423,12 @@ public:
      */
     bool setSubvector(int position, const VectorOf<T> &v)
     {
-        if (position+v.size() > this->size())
+        if (position + v.size() > this->size()) {
             return false;
-        for (size_t i=0;i<v.size();i++)
-            (*this)[position+i] = v(i);
+        }
+        for (size_t i = 0; i < v.size(); i++) {
+            (*this)[position + i] = v(i);
+        }
         return true;
     }
 

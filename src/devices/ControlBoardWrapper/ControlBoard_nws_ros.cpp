@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include "ControlBoard_nws_ros.h"
@@ -32,8 +29,8 @@ ControlBoard_nws_ros::ControlBoard_nws_ros() :
 
 void ControlBoard_nws_ros::closePorts()
 {
-    rosPublisherPort.interrupt();
-    rosPublisherPort.close();
+    publisherPort.interrupt();
+    publisherPort.close();
 
     delete node;
     node = nullptr;
@@ -86,24 +83,31 @@ bool ControlBoard_nws_ros::open(Searchable& config)
     }
 
     // check for nodeName parameter
-    if (!config.check("nodeName")) {
-        yCError(CONTROLBOARD) << nodeName << " cannot find nodeName parameter";
+    if (!config.check("node_name")) {
+        yCError(CONTROLBOARD) << nodeName << " cannot find node_name parameter";
         return false;
     }
-    nodeName = config.find("nodeName").asString(); // TODO: check name is correct
-    yCInfo(CONTROLBOARD) << "nodeName is " << nodeName;
+    nodeName = config.find("node_name").asString();
+    if(nodeName[0] != '/'){
+        yCError(CONTROLBOARD) << "node_name must begin with an initial /";
+        return false;
+    }
 
     // check for topicName parameter
-    if (!config.check("topicName")) {
-        yCError(CONTROLBOARD) << nodeName << " cannot find topicName parameter";
+    if (!config.check("topic_name")) {
+        yCError(CONTROLBOARD) << nodeName << " cannot find topic_name parameter";
         return false;
     }
-    topicName = config.find("topicName").asString();
+    topicName = config.find("topic_name").asString();
+    if(topicName[0] != '/'){
+        yCError(CONTROLBOARD) << "topic_name must begin with an initial /";
+        return false;
+    }
+    topicName.append("/joint_states");
     yCInfo(CONTROLBOARD) << "topicName is " << topicName;
-
     // call ROS node/topic initialization
     node = new yarp::os::Node(nodeName);
-    if (!rosPublisherPort.topic(topicName)) {
+    if (!publisherPort.topic(topicName)) {
         yCError(CONTROLBOARD) << " opening " << topicName << " Topic, check your configuration";
         return false;
     }
@@ -264,35 +268,6 @@ bool ControlBoard_nws_ros::detach()
     return true;
 }
 
-bool ControlBoard_nws_ros::attachAll(const PolyDriverList& p)
-{
-    if (p.size() < 1) {
-        yCError(CONTROLBOARD, "No devices found");
-        return false;
-    }
-
-    if (p.size() > 1) {
-        yCError(CONTROLBOARD, "Cannot attach more than one device");
-        return false;
-    }
-
-    const auto& key = p[0]->key;
-    auto* poly = p[0]->poly;
-
-    if (!poly->isValid())
-    {
-        yCError(CONTROLBOARD, "Device %s is not valid", key.c_str());
-        return false;
-    }
-
-    return attach(poly);
-}
-
-bool ControlBoard_nws_ros::detachAll()
-{
-    return detach();
-}
-
 
 bool ControlBoard_nws_ros::updateAxisName()
 {
@@ -355,5 +330,5 @@ void ControlBoard_nws_ros::run()
     ros_struct.header.seq = counter++;
     ros_struct.header.stamp = averageTime.getTime();
 
-    rosPublisherPort.write(ros_struct);
+    publisherPort.write(ros_struct);
 }

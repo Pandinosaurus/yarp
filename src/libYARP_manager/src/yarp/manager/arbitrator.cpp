@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/manager/arbitrator.h>
@@ -79,13 +76,15 @@ bool Arbitrator::trainWeights(const char* opnd)
 
     BinaryExpParser parser;
     std::map<string, string>::iterator itr;
-    for(itr=rules.begin(); itr!=rules.end(); itr++)
+    for (itr = rules.begin(); itr != rules.end(); itr++) {
         parser.addRestrictedOperand((itr->first).c_str());
+    }
 
     // parsing the compact logic
     rule = string(opnd) + " : " + rule;
-    if(!parser.parse(rule))
+    if (!parser.parse(rule)) {
         return false;
+    }
 
     // trining the weights
     LinkTrainer trainer;
@@ -121,8 +120,9 @@ bool Arbitrator::trainWeights()
     alphas.clear();
     bool bAllOk = true;
     std::map<string, string>::iterator itr;
-    for(itr=rules.begin(); itr!=rules.end(); itr++)
+    for (itr = rules.begin(); itr != rules.end(); itr++) {
         bAllOk &= trainWeights((itr->first).c_str());
+    }
 
     return bAllOk;
 }
@@ -131,14 +131,16 @@ bool Arbitrator::validate()
 {
     ErrorLogger* logger  = ErrorLogger::Instance();
 
-    if(!trainWeights())
+    if (!trainWeights()) {
         return false;
+    }
 
 #ifdef WITH_YARPMATH
 //#if (GSL_MAJOR_VERSION >= 2 || (GSL_MAJOR_VERSION >= 1 && GSL_MINOR_VERSION >= 14))
     int n = alphas.size();
-    if(n == 0)
+    if (n == 0) {
         return true;
+    }
 
     yarp::sig::Matrix A(n, n);
     std::map<std::string, std::map<std::string, double> >::iterator itr;    // iterating over rows
@@ -152,10 +154,11 @@ bool Arbitrator::validate()
         for(jtr=alphas.begin(); jtr!=alphas.end(); jtr++)
         {
             std::string opnd = jtr->first;
-            if(w.find(opnd) != w.end())
+            if (w.find(opnd) != w.end()) {
                 A(row,col) = w[opnd];
-            else
-                A(row,col) = 0.0;
+            } else {
+                A(row, col) = 0.0;
+            }
             col++;
         }
         row++;

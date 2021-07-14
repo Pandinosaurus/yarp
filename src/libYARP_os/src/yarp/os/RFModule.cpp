@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/RFModule.h>
@@ -572,11 +569,11 @@ bool RFModule::safeRespond(const Bottle& command, Bottle& reply)
 
 bool RFModule::basicRespond(const Bottle& command, Bottle& reply)
 {
-    switch (command.get(0).asVocab()) {
-    case yarp::os::createVocab('q', 'u', 'i', 't'):
-    case yarp::os::createVocab('e', 'x', 'i', 't'):
-    case yarp::os::createVocab('b', 'y', 'e'):
-        reply.addVocab(Vocab::encode("bye"));
+    switch (command.get(0).asVocab32()) {
+    case yarp::os::createVocab32('q', 'u', 'i', 't'):
+    case yarp::os::createVocab32('e', 'x', 'i', 't'):
+    case yarp::os::createVocab32('b', 'y', 'e'):
+        reply.addVocab32("bye");
         stopModule(false); //calls interruptModule()
         return true;
     default:

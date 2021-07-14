@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/SharedLibraryFactory.h>
@@ -75,10 +72,10 @@ bool yarp::os::SharedLibraryFactory::open(const char* dll_name, const char* fn_n
 
 bool yarp::os::SharedLibraryFactory::isValid() const
 {
-    if (returnValue != yarp::os::createVocab('Y', 'A', 'R', 'P')) {
+    if (returnValue != yarp::os::createVocab32('Y', 'A', 'R', 'P')) {
         return false;
     }
-    if (api.startCheck != yarp::os::createVocab('Y', 'A', 'R', 'P')) {
+    if (api.startCheck != yarp::os::createVocab32('Y', 'A', 'R', 'P')) {
         return false;
     }
     if (api.structureSize != sizeof(SharedLibraryClassApi)) {
@@ -87,7 +84,7 @@ bool yarp::os::SharedLibraryFactory::isValid() const
     if (api.systemVersion != 5) {
         return false;
     }
-    if (api.endCheck != yarp::os::createVocab('P', 'L', 'U', 'G')) {
+    if (api.endCheck != yarp::os::createVocab32('P', 'L', 'U', 'G')) {
         return false;
     }
     return true;

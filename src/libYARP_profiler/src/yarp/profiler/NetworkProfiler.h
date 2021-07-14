@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_PROFILER_NETWORK_PROFILER_H
@@ -72,11 +69,13 @@ public:
             str<<"port name: "<<name<<std::endl;
             str<<"outputs:"<<std::endl;
             std::vector<ConnectionInfo>::const_iterator itr;
-            for(itr=outputs.begin(); itr!=outputs.end(); itr++)
-                str<<"   + "<<(*itr).name<<" ("<<(*itr).carrier<<")"<<std::endl;
+            for (itr = outputs.begin(); itr != outputs.end(); itr++) {
+                str << "   + " << (*itr).name << " (" << (*itr).carrier << ")" << std::endl;
+            }
             str<<"inputs:"<<std::endl;
-            for(itr=inputs.begin(); itr!=inputs.end(); itr++)
-                str<<"   + "<<(*itr).name<<" ("<<(*itr).carrier<<")"<<std::endl;
+            for (itr = inputs.begin(); itr != inputs.end(); itr++) {
+                str << "   + " << (*itr).name << " (" << (*itr).carrier << ")" << std::endl;
+            }
             str<<"owner:"<<std::endl;
             str<<"   + name:      "<<owner.name<<std::endl;
             str<<"   + arguments: "<<owner.arguments<<std::endl;

@@ -1,19 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 
@@ -26,8 +13,9 @@
 #include <yarp/os/Stamp.h>
 
 #include <yarp/dev/DeviceDriver.h>
-#include <yarp/dev/FrameGrabberInterfaces.h>
-#include <yarp/dev/IVisualParams.h>
+#include <yarp/dev/IFrameGrabberControls.h>
+#include <yarp/dev/IFrameGrabberImage.h>
+#include <yarp/dev/IRgbVisualParams.h>
 #include <yarp/dev/IPreciselyTimed.h>
 
 /**
@@ -41,8 +29,6 @@
 class USBCameraDriver :
         public yarp::dev::DeviceDriver,
         public yarp::dev::IPreciselyTimed,
-        public yarp::dev::IFrameGrabber,
-        public yarp::dev::IFrameGrabberRgb,
         public yarp::dev::IFrameGrabberControls,
         public yarp::dev::IRgbVisualParams
 {
@@ -50,9 +36,9 @@ class USBCameraDriver :
     void operator=(const USBCameraDriver&) = delete;
 
 protected:
-    yarp::dev::IFrameGrabberRgb* deviceRgb;
     yarp::dev::IPreciselyTimed* deviceTimed;
-    yarp::dev::IFrameGrabber* deviceRaw;
+    yarp::dev::IFrameGrabberImage* frameGrabberImage;
+    yarp::dev::IFrameGrabberImageRaw* frameGrabberImageRaw;
     yarp::dev::DeviceDriver* os_device;
     yarp::dev::IFrameGrabberControls* deviceControls;
     yarp::dev::IRgbVisualParams* deviceRgbVisualParam;
@@ -85,38 +71,8 @@ public:
      */
     bool close() override;
 
-    /**
-     * Implements FrameGrabber basic interface.
-     */
-    int height() const override;
-
-    /**
-     * Implements FrameGrabber basic interface.
-     */
-    int width() const override;
-
-    /**
-     * Implements FrameGrabber basic interface.
-     * @param buffer the pointer to the array to store the last frame.
-     * @return returns true/false on success/failure.
-     */
-    bool getRawBuffer(unsigned char* buffer) override;
-
-    /**
-     * Implements the Frame grabber basic interface.
-     * @return the size of the raw buffer (for the Dragonfly
-     * camera this is 1x640x480).
-     */
-    int getRawBufferSize() override;
-
-    /**
-     * FrameGrabber bgr interface, returns the last acquired frame as
-     * a buffer of bgr triplets. A demosaicking method is applied to
-     * reconstuct the color from the Bayer pattern of the sensor.
-     * @param buffer pointer to the array that will contain the last frame.
-     * @return true/false upon success/failure
-     */
-    bool getRgbBuffer(unsigned char* buffer) override;
+    int height() const;
+    int width() const;
 
     /**
      * Implements the IPreciselyTimed interface.

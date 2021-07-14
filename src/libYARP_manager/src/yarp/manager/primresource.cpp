@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/manager/primresource.h>
@@ -33,12 +30,14 @@ Memory::Memory(const char* szName) : GenericResource("Memory")
 
 bool Memory::satisfy(GenericResource* resource)
 {
-    if(!getAvailability() || getDisable())
+    if (!getAvailability() || getDisable()) {
         return false;
+    }
 
     auto* mem = dynamic_cast<Memory*>(resource);
-    if(!mem)
+    if (!mem) {
         return false;
+    }
     return ( (freeSpace >= mem->getFreeSpace()) &&
              (totalSpace >= mem->getTotalSpace()) );
 }
@@ -73,12 +72,14 @@ Storage::Storage(const char* szName) : GenericResource("Storage")
 
 bool Storage::satisfy(GenericResource* resource)
 {
-    if(!getAvailability() || getDisable())
+    if (!getAvailability() || getDisable()) {
         return false;
+    }
 
     auto* mem = dynamic_cast<Storage*>(resource);
-    if(!mem)
+    if (!mem) {
         return false;
+    }
     return ( (freeSpace >= mem->getFreeSpace()) &&
              (totalSpace >= mem->getTotalSpace()) );
 }
@@ -109,12 +110,14 @@ Network::Network(const char* szName) : GenericResource("Network")
 
 bool Network::satisfy(GenericResource* resource)
 {
-    if(!getAvailability() || getDisable())
+    if (!getAvailability() || getDisable()) {
         return false;
+    }
 
     auto* net = dynamic_cast<Network*>(resource);
-    if(!net)
+    if (!net) {
         return false;
+    }
     bool ret = (!strlen(net->getIP4()))? true : (strIP4 == string(net->getIP4()));
     ret &= (!strlen(net->getIP6()))? true : (strIP6 == string(net->getIP6()));
     ret &= (!strlen(net->getMAC()))? true : (strMAC == string(net->getMAC()));
@@ -161,12 +164,14 @@ Processor::Processor(const char* szName) : GenericResource("Processor")
 
 bool Processor::satisfy(GenericResource* resource)
 {
-    if(!getAvailability() || getDisable())
+    if (!getAvailability() || getDisable()) {
         return false;
+    }
 
     auto* proc = dynamic_cast<Processor*>(resource);
-    if(!proc)
+    if (!proc) {
         return false;
+    }
 
     bool ret = (!strlen(proc->getArchitecture()))? true : (strArchitecure == string(proc->getArchitecture()));
     ret &= (!strlen(proc->getModel()))? true : (strModel == string(proc->getModel()));
@@ -228,28 +233,32 @@ bool Computer::addPeripheral(GenericResource& res)
 
 bool Computer::satisfy(GenericResource* resource)
 {
-    if(!getAvailability() || getDisable())
+    if (!getAvailability() || getDisable()) {
         return false;
+    }
 
     auto* mres = dynamic_cast<MultiResource*>(resource);
     if(mres)
     {
-        if(!mres->resourceCount())
+        if (!mres->resourceCount()) {
             return true;
+        }
         for(int i=0; i<mres->resourceCount(); i++)
         {
             auto* comp = dynamic_cast<Computer*>(&mres->getResourceAt(i));
-            if(comp &&satisfyComputer(comp))
+            if (comp && satisfyComputer(comp)) {
                 return true;
-            else if(satisfyComputerResource(&mres->getResourceAt(i)))
-                    return true;
+            } else if (satisfyComputerResource(&mres->getResourceAt(i))) {
+                return true;
+            }
         }
         return false;
     }
 
     auto* comp = dynamic_cast<Computer*>(resource);
-    if(comp)
+    if (comp) {
         return satisfyComputer(comp);
+    }
 
     return satisfyComputerResource(resource);
 }
@@ -262,29 +271,37 @@ bool Computer::satisfyComputer(Computer* comp)
     ret &= satisfyComputerResource(&comp->getProcessor());
     ret &= satisfyComputerResource(&comp->getNetwork());
     ret &= satisfyComputerResource(&comp->getPlatform());
-    for(int i=0; i<comp->peripheralCount(); i++)
+    for (int i = 0; i < comp->peripheralCount(); i++) {
         ret &= satisfyComputerResource(&comp->getPeripheralAt(i));
+    }
     return ret;
 }
 
 
 bool Computer::satisfyComputerResource(GenericResource* resource)
 {
-    if(memory.satisfy(resource))
+    if (memory.satisfy(resource)) {
         return true;
-    if(storage.satisfy(resource))
+    }
+    if (storage.satisfy(resource)) {
         return true;
-    if(network.satisfy(resource))
+    }
+    if (network.satisfy(resource)) {
         return true;
-    if(processor.satisfy(resource))
+    }
+    if (processor.satisfy(resource)) {
         return true;
-    if(platform.satisfy(resource))
+    }
+    if (platform.satisfy(resource)) {
         return true;
+    }
 
     ResourcePIterator itr;
-    for(itr=peripheralResources.begin(); itr!=peripheralResources.end(); itr++)
-        if((*itr)->satisfy(resource))
+    for (itr = peripheralResources.begin(); itr != peripheralResources.end(); itr++) {
+        if ((*itr)->satisfy(resource)) {
             return true;
+        }
+    }
     return false;
 }
 
@@ -304,8 +321,9 @@ void Computer::swap(const Computer &comp)
     platform = comp.platform;
     processes = comp.processes;
     // deep copy
-    for(int i=0; i<comp.peripheralCount(); i++)
+    for (int i = 0; i < comp.peripheralCount(); i++) {
         addPeripheral(comp.getPeripheralAt(i));
+    }
 }
 
 void Computer::clear()

@@ -1,19 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #ifdef MSVC
@@ -274,28 +261,36 @@ void MainWindow::handleButton_Er()
 void MainWindow::handleButton_I()
 {
     max_vel_lin += lin_vel_step;
-    if (max_vel_lin < 0) max_vel_lin = 0;
+    if (max_vel_lin < 0) {
+        max_vel_lin = 0;
+    }
     snprintf(buff,100, s_max_lin_vel, max_vel_lin);
     ui->label_max_lin_vel->setText(buff);
 }
 void MainWindow::handleButton_K()
 {
     max_vel_lin -= lin_vel_step;
-    if (max_vel_lin < 0) max_vel_lin = 0;
+    if (max_vel_lin < 0) {
+        max_vel_lin = 0;
+    }
     snprintf(buff, 100, s_max_lin_vel, max_vel_lin);
     ui->label_max_lin_vel->setText(buff);
 }
 void MainWindow::handleButton_O()
 {
     max_vel_theta += ang_vel_step;
-    if (max_vel_theta < 0) max_vel_theta = 0;
+    if (max_vel_theta < 0) {
+        max_vel_theta = 0;
+    }
     snprintf(buff, 100, s_max_ang_vel, max_vel_theta);
     ui->label_max_ang_vel->setText(buff);
 }
 void MainWindow::handleButton_L()
 {
     max_vel_theta -= ang_vel_step;
-    if (max_vel_theta < 0) max_vel_theta = 0;
+    if (max_vel_theta < 0) {
+        max_vel_theta = 0;
+    }
     snprintf(buff, 100, s_max_ang_vel, max_vel_theta);
     ui->label_max_ang_vel->setText(buff);
 }

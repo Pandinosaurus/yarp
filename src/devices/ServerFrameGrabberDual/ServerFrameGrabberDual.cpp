@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include "ServerFrameGrabberDual.h"
@@ -16,10 +13,11 @@
 #include <yarp/sig/Vector.h>
 #include <yarp/sig/ImageUtils.h>
 #include <yarp/os/PortablePair.h>
-#include <yarp/dev/FrameGrabberInterfaces.h>
-#include <yarp/dev/GenericVocabs.h>
+
+#include <yarp/proto/framegrabber/CameraVocabs.h>
 
 #include <cstring>
+#include <algorithm> // std::for_each
 
 using namespace yarp::os;
 using namespace yarp::dev;
@@ -29,128 +27,6 @@ namespace {
 YARP_LOG_COMPONENT(SERVERGRABBER, "yarp.device.grabberDual")
 }
 
-
-bool DC1394Parser::configure(IFrameGrabberControlsDC1394 *interface)
-{
-    fgCtrl_DC1394 = interface;
-    return true;
-}
-
-bool DC1394Parser::respond(const Bottle& cmd, Bottle& response)
-{
-    int code = cmd.get(1).asVocab();
-    if (fgCtrl_DC1394)
-    {
-        switch(code)
-        {
-        case VOCAB_DRGETMSK: // VOCAB_DRGETMSK 12
-            response.addInt32(int(fgCtrl_DC1394->getVideoModeMaskDC1394()));
-            return true;
-        case VOCAB_DRGETVMD: // VOCAB_DRGETVMD 13
-            response.addInt32(int(fgCtrl_DC1394->getVideoModeDC1394()));
-            return true;
-        case VOCAB_DRSETVMD: // VOCAB_DRSETVMD 14
-            response.addInt32(int(fgCtrl_DC1394->setVideoModeDC1394(cmd.get(1).asInt32())));
-            return true;
-        case VOCAB_DRGETFPM: // VOCAB_DRGETFPM 15
-            response.addInt32(int(fgCtrl_DC1394->getFPSMaskDC1394()));
-            return true;
-        case VOCAB_DRGETFPS: // VOCAB_DRGETFPS 16
-            response.addInt32(int(fgCtrl_DC1394->getFPSDC1394()));
-            return true;
-        case VOCAB_DRSETFPS: // VOCAB_DRSETFPS 17
-            response.addInt32(int(fgCtrl_DC1394->setFPSDC1394(cmd.get(1).asInt32())));
-            return true;
-
-        case VOCAB_DRGETISO: // VOCAB_DRGETISO 18
-            response.addInt32(int(fgCtrl_DC1394->getISOSpeedDC1394()));
-            return true;
-        case VOCAB_DRSETISO: // VOCAB_DRSETISO 19
-            response.addInt32(int(fgCtrl_DC1394->setISOSpeedDC1394(cmd.get(1).asInt32())));
-            return true;
-
-        case VOCAB_DRGETCCM: // VOCAB_DRGETCCM 20
-            response.addInt32(int(fgCtrl_DC1394->getColorCodingMaskDC1394(cmd.get(1).asInt32())));
-            return true;
-        case VOCAB_DRGETCOD: // VOCAB_DRGETCOD 21
-            response.addInt32(int(fgCtrl_DC1394->getColorCodingDC1394()));
-            return true;
-        case VOCAB_DRSETCOD: // VOCAB_DRSETCOD 22
-            response.addInt32(int(fgCtrl_DC1394->setColorCodingDC1394(cmd.get(1).asInt32())));
-            return true;
-
-        case VOCAB_DRGETF7M: // VOCAB_DRGETF7M 25
-            {
-                unsigned int xstep,ystep,xdim,ydim,xoffstep,yoffstep;
-                fgCtrl_DC1394->getFormat7MaxWindowDC1394(xdim,ydim,xstep,ystep,xoffstep,yoffstep);
-                response.addInt32(xdim);
-                response.addInt32(ydim);
-                response.addInt32(xstep);
-                response.addInt32(ystep);
-                response.addInt32(xoffstep);
-                response.addInt32(yoffstep);
-            }
-            return true;
-        case VOCAB_DRGETWF7: // VOCAB_DRGETWF7 26
-            {
-                unsigned int xdim,ydim;
-                int x0,y0;
-                fgCtrl_DC1394->getFormat7WindowDC1394(xdim,ydim,x0,y0);
-                response.addInt32(xdim);
-                response.addInt32(ydim);
-                response.addInt32(x0);
-                response.addInt32(y0);
-            }
-            return true;
-        case VOCAB_DRSETWF7: // VOCAB_DRSETWF7 27
-            response.addInt32(int(fgCtrl_DC1394->setFormat7WindowDC1394(cmd.get(1).asInt32(),cmd.get(2).asInt32(),cmd.get(3).asInt32(),cmd.get(4).asInt32())));
-            return true;
-        case VOCAB_DRSETOPM: // VOCAB_DRSETOPM 28
-            response.addInt32(int(fgCtrl_DC1394->setOperationModeDC1394(cmd.get(1).asInt32()!=0)));
-            return true;
-        case VOCAB_DRGETOPM: // VOCAB_DRGETOPM 29
-            response.addInt32(fgCtrl_DC1394->getOperationModeDC1394());
-            return true;
-
-        case VOCAB_DRSETTXM: // VOCAB_DRSETTXM 30
-            response.addInt32(int(fgCtrl_DC1394->setTransmissionDC1394(cmd.get(1).asInt32()!=0)));
-            return true;
-        case VOCAB_DRGETTXM: // VOCAB_DRGETTXM 31
-            response.addInt32(fgCtrl_DC1394->getTransmissionDC1394());
-            return true;
-        case VOCAB_DRSETBCS: // VOCAB_DRSETBCS 34
-            response.addInt32(int(fgCtrl_DC1394->setBroadcastDC1394(cmd.get(1).asInt32()!=0)));
-            return true;
-        case VOCAB_DRSETDEF: // VOCAB_DRSETDEF 35
-            response.addInt32(int(fgCtrl_DC1394->setDefaultsDC1394()));
-            return true;
-        case VOCAB_DRSETRST: // VOCAB_DRSETRST 36
-            response.addInt32(int(fgCtrl_DC1394->setResetDC1394()));
-            return true;
-        case VOCAB_DRSETPWR: // VOCAB_DRSETPWR 37
-            response.addInt32(int(fgCtrl_DC1394->setPowerDC1394(cmd.get(1).asInt32()!=0)));
-            return true;
-        case VOCAB_DRSETCAP: // VOCAB_DRSETCAP 38
-            response.addInt32(int(fgCtrl_DC1394->setCaptureDC1394(cmd.get(1).asInt32()!=0)));
-            return true;
-        case VOCAB_DRSETBPP: // VOCAB_DRSETCAP 39
-            response.addInt32(int(fgCtrl_DC1394->setBytesPerPacketDC1394(cmd.get(1).asInt32())));
-            return true;
-        case VOCAB_DRGETBPP: // VOCAB_DRGETTXM 40
-            response.addInt32(fgCtrl_DC1394->getBytesPerPacketDC1394());
-            return true;
-        }
-    }
-    else
-    {
-        yCWarning(SERVERGRABBER) << "DC1394Parser:  firewire interface not implemented in subdevice, some features could not be available";
-//        response.clear();
-//        response.addVocab(VOCAB_FAILED);
-        return DeviceResponder::respond(cmd,response);
-    }
-
-    return true;
-}
 
 // **********ServerGrabberResponder**********
 
@@ -181,9 +57,9 @@ bool ServerGrabberResponder::respond(const yarp::os::Bottle &command, yarp::os::
         {
             return DeviceResponder::respond(command, reply);
         }
-    }
-    else
+    } else {
         return false;
+    }
 }
 
 // **********ServerGrabber**********
@@ -195,8 +71,9 @@ ServerGrabber::ServerGrabber() :
 
 ServerGrabber::~ServerGrabber()
 {
-    if(param.active)
+    if (param.active) {
         close();
+    }
 }
 
 bool ServerGrabber::close() {
@@ -240,7 +117,7 @@ bool ServerGrabber::close() {
     if(responder2)
     {
         delete responder2;
-        responder=nullptr;
+        responder2=nullptr;
     }
 
     if(isSubdeviceOwned && poly2)
@@ -258,6 +135,11 @@ bool ServerGrabber::close() {
 }
 
 bool ServerGrabber::open(yarp::os::Searchable& config) {
+
+    yCWarning(SERVERGRABBER) << "The 'grabberDual' device is deprecated in favour of 'frameGrabber_nws_yarp' (and eventually 'frameGrabberCropper').";
+    yCWarning(SERVERGRABBER) << "The old device is no longer supported, and it will be deprecated in YARP 3.6 and removed in YARP 4.";
+    yCWarning(SERVERGRABBER) << "Please update your scripts.";
+
     if (param.active) {
         yCError(SERVERGRABBER, "Did you just try to open the same ServerGrabber twice?");
         return false;
@@ -285,8 +167,9 @@ bool ServerGrabber::open(yarp::os::Searchable& config) {
     else
     {
         yCInfo(SERVERGRABBER) << "Running, waiting for attach...";
-        if(!openDeferredAttach(config))
-        return false;
+        if (!openDeferredAttach(config)) {
+            return false;
+        }
     }
 
 
@@ -324,54 +207,62 @@ bool ServerGrabber::open(yarp::os::Searchable& config) {
 
 bool ServerGrabber::fromConfig(yarp::os::Searchable &config)
 {
-    if(config.check("period","refresh period(in ms) of the broadcasted values through yarp ports")
-            && config.find("period").isInt32())
+    if (config.check("period", "refresh period(in ms) of the broadcasted values through yarp ports")
+        && config.find("period").isInt32()) {
         period = config.find("period").asInt32() / 1000.0;
-    else
-        yCWarning(SERVERGRABBER) << "Period parameter not found, using default of"<< DEFAULT_THREAD_PERIOD << "s";
+    } else {
+        yCInfo(SERVERGRABBER) << "Period parameter not found, using default of" << DEFAULT_THREAD_PERIOD << "s";
+    }
     if((config.check("subdevice")) && (config.check("left_config") || config.check("right_config")))
     {
         yCError(SERVERGRABBER) << "Found both 'subdevice' and 'left_config/right_config' parameters...";
         return false;
     }
-    if(!config.check("subdevice", "name of the subdevice to use as a data source")
-            && config.check("left_config","name of the ini file containing the configuration of one of two subdevices to use as a data source")
-            && config.check("right_config" , "name of the ini file containing the configuration of one of two subdevices to use as a data source"))
-        param.twoCameras=true;
-    if(config.check("twoCameras", "if true ServerGrabber will open and handle two devices, if false only one"))//extra conf parameter for the yarprobotinterface
-        param.twoCameras=config.find("twoCameras").asBool();
-    if(config.check("split", "set 'true' to split the streaming on two different ports"))
-        param.split=config.find("split").asBool();
+    if (!config.check("subdevice", "name of the subdevice to use as a data source")
+        && config.check("left_config", "name of the ini file containing the configuration of one of two subdevices to use as a data source")
+        && config.check("right_config", "name of the ini file containing the configuration of one of two subdevices to use as a data source")) {
+        param.twoCameras = true;
+    }
+    if (config.check("twoCameras", "if true ServerGrabber will open and handle two devices, if false only one")) { //extra conf parameter for the yarprobotinterface
+        param.twoCameras = config.find("twoCameras").asBool();
+    }
+    if (config.check("split", "set 'true' to split the streaming on two different ports")) {
+        param.split = config.find("split").asBool();
+    }
     if(config.check("capabilities","two capabilities supported, COLOR and RAW respectively for rgb and raw streaming"))
     {
-        if(config.find("capabilities").asString()=="COLOR")
+        if (config.find("capabilities").asString() == "COLOR") {
             param.cap=COLOR;
-        else if(config.find("capabilities").asString()=="RAW")
-            param.cap=RAW;
-    }
-    else
+        } else if (config.find("capabilities").asString() == "RAW") {
+            param.cap = RAW;
+        }
+    } else {
         yCWarning(SERVERGRABBER) << "'capabilities' parameter not found or misspelled, the option available are COLOR(default) and RAW, using default";
+    }
     param.canDrop = !config.check("no_drop","if present, use strict policy for sending data");
     param.addStamp = config.check("stamp","if present, add timestamps to data");
 
     param.singleThreaded =
         config.check("single_threaded",
-                     "if present, operate in single threaded mode")!=0;
+                     "if present, operate in single threaded mode");
     //TODO audio part
     std::string rootName;
     rootName = config.check("name",Value("/grabber"),
                             "name of port to send data on").asString();
-    if(!param.twoCameras && param.split)
+    if (!param.twoCameras && param.split) {
         param.splitterMode = true;
+    }
 
     responder = new ServerGrabberResponder(true);
-    if(!responder->configure(this))
+    if (!responder->configure(this)) {
         return false;
+    }
     if(param.twoCameras)
     {
         responder2 = new ServerGrabberResponder(false);
-        if(!responder2->configure(this))
+        if (!responder2->configure(this)) {
             return false;
+        }
 
         rpcPort_Name  = rootName + "/left/rpc";
         rpcPort2_Name  = rootName + "/right/rpc";
@@ -379,9 +270,9 @@ bool ServerGrabber::fromConfig(yarp::os::Searchable &config)
         {
             pImg_Name = rootName + "/left";
             pImg2_Name = rootName + "/right";
-        }
-        else
+        } else {
             pImg_Name = rootName;
+        }
 
         // check if we need to create subdevice or if they are
         // passed later on thorugh attachAll()
@@ -399,8 +290,9 @@ bool ServerGrabber::fromConfig(yarp::os::Searchable &config)
         if(param.split)
         {
             responder2 = new ServerGrabberResponder(false);
-            if(!responder2->configure(this))
+            if (!responder2->configure(this)) {
                 return false;
+            }
             pImg_Name = rootName + "/left";
             pImg2_Name = rootName + "/right";
         }
@@ -471,17 +363,17 @@ bool ServerGrabber::initialize_YARP(yarp::os::Searchable &params)
 
 bool ServerGrabber::respond(const yarp::os::Bottle& cmd,
                                   yarp::os::Bottle& response, bool left, bool both=false) {
-    int code = cmd.get(0).asVocab();
+    int code = cmd.get(0).asVocab32();
     Bottle response2;
     switch (code)
     {
     case VOCAB_FRAMEGRABBER_IMAGE:
     {
-        switch (cmd.get(1).asVocab())
+        switch (cmd.get(1).asVocab32())
         {
             case VOCAB_GET:
             {
-                switch (cmd.get(2).asVocab())
+                switch (cmd.get(2).asVocab32())
                 {
                     case VOCAB_CROP:
                     {
@@ -525,13 +417,14 @@ bool ServerGrabber::respond(const yarp::os::Bottle& cmd,
 
                         // Default values here are valid for cases 1a and `left` side of 2a
                         IFrameGrabberImage *imageInterface = fgImage;
-                        int u_offset = 0;
 
                         if(param.twoCameras == false)   // a single HW source of images
                         {
                             imageInterface = fgImage;
                             if(left == false)                               // if left is false, implicitly split is true
-                                u_offset = imageInterface->width()/2;       // 1b
+                            {
+                                std::for_each(vertices.begin(), vertices.end(), [=](auto &pt) { pt.first += imageInterface->width() / 2; }); // 1b
+                            }
 
                         }
                         else
@@ -541,7 +434,7 @@ bool ServerGrabber::respond(const yarp::os::Bottle& cmd,
                                 if(left == false)
                                 {
                                     imageInterface = fgImage2;
-                                    u_offset = 0;
+                                    // no offset
                                 }
                             }
                             else
@@ -549,23 +442,22 @@ bool ServerGrabber::respond(const yarp::os::Bottle& cmd,
                                 if(vertices[0].first >= fgImage->width())    // 2b, right image
                                 {
                                     imageInterface = fgImage2;
-                                    u_offset = -fgImage->width();
+                                    std::for_each(vertices.begin(), vertices.end(), [=](auto &pt) { pt.first -= fgImage->width(); });
                                 }
                             }
 
                         }
 
-
                         if(imageInterface != nullptr)
                         {
-                            if(imageInterface->getImageCrop((cropType_id_t) cmd.get(3).asVocab(), vertices, cropped) )
+                            if(imageInterface->getImageCrop((cropType_id_t) cmd.get(3).asVocab32(), vertices, cropped) )
                             {
                                 // use the device output
                             }
                             else
                             {
                                 // In case the device has not yet implemented this feature, do it here (less efficient)
-                                if(cmd.get(3).asVocab() == YARP_CROP_RECT)
+                                if(cmd.get(3).asVocab32() == YARP_CROP_RECT)
                                 {
                                     if(nPoints != 2)
                                     {
@@ -576,19 +468,18 @@ bool ServerGrabber::respond(const yarp::os::Bottle& cmd,
                                     ImageOf< PixelRgb > full;
                                     imageInterface->getImage(full);
 
-                                    cropped.resize(vertices[1].first - vertices[0].first +1, vertices[1].second - vertices[0].second +1);  // +1 to be inclusive
-                                    cropped.zero();
-                                    for(int u_in=vertices[0].first + u_offset, u_out=0; u_in<=vertices[1].first + u_offset; u_in++, u_out++)
+                                    if(!utils::cropRect(full, vertices[0], vertices[1], cropped))
                                     {
-                                        for(int v_in=vertices[0].second, v_out=0; v_in <= vertices[1].second; v_in++, v_out++)
-                                        {
-                                            cropped.pixel(u_out, v_out).r = full.pixel(u_in, v_in).r;
-                                            cropped.pixel(u_out, v_out).g = full.pixel(u_in, v_in).g;
-                                            cropped.pixel(u_out, v_out).b = full.pixel(u_in, v_in).b;
-                                        }
+                                        response.addString("GetImageCrop failed: utils::cropRect error.");
+                                        yCError(SERVERGRABBER, "GetImageCrop failed: utils::cropRect error: (%d, %d) (%d, %d)",
+                                                vertices[0].first,
+                                                vertices[0].second,
+                                                vertices[1].first,
+                                                vertices[1].second);
+                                        return false;
                                     }
                                 }
-                                else if(cmd.get(3).asVocab() == YARP_CROP_LIST)
+                                else if(cmd.get(3).asVocab32() == YARP_CROP_LIST)
                                 {
                                     response.addString("List type not yet implemented");
                                 }
@@ -599,8 +490,8 @@ bool ServerGrabber::respond(const yarp::os::Bottle& cmd,
                             }
                         }
 
-                        response.addVocab(VOCAB_CROP);
-                        response.addVocab(VOCAB_IS);
+                        response.addVocab32(VOCAB_CROP);
+                        response.addVocab32(VOCAB_IS);
                         response.addInt32(cropped.width());                       // Actual width  of image in pixels, to check everything is ok
                         response.addInt32(cropped.height());                      // Actual height of image in pixels, to check everything is ok
 
@@ -628,12 +519,12 @@ bool ServerGrabber::respond(const yarp::os::Bottle& cmd,
         {
             bool ret;
             if(both){
-                ret=ifgCtrl_Parser.respond(cmd, response);
-                ret&=ifgCtrl2_Parser.respond(cmd, response2);
+                ret=ifgCtrl_Responder.respond(cmd, response);
+                ret&=ifgCtrl2_Responder.respond(cmd, response2);
                 if(!ret || (response!=response2))
                 {
                     response.clear();
-                    response.addVocab(VOCAB_FAILED);
+                    response.addVocab32(VOCAB_FAILED);
                     ret=false;
                     yCWarning(SERVERGRABBER) << "Response different among cameras or failed";
                 }
@@ -642,17 +533,17 @@ bool ServerGrabber::respond(const yarp::os::Bottle& cmd,
             {
                 if(left)
                 {
-                    ret=ifgCtrl_Parser.respond(cmd, response);
+                    ret=ifgCtrl_Responder.respond(cmd, response);
                 }
                 else
                 {
-                    ret=ifgCtrl2_Parser.respond(cmd, response);
+                    ret=ifgCtrl2_Responder.respond(cmd, response);
                 }
             }
             return ret;
+        } else {
+            return ifgCtrl_Responder.respond(cmd, response);
         }
-        else
-            return ifgCtrl_Parser.respond(cmd, response);
     } break;
 
     case VOCAB_RGB_VISUAL_PARAMS:
@@ -664,7 +555,7 @@ bool ServerGrabber::respond(const yarp::os::Bottle& cmd,
             ret&=rgbParser2.respond(cmd,response2);
             if(ret)
             {
-                switch (cmd.get(2).asVocab())
+                switch (cmd.get(2).asVocab32())
                 {
                     //Only the intrinsic parameters are allowed to be different among the two cameras
                     // so we give both responses appending one to the other.
@@ -680,7 +571,7 @@ bool ServerGrabber::respond(const yarp::os::Bottle& cmd,
                         if(response!=response2)
                         {
                             response.clear();
-                            response.addVocab(VOCAB_FAILED);
+                            response.addVocab32(VOCAB_FAILED);
                             ret=false;
                             yCWarning(SERVERGRABBER) << "Response different among cameras or failed";
                         }
@@ -690,9 +581,9 @@ bool ServerGrabber::respond(const yarp::os::Bottle& cmd,
             }
 
             return ret;
+        } else {
+            return rgbParser.respond(cmd, response);
         }
-        else
-            return rgbParser.respond(cmd,response);
     } break;
         //////////////////
         // DC1394 COMMANDS
@@ -704,8 +595,8 @@ bool ServerGrabber::respond(const yarp::os::Bottle& cmd,
             bool ret;
             if(both)
             {
-                ret=ifgCtrl_DC1394_Parser.respond(cmd, response);
-                ret&=ifgCtrl2_DC1394_Parser.respond(cmd, response2);
+                ret=ifgCtrl_DC1394_Responder.respond(cmd, response);
+                ret&=ifgCtrl2_DC1394_Responder.respond(cmd, response2);
                 if(!ret || (response!=response2))
                 {
                     response.clear();
@@ -719,17 +610,17 @@ bool ServerGrabber::respond(const yarp::os::Bottle& cmd,
             {
                 if(left)
                 {
-                    ret=ifgCtrl_DC1394_Parser.respond(cmd, response);
+                    ret=ifgCtrl_DC1394_Responder.respond(cmd, response);
                 }
                 else
                 {
-                    ret=ifgCtrl2_DC1394_Parser.respond(cmd, response);
+                    ret=ifgCtrl2_DC1394_Responder.respond(cmd, response);
                 }
             }
             return ret;
+        } else {
+            return ifgCtrl_DC1394_Responder.respond(cmd, response);
         }
-        else
-            return ifgCtrl_DC1394_Parser.respond(cmd, response);
     } break;
     }
     yCError(SERVERGRABBER) << "Command not recognized" << cmd.toString();
@@ -786,7 +677,7 @@ bool ServerGrabber::attachAll(const PolyDriverList &device2attach)
             {
                 if((fgImage==nullptr) || (fgImage2==nullptr))
                 {
-                    yCError(SERVERGRABBER) << "Capability required not supported";
+                    yCError(SERVERGRABBER) << "Capability \"COLOR\" required not supported";
                     return false;
                 }
             }
@@ -795,7 +686,7 @@ bool ServerGrabber::attachAll(const PolyDriverList &device2attach)
             {
                 if((fgImageRaw==nullptr) || (fgImageRaw2==nullptr))
                 {
-                    yCError(SERVERGRABBER) << "Capability required not supported";
+                    yCError(SERVERGRABBER) << "Capability \"RAW\" required not supported";
                     return false;
                 }
             }
@@ -815,7 +706,7 @@ bool ServerGrabber::attachAll(const PolyDriverList &device2attach)
         }
         if(fgCtrl != nullptr && fgCtrl2 != nullptr)
         {
-            if(!(ifgCtrl_Parser.configure(fgCtrl)) || !(ifgCtrl2_Parser.configure(fgCtrl2)))
+            if(!(ifgCtrl_Responder.configure(fgCtrl)) || !(ifgCtrl2_Responder.configure(fgCtrl2)))
             {
                 yCError(SERVERGRABBER) << "Error configuring interfaces for parsers";
                 return false;
@@ -823,7 +714,7 @@ bool ServerGrabber::attachAll(const PolyDriverList &device2attach)
         }
         if(fgCtrl_DC1394 != nullptr && fgCtrl2_DC1394 != nullptr)
         {
-            if(!(ifgCtrl_DC1394_Parser.configure(fgCtrl_DC1394)) || !(ifgCtrl2_DC1394_Parser.configure(fgCtrl2_DC1394)))
+            if(!(ifgCtrl_DC1394_Responder.configure(fgCtrl_DC1394)) || !(ifgCtrl2_DC1394_Responder.configure(fgCtrl2_DC1394)))
             {
                 yCError(SERVERGRABBER) << "Error configuring interfaces for parsers";
                 return false;
@@ -847,7 +738,7 @@ bool ServerGrabber::attachAll(const PolyDriverList &device2attach)
             {
                 if(fgImage==nullptr)
                 {
-                    yCError(SERVERGRABBER) << "Capability required not supported";
+                    yCError(SERVERGRABBER) << "Capability \"COLOR\" required not supported";
                     return false;
                 }
             }
@@ -856,7 +747,7 @@ bool ServerGrabber::attachAll(const PolyDriverList &device2attach)
             {
                 if(fgImageRaw==nullptr)
                 {
-                    yCError(SERVERGRABBER) << "Capability required not supported";
+                    yCError(SERVERGRABBER) << "Capability \"RAW\" required not supported";
                     return false;
                 }
             }
@@ -884,7 +775,7 @@ bool ServerGrabber::attachAll(const PolyDriverList &device2attach)
         }
         if(fgCtrl != nullptr)
         {
-            if(!(ifgCtrl_Parser.configure(fgCtrl)))
+            if(!(ifgCtrl_Responder.configure(fgCtrl)))
             {
                 yCError(SERVERGRABBER) << "Error configuring interfaces for parsers";
                 return false;
@@ -893,7 +784,7 @@ bool ServerGrabber::attachAll(const PolyDriverList &device2attach)
 
         if(fgCtrl_DC1394 != nullptr)
         {
-            if(!(ifgCtrl_DC1394_Parser.configure(fgCtrl_DC1394)))
+            if(!(ifgCtrl_DC1394_Responder.configure(fgCtrl_DC1394)))
             {
                 yCError(SERVERGRABBER) << "Error configuring interfaces for parsers";
                 return false;
@@ -909,16 +800,18 @@ bool ServerGrabber::attachAll(const PolyDriverList &device2attach)
 bool ServerGrabber::detachAll()
 {
     //check if we already instantiated a subdevice previously
-    if (isSubdeviceOwned)
+    if (isSubdeviceOwned) {
         return false;
+    }
     stopThread();
     return true;
 
 }
 void ServerGrabber::stopThread()
 {
-    if (yarp::os::PeriodicThread::isRunning())
+    if (yarp::os::PeriodicThread::isRunning()) {
         yarp::os::PeriodicThread::stop();
+    }
 
     rgbVis_p       = nullptr;
     rgbVis_p2      = nullptr;
@@ -936,6 +829,7 @@ void ServerGrabber::setupFlexImage(const Image &_img, FlexImage &flex_i)
 {
     flex_i.setPixelCode(_img.getPixelCode());
     flex_i.setQuantum(_img.getQuantum());
+    flex_i.setTopIsLowIndex(_img.topIsLowIndex());
     flex_i.setExternal(_img.getRawImage(), _img.width(),_img.height());
 
 }
@@ -1032,8 +926,9 @@ bool ServerGrabber::openAndAttachSubDevice(Searchable &prop){
         plist.push(pd);
         plist.push(pd2);
         //The thread is started by attachAll()
-        if(!attachAll(plist))
+        if (!attachAll(plist)) {
             return false;
+        }
     }
     else
     {
@@ -1062,8 +957,9 @@ bool ServerGrabber::openAndAttachSubDevice(Searchable &prop){
         PolyDriverDescriptor pd(poly,"poly");
         plist.push(pd);
         //The thread is started by attachAll()
-        if(!attachAll(plist))
+        if (!attachAll(plist)) {
             return false;
+        }
     }
     isSubdeviceOwned = true;
     return true;
@@ -1146,10 +1042,9 @@ void ServerGrabber::run()
                     setupFlexImage(*img,flex_i);
                     fgImage2->getImage(*img2);
                     setupFlexImage(*img2,flex_i2);
-                }
-                else
+                } else {
                     yCError(SERVERGRABBER) << "Image not captured.. check hardware configuration";
-
+                }
             }
             if(param.cap==RAW)
             {
@@ -1159,10 +1054,9 @@ void ServerGrabber::run()
                     setupFlexImage(*img_Raw,flex_i);
                     fgImageRaw2->getImage(*img2_Raw);
                     setupFlexImage(*img2_Raw,flex_i2);
-                }
-                else
+                } else {
                     yCError(SERVERGRABBER) << "Image not captured.. check hardware configuration";
-
+                }
             }
             Stamp s = Stamp(count,Time::now());
             pImg.setStrict(!param.canDrop);
@@ -1194,10 +1088,9 @@ void ServerGrabber::run()
                         yCError(SERVERGRABBER) << "Failed to concatenate images";
                         return;
                     }
-                }
-                else
+                } else {
                     yCError(SERVERGRABBER) << "Image not captured.. check hardware configuration";
-
+                }
             }
             if(param.cap==RAW)
             {
@@ -1213,10 +1106,9 @@ void ServerGrabber::run()
                         yCError(SERVERGRABBER) << "Failed to concatenate images";
                         return;
                     }
-                }
-                else
+                } else {
                     yCError(SERVERGRABBER) << "Image not captured.. check hardware configuration";
-
+                }
             }
 
             Stamp s = Stamp(count,Time::now());
@@ -1249,9 +1141,9 @@ void ServerGrabber::run()
 
                     setupFlexImage(*img,flex_i);
                     setupFlexImage(*img2,flex_i2);
-                }
-                else
+                } else {
                     yCError(SERVERGRABBER) << "Image not captured.. check hardware configuration";
+                }
             }
             if(param.cap==RAW)
             {
@@ -1270,9 +1162,9 @@ void ServerGrabber::run()
                     setupFlexImage(*img_Raw,flex_i);
                     setupFlexImage(*img2_Raw,flex_i2);
 
-                }
-                else
+                } else {
                     yCError(SERVERGRABBER) << "Image not captured.. check hardware configuration";
+                }
             }
             Stamp s = Stamp(count,Time::now());
             pImg.setStrict(!param.canDrop);
@@ -1295,9 +1187,9 @@ void ServerGrabber::run()
                 {
                     fgImage->getImage(*img);
                     setupFlexImage(*img,flex_i);
-                }
-                else
+                } else {
                     yCError(SERVERGRABBER) << "Image not captured.. check hardware configuration";
+                }
             }
             if(param.cap==RAW)
             {
@@ -1305,9 +1197,9 @@ void ServerGrabber::run()
                 {
                     fgImageRaw->getImage(*img_Raw);
                     setupFlexImage(*img_Raw,flex_i);
-                }
-                else
+                } else {
                     yCError(SERVERGRABBER) << "Image not captured.. check hardware configuration";
+                }
             }
             Stamp s = Stamp(count,Time::now());
             pImg.setStrict(!param.canDrop);
@@ -1322,6 +1214,7 @@ void ServerGrabber::shallowCopyImages(const yarp::sig::FlexImage& src, yarp::sig
 {
     dest.setPixelCode(src.getPixelCode());
     dest.setQuantum(src.getQuantum());
+    dest.setTopIsLowIndex(src.topIsLowIndex());
     dest.setExternal(src.getRawImage(), src.width(), src.height());
 }
 void ServerGrabber::cleanUp()

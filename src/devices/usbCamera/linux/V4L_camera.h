@@ -1,19 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 
@@ -24,8 +11,9 @@
 #include <yarp/os/Semaphore.h>
 
 #include <yarp/dev/DeviceDriver.h>
-#include <yarp/dev/FrameGrabberInterfaces.h>
-#include <yarp/dev/IVisualParams.h>
+#include <yarp/dev/IFrameGrabberImage.h>
+#include <yarp/dev/IFrameGrabberControls.h>
+#include <yarp/dev/IRgbVisualParams.h>
 #include <yarp/dev/IPreciselyTimed.h>
 
 #include <asm/types.h>
@@ -140,8 +128,8 @@ typedef struct
 
 class V4L_camera :
         public yarp::dev::DeviceDriver,
-        public yarp::dev::IFrameGrabberRgb,
-        public yarp::dev::IFrameGrabber,
+        public yarp::dev::IFrameGrabberImage,
+        public yarp::dev::IFrameGrabberImageRaw,
         public yarp::dev::IFrameGrabberControls,
         public yarp::dev::IPreciselyTimed,
         public yarp::os::PeriodicThread,
@@ -156,23 +144,10 @@ public:
 
     yarp::os::Stamp getLastInputStamp() override;
 
-    // IFrameGrabberRgb    Interface
-    bool getRgbBuffer(unsigned char* buffer) override;
-
-    // IFrameGrabber Interface
-    bool getRawBuffer(unsigned char* buffer) override;
-    int getRawBufferSize() override;
-
-    /**
-     * Return the height of each frame.
-     * @return image height
-     */
+    /*Implementation of IFrameGrabberImage and IFrameGrabberImageRaw interfaces*/
+    bool getImage(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image) override;
+    bool getImage(yarp::sig::ImageOf<yarp::sig::PixelMono>& image) override;
     int height() const override;
-
-    /**
-     * Return the width of each frame.
-     * @return image width
-     */
     int width() const override;
 
     /*Implementation of IRgbVisualParams interface*/

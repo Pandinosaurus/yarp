@@ -1,19 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "newapplicationwizard.h"
@@ -132,16 +119,18 @@ NewApplicationWizard::NewApplicationWizard(yarp::os::Property *config, bool _sav
             string::size_type pos=appPaths.find(';');
             strPath=appPaths.substr(0, pos);
             trimString(strPath);
-            if (!absolute(strPath.c_str()))
-                strPath=basepath+strPath;
+            if (!absolute(strPath.c_str())) {
+                strPath = basepath + strPath;
+            }
 
-            if((strPath.rfind(directorySeparator)==string::npos) ||
-                    (strPath.rfind(directorySeparator)!=strPath.size()-1))
+            if ((strPath.rfind(directorySeparator) == string::npos) || (strPath.rfind(directorySeparator) != strPath.size() - 1)) {
                 strPath = strPath + string(directorySeparator);
+            }
             folderCombo->addItem(QString("%1").arg(strPath.c_str()));
 
-            if (pos==string::npos)
+            if (pos == string::npos) {
                 break;
+            }
             appPaths=appPaths.substr(pos+1);
         }
         while (appPaths!="");
@@ -152,8 +141,9 @@ NewApplicationWizard::NewApplicationWizard(yarp::os::Property *config, bool _sav
 
        homePath +=  string(directorySeparator) + string("applications");
 
-       if (appPaths.find(homePath)==string::npos)
+       if (appPaths.find(homePath) == string::npos) {
            folderCombo->addItem(QString("%1").arg(homePath.c_str()));
+       }
    }
 
     if(folderCombo->count() <= 0){

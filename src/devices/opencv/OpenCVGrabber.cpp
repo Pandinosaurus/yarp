@@ -1,21 +1,8 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * Copyright (C) 2006 Eric Mislivec
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-FileCopyrightText: 2006 Eric Mislivec
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 /*
@@ -26,7 +13,6 @@
 #include "OpenCVGrabber.h"
 
 #include <yarp/dev/Drivers.h>
-#include <yarp/dev/FrameGrabberInterfaces.h>
 #include <yarp/dev/PolyDriver.h>
 
 #include <string>
@@ -114,9 +100,15 @@ bool OpenCVGrabber::open(Searchable & config) {
             m_cap.set(cv::VideoCaptureProperties::CAP_PROP_FPS, m_fps);
         }
 
-        if (config.check("flip_x", "if present, flip the image along the x-axis"))         m_flip_x = true;
-        if (config.check("flip_y", "if present, flip the image along the y-axis"))         m_flip_y = true;
-        if (config.check("transpose", "if present, rotate the image along of 90 degrees")) m_transpose = true;
+        if (config.check("flip_x", "if present, flip the image along the x-axis")) {
+            m_flip_x = true;
+        }
+        if (config.check("flip_y", "if present, flip the image along the y-axis")) {
+            m_flip_y = true;
+        }
+        if (config.check("transpose", "if present, rotate the image along of 90 degrees")) {
+            m_transpose = true;
+        }
     }
 
 
@@ -238,7 +230,9 @@ bool OpenCVGrabber::getImage(ImageOf<PixelRgb> & image) {
 
     if (frame.empty() && m_loop) {
         bool ok = open(m_config);
-        if (!ok) return false;
+        if (!ok) {
+            return false;
+        }
         m_cap.read(frame);
     }
 

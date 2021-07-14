@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARPC_YARPIMPL_INC
@@ -45,23 +42,23 @@ public:
         }
     }
 
-    virtual bool read(yarp::os::ConnectionReader& connection) {
+    bool read(yarp::os::ConnectionReader& connection) override {
         yarpReader reader;
         reader.implementation = &connection;
         return (callbacks->read(&reader,ref->client)==0);
     }
 
-    virtual bool write(yarp::os::ConnectionWriter& connection) {
+    bool write(yarp::os::ConnectionWriter& connection) const override {
         yarpWriter writer;
         writer.implementation = &connection;
         return (callbacks->write(&writer,ref->client)==0);
     }
 
-    virtual void onCommencement() {
+    void onCommencement() const override {
         callbacks->onCommencement(ref->client);
     }
 
-    virtual void onCompletion() {
+    void onCompletion() const override {
         callbacks->onCompletion(ref->client);
     }
 

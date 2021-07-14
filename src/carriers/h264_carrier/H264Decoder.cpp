@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include "H264Decoder.h"
@@ -231,8 +228,9 @@ GstFlowReturn new_sample(GstAppSink *appsink, gpointer user_data)
     gst_buffer_unmap(buffer, &map);
 
     gst_sample_unref(sample);
-    if(dec_data->isReq)
+    if (dec_data->isReq) {
         dec_data->s->post();
+    }
 
 
 #ifdef debug_time

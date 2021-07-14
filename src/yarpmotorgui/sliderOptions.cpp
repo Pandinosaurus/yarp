@@ -1,20 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "sliderOptions.h"
@@ -108,17 +95,29 @@ sliderOptions::sliderOptions( QWidget *parent) :
 
 sliderOptions::~sliderOptions()
 {
-    if      (ui->radio_pos_auto->isChecked()) val_pos_choice = 0;
-    else if (ui->radio_pos_user->isChecked()) val_pos_choice = 1;
-    else if (ui->radio_pos_one->isChecked())  val_pos_choice = 2;
+    if (ui->radio_pos_auto->isChecked()) {
+        val_pos_choice = 0;
+    } else if (ui->radio_pos_user->isChecked()) {
+        val_pos_choice = 1;
+    } else if (ui->radio_pos_one->isChecked()) {
+        val_pos_choice = 2;
+    }
 
-    if      (ui->radio_vel_auto->isChecked()) val_vel_choice = 0;
-    else if (ui->radio_vel_user->isChecked()) val_vel_choice = 1;
-    else if (ui->radio_vel_one->isChecked())  val_vel_choice = 2;
+    if (ui->radio_vel_auto->isChecked()) {
+        val_vel_choice = 0;
+    } else if (ui->radio_vel_user->isChecked()) {
+        val_vel_choice = 1;
+    } else if (ui->radio_vel_one->isChecked()) {
+        val_vel_choice = 2;
+    }
 
-    if      (ui->radio_trq_auto->isChecked()) val_trq_choice = 0;
-    else if (ui->radio_trq_user->isChecked()) val_trq_choice = 1;
-    else if (ui->radio_trq_one->isChecked())  val_trq_choice = 2;
+    if (ui->radio_trq_auto->isChecked()) {
+        val_trq_choice = 0;
+    } else if (ui->radio_trq_user->isChecked()) {
+        val_trq_choice = 1;
+    } else if (ui->radio_trq_one->isChecked()) {
+        val_trq_choice = 2;
+    }
 
     val_pos_custom_step = ui->pos_step->text().toDouble();
     val_vel_custom_step = ui->vel_step->text().toDouble();

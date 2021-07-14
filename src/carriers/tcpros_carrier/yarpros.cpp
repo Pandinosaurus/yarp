@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 
@@ -74,15 +71,21 @@ string addPart(string t, string name, int code, Value *val, string orig, string 
             r += '\''; r += char1; r += "\'*256^3";
         }
         if (char2!=0) {
-            if (r!="") r += "+";
+            if (r != "") {
+                r += "+";
+            }
             r += '\''; r += char2; r += "\'*256^2";
         }
         if (char3!=0) {
-            if (r!="") r += "+";
+            if (r != "") {
+                r += "+";
+            }
             r += '\''; r += char3; r += "\'*256";
         }
         if (char4!=0) {
-            if (r!="") r += "+";
+            if (r != "") {
+                r += "+";
+            }
             r += '\''; r += char4; r += '\'';
         }
         if (r.length()==0) {
@@ -141,10 +144,10 @@ string showFormat(Bottle& b, string root) {
         char val_name[1000];
         sprintf(tag_name,"%s%zu_tag", root.c_str(), i);
         sprintf(val_name,"%s%zu", root.c_str(), i);
-        if (v.isVocab()) {
+        if (v.isVocab32()) {
             if (!specialized) {
-                r += addPart("int32",tag_name,BOTTLE_TAG_VOCAB,nullptr,
-                             "BOTTLE_TAG_VOCAB");
+                r += addPart("int32",tag_name,BOTTLE_TAG_VOCAB32,nullptr,
+                             "BOTTLE_TAG_VOCAB32");
                 r += "\n";
             }
             r += addPart("int32",val_name,v.asInt32(),nullptr,v.toString(),"vocab");
@@ -358,11 +361,15 @@ int main(int argc, char *argv[]) {
         RosLookup lookup;
         yCDebug(YARPROS, "  * looking up ros node %s", ros_port.c_str());
         bool ok = lookup.lookupCore(ros_port);
-        if (!ok) return 1;
+        if (!ok) {
+            return 1;
+        }
         yCDebug(YARPROS, "  * found ros node %s", ros_port.c_str());
         yCDebug(YARPROS, "  * looking up topic %s", topic.c_str());
         ok = lookup.lookupTopic(topic);
-        if (!ok) return 1;
+        if (!ok) {
+            return 1;
+        }
         yCDebug(YARPROS, "  * found topic %s", topic.c_str());
         string carrier = "tcpros+role.pub+topic.";
         if (service) {
@@ -394,7 +401,9 @@ int main(int argc, char *argv[]) {
         RosLookup lookup;
         yCDebug(YARPROS, "  * looking up ros node %s", ros_port.c_str());
         bool ok = lookup.lookupCore(ros_port);
-        if (!ok) return 1;
+        if (!ok) {
+            return 1;
+        }
         yCDebug(YARPROS, "  * found ros node %s", ros_port.c_str());
         ok = register_port(yarp_port.c_str(),
                       (string("tcpros+role.sub+topic.")+topic).c_str(),
@@ -413,24 +422,32 @@ int main(int argc, char *argv[]) {
         }
         std::string dir = cmd.get(1).asString();
         bool in = false;
-        if (dir=="in") in = true;
-        else if (dir=="out") in = false;
-        else {
+        if (dir == "in") {
+            in = true;
+        } else if (dir == "out") {
+            in = false;
+        } else {
             yCError(YARPROS, "Please specify one of 'in' or 'out'.");
             return 1;
         }
         std::string pname = cmd.get(2).asString();
         Port p;
-        if (!p.open("...")) return 1;
+        if (!p.open("...")) {
+            return 1;
+        }
         if (in) {
-            if (!Network::connect(pname,p.getName(),"tcp+log.in")) return 1;
+            if (!Network::connect(pname, p.getName(), "tcp+log.in")) {
+                return 1;
+            }
         } else {
-            if (!Network::connect(pname,p.getName())) return 1;
+            if (!Network::connect(pname, p.getName())) {
+                return 1;
+            }
         }
         Bottle b;
         p.read(b);
         string r;
-        if (in&&b.get(0).asVocab()==yarp::os::createVocab('r','p','c')&&b.get(1).isList()) {
+        if (in&&b.get(0).asVocab32()==yarp::os::createVocab32('r','p','c')&&b.get(1).isList()) {
 
             r = showFormat(*b.get(1).asList(),"v");
         } else {

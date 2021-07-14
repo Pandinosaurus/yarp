@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_IIMPEDANCECONTROL_H
@@ -114,9 +111,9 @@ public:
 };
 
 //interface
-constexpr yarp::conf::vocab32_t VOCAB_IMPEDANCE    = yarp::os::createVocab('i','i','m','p');
+constexpr yarp::conf::vocab32_t VOCAB_IMPEDANCE    = yarp::os::createVocab32('i','i','m','p');
 
-constexpr yarp::conf::vocab32_t VOCAB_POSITION     = yarp::os::createVocab('p','o','s');
-constexpr yarp::conf::vocab32_t VOCAB_VELOCITY     = yarp::os::createVocab('v','e','l');
+constexpr yarp::conf::vocab32_t VOCAB_POSITION     = yarp::os::createVocab32('p','o','s');
+constexpr yarp::conf::vocab32_t VOCAB_VELOCITY     = yarp::os::createVocab32('v','e','l');
 
 #endif // YARP_DEV_IIMPEDANCECONTROL_H

@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_IFRAMETRANSFORM_H
@@ -164,9 +161,9 @@ public:
     virtual bool     waitForTransform(const std::string &target_frame_id, const std::string &source_frame_id, const double &timeout) = 0;
 };
 
-constexpr yarp::conf::vocab32_t VOCAB_ITRANSFORM              = yarp::os::createVocab('i','t','r','f');
-constexpr yarp::conf::vocab32_t VOCAB_TRANSFORM_SET           = yarp::os::createVocab('t','f','s','t');
-constexpr yarp::conf::vocab32_t VOCAB_TRANSFORM_DELETE        = yarp::os::createVocab('t','f','d','l');
-constexpr yarp::conf::vocab32_t VOCAB_TRANSFORM_DELETE_ALL    = yarp::os::createVocab('t','f','d','a');
+constexpr yarp::conf::vocab32_t VOCAB_ITRANSFORM              = yarp::os::createVocab32('i','t','r','f');
+constexpr yarp::conf::vocab32_t VOCAB_TRANSFORM_SET           = yarp::os::createVocab32('t','f','s','t');
+constexpr yarp::conf::vocab32_t VOCAB_TRANSFORM_DELETE        = yarp::os::createVocab32('t','f','d','l');
+constexpr yarp::conf::vocab32_t VOCAB_TRANSFORM_DELETE_ALL    = yarp::os::createVocab32('t','f','d','a');
 
 #endif // YARP_DEV_IFRAMETRANSFORM_H

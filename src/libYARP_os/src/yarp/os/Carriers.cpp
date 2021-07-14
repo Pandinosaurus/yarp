@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/Carriers.h>
@@ -37,7 +34,7 @@ std::string bytes_to_string(const Bytes& header)
 {
     std::string ret;
     for (size_t i = 0; i < header.length(); i++) {
-        ret += NetType::toString(header.get()[i]);
+        ret += yarp::conf::numeric::to_string(header.get()[i]);
         ret += " ";
     }
     ret += "[";
@@ -126,7 +123,7 @@ Carrier* Carriers::Private::chooseCarrier(const Bytes& header,
     if (load_if_needed) {
         if (scanForCarrier(header)) {
             // We made progress, let's try again...
-            return Carriers::Private::chooseCarrier(header, true);
+            return Carriers::Private::chooseCarrier(header, false);
         }
     }
 
@@ -309,12 +306,6 @@ bool Carriers::addCarrierPrototype(Carrier* carrier)
     return true;
 }
 
-
-bool Carrier::reply(ConnectionState& proto, SizedWriter& writer)
-{
-    writer.write(proto.os());
-    return proto.os().isOk();
-}
 
 Carriers& Carriers::getInstance()
 {

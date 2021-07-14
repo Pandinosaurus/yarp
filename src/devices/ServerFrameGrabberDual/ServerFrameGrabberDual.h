@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_SERVERGRABBER_H
@@ -12,8 +9,8 @@
 
 #include <cstdio>
 
-#include <yarp/dev/FrameGrabberInterfaces.h>
-#include <yarp/dev/FrameGrabberControlImpl.h>
+
+#include <yarp/dev/IFrameGrabberImage.h>
 #include <yarp/dev/AudioGrabberInterfaces.h>
 #include <yarp/dev/AudioVisualInterfaces.h>
 #include <yarp/dev/ServiceInterfaces.h>
@@ -25,25 +22,14 @@
 #include <yarp/os/PeriodicThread.h>
 #include <yarp/os/Vocab.h>
 #include <yarp/os/Bottle.h>
-#include <yarp/dev/IVisualParamsImpl.h>
 #include <yarp/dev/IWrapper.h>
 #include <yarp/dev/IMultipleWrapper.h>
 
+#include <yarp/proto/framegrabber/FrameGrabberControls_Responder.h>
+#include <yarp/proto/framegrabber/FrameGrabberControlsDC1394_Responder.h>
+#include <yarp/proto/framegrabber/RgbVisualParams_Responder.h>
 
 class ServerGrabber;
-
-class DC1394Parser :
-        public yarp::dev::DeviceResponder
-{
-private:
-    yarp::dev::IFrameGrabberControlsDC1394  *fgCtrl_DC1394{nullptr};
-
-public:
-    DC1394Parser() = default;
-    ~DC1394Parser() override = default;
-    bool configure(yarp::dev::IFrameGrabberControlsDC1394 *interface);
-    bool respond(const yarp::os::Bottle& cmd, yarp::os::Bottle& response) override;
-};
 
 
 class ServerGrabberResponder :
@@ -87,9 +73,9 @@ struct Configuration
 
 
 /**
- * @ingroup dev_impl_wrapper
+ * @ingroup dev_impl_wrapper dev_impl_deprecated
  *
- * \brief `grabberDual`: A Network grabber for camera devices.
+ * \brief `grabberDual` *deprecated*: A Network grabber for camera devices.
  *
  * In base of the configuration this device can handle one or two cameras.\n
  * In case of two cameras, the RGB or RAW streaming will be produced on two separated ports or on a single port with the two images
@@ -190,8 +176,8 @@ private:
     int count2{0};
     ServerGrabberResponder* responder{nullptr};
     ServerGrabberResponder* responder2{nullptr};
-    yarp::dev::Implement_RgbVisualParams_Parser  rgbParser;
-    yarp::dev::Implement_RgbVisualParams_Parser  rgbParser2;
+    yarp::proto::framegrabber::RgbVisualParams_Responder rgbParser;
+    yarp::proto::framegrabber::RgbVisualParams_Responder rgbParser2;
     yarp::dev::IRgbVisualParams* rgbVis_p{nullptr};
     yarp::dev::IRgbVisualParams* rgbVis_p2{nullptr};
     std::string rpcPort_Name;
@@ -216,10 +202,10 @@ private:
     yarp::dev::IFrameGrabberControlsDC1394* fgCtrl_DC1394{nullptr};
     yarp::dev::IFrameGrabberControlsDC1394* fgCtrl2_DC1394{nullptr};
     yarp::dev::IPreciselyTimed *fgTimed{nullptr};
-    yarp::dev::FrameGrabberControls_Parser ifgCtrl_Parser;
-    yarp::dev::FrameGrabberControls_Parser ifgCtrl2_Parser;
-    DC1394Parser ifgCtrl_DC1394_Parser;
-    DC1394Parser ifgCtrl2_DC1394_Parser;
+    yarp::proto::framegrabber::FrameGrabberControls_Responder ifgCtrl_Responder;
+    yarp::proto::framegrabber::FrameGrabberControls_Responder ifgCtrl2_Responder;
+    yarp::proto::framegrabber::FrameGrabberControlsDC1394_Responder ifgCtrl_DC1394_Responder;
+    yarp::proto::framegrabber::FrameGrabberControlsDC1394_Responder ifgCtrl2_DC1394_Responder;
     Configuration param;
     yarp::sig::ImageOf<yarp::sig::PixelRgb>* img{nullptr};
     yarp::sig::ImageOf<yarp::sig::PixelRgb>* img2{nullptr};

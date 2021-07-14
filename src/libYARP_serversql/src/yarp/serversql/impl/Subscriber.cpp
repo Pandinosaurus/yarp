@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/serversql/impl/Subscriber.h>
@@ -42,8 +39,8 @@ bool Subscriber::apply(yarp::os::Bottle& cmd,
         if (!dest.empty()) {
             ok = addSubscription(src, dest, mode);
             reply.clear();
-            reply.addVocab(ok ? yarp::os::createVocab('o', 'k')
-                              : yarp::os::createVocab('f', 'a', 'i', 'l'));
+            reply.addVocab32(ok ? yarp::os::createVocab32('o', 'k')
+                              : yarp::os::createVocab32('f', 'a', 'i', 'l'));
             return ok;
         }
 
@@ -55,8 +52,8 @@ bool Subscriber::apply(yarp::os::Bottle& cmd,
         ok = removeSubscription(cmd.get(1).asString(),
                                 cmd.get(2).asString());
         reply.clear();
-        reply.addVocab(ok ? yarp::os::createVocab('o', 'k')
-                          : yarp::os::createVocab('f', 'a', 'i', 'l'));
+        reply.addVocab32(ok ? yarp::os::createVocab32('o', 'k')
+                          : yarp::os::createVocab32('f', 'a', 'i', 'l'));
         return ok;
     }
     if (tag == "announce") {
@@ -66,7 +63,7 @@ bool Subscriber::apply(yarp::os::Bottle& cmd,
             welcome(cmd.get(1).asString(), true);
         }
         reply.clear();
-        reply.addVocab(yarp::os::createVocab('o', 'k'));
+        reply.addVocab32(yarp::os::createVocab32('o', 'k'));
         return true;
     }
     if (tag == "topic") {
@@ -75,7 +72,7 @@ bool Subscriber::apply(yarp::os::Bottle& cmd,
                                    cmd.get(2).asString(),
                                    true);
             reply.clear();
-            reply.addVocab(replyCode(result));
+            reply.addVocab32(replyCode(result));
             return true;
         }
 
@@ -89,7 +86,7 @@ bool Subscriber::apply(yarp::os::Bottle& cmd,
                                   cmd.get(2).asString(),
                                   cmd.get(3).asString());
             reply.clear();
-            reply.addVocab(replyCode(result));
+            reply.addVocab32(replyCode(result));
             return true;
         }
         if (cmd.size() == 3) {
@@ -98,7 +95,7 @@ bool Subscriber::apply(yarp::os::Bottle& cmd,
                         cmd.get(2).asString());
             reply.clear();
             if (result.empty()) {
-                reply.addVocab(replyCode(false));
+                reply.addVocab32(replyCode(false));
             } else {
                 reply.addString(cmd.get(0).asString());
                 reply.addString(cmd.get(1).asString());
@@ -108,13 +105,13 @@ bool Subscriber::apply(yarp::os::Bottle& cmd,
             return true;
         }
         reply.clear();
-        reply.addVocab(replyCode(false));
+        reply.addVocab32(replyCode(false));
         return true;
     }
     if (tag == "untopic") {
         bool result = setTopic(cmd.get(1).asString(), "", false);
         reply.clear();
-        reply.addVocab(replyCode(result));
+        reply.addVocab32(replyCode(result));
         return true;
     }
     return ok;

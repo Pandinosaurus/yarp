@@ -1,19 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "qtyarpview.h"
@@ -170,20 +157,23 @@ QString QtYARPView::getPixelAsStr(int x, int y){
 
 void QtYARPView::periodToFreq(double avT, double mT, double MT, double &avH, double &mH, double &MH)
 {
-    if (avT!=0)
+    if (avT != 0) {
         avH=1.0/avT;
-    else
-        avH=0;
+    } else {
+        avH = 0;
+    }
 
-    if (mT!=0)
+    if (mT != 0) {
         MH=1.0/mT;
-    else
-        MH=0;
+    } else {
+        MH = 0;
+    }
 
-    if (MT!=0)
+    if (MT != 0) {
         mH=1.0/MT;
-    else
-        mH=0;
+    } else {
+        mH = 0;
+    }
 }
 
 void QtYARPView::onSendFps(double portAvg, double portMin, double portMax,
@@ -227,10 +217,12 @@ void QtYARPView::createObjects() {
 
 /*! \brief Deletes the input port and the port callback.*/
 void QtYARPView::deleteObjects() {
-    if (ptr_inputPort!=nullptr)
+    if (ptr_inputPort != nullptr) {
         delete ptr_inputPort;
-    if (ptr_portCallback!=nullptr)
+    }
+    if (ptr_portCallback != nullptr) {
         delete ptr_portCallback;
+    }
 }
 
 /*! \brief parse the parameters received from the main container in QstringList form
@@ -451,10 +443,11 @@ void QtYARPView::closePorts()
     if (_options.m_outputEnabled == 1 && _pOutPort){
         _pOutPort->close();
         bool ok = true;
-        if  (ok)
+        if (ok) {
             qDebug("Port %s unregistration succeed!\n", _options.m_outPortName);
-        else
+        } else {
             qDebug("ERROR: Port %s unregistration failed.\n", _options.m_outPortName);
+        }
         delete _pOutPort;
         _pOutPort = nullptr;
     }
@@ -462,10 +455,11 @@ void QtYARPView::closePorts()
     if (_options.m_rightEnabled == 1 && _pOutRightPort){
         _pOutRightPort->close();
         bool ok = true;
-        if  (ok)
+        if (ok) {
             qDebug("Port %s unregistration succeed!\n", _options.m_outRightPortName);
-        else
+        } else {
             qDebug("ERROR: Port %s unregistration failed.\n", _options.m_outRightPortName);
+        }
         delete _pOutRightPort;
         _pOutRightPort = nullptr;
     }

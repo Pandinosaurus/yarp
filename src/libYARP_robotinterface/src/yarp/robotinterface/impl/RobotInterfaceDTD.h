@@ -1,21 +1,18 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_ROBOTINTERFACE_IMPL_ROBOTINTERFACEDTD_H
 #define YARP_ROBOTINTERFACE_IMPL_ROBOTINTERFACEDTD_H
 
 #include <yarp/robotinterface/api.h>
-#include <yarp/robotinterface/experimental/Action.h>
-#include <yarp/robotinterface/experimental/Device.h>
-#include <yarp/robotinterface/experimental/Param.h>
-#include <yarp/robotinterface/experimental/Robot.h>
-#include <yarp/robotinterface/experimental/Types.h>
-#include <yarp/robotinterface/experimental/XMLReader.h>
+#include <yarp/robotinterface/Action.h>
+#include <yarp/robotinterface/Device.h>
+#include <yarp/robotinterface/Param.h>
+#include <yarp/robotinterface/Robot.h>
+#include <yarp/robotinterface/Types.h>
+#include <yarp/robotinterface/XMLReader.h>
 
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Network.h>
@@ -46,26 +43,19 @@ public:
         DocTypeActions,
     };
 
-    RobotInterfaceDTD() :
-            type(DocTypeUnknown),
-            identifier(""),
-            uri(""),
-            majorVersion(0),
-            minorVersion(0)
-    {
-    }
+    RobotInterfaceDTD() = default;
 
     bool parse(TiXmlUnknown* unknownNode, const std::string& curr_filename);
 
-    bool valid();
+    bool valid() const;
 
     void setDefault();
 
-    DocType type;
+    DocType type {DocTypeUnknown};
     std::string identifier;
     std::string uri;
-    unsigned int majorVersion;
-    unsigned int minorVersion;
+    unsigned int majorVersion {0};
+    unsigned int minorVersion {0};
 
     static const std::string baseUri;
     static const std::string ext;

@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_IVELOCITYCONTROL_H
@@ -299,8 +296,8 @@ public:
     virtual bool stop(const int n_joint, const int *joints)=0;
 };
 
-constexpr yarp::conf::vocab32_t VOCAB_VELOCITY_MOVE_GROUP = yarp::os::createVocab('v','m','o','g') ;
-constexpr yarp::conf::vocab32_t VOCAB_VEL_PID  = yarp::os::createVocab('v','p','d');
-constexpr yarp::conf::vocab32_t VOCAB_VEL_PIDS = yarp::os::createVocab('v','p','d','s');
+constexpr yarp::conf::vocab32_t VOCAB_VELOCITY_MOVE_GROUP = yarp::os::createVocab32('v','m','o','g') ;
+constexpr yarp::conf::vocab32_t VOCAB_VEL_PID  = yarp::os::createVocab32('v','p','d');
+constexpr yarp::conf::vocab32_t VOCAB_VEL_PIDS = yarp::os::createVocab32('v','p','d','s');
 
 #endif // YARP_DEV_IVELOCITYCONTROL_H

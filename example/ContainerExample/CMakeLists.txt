@@ -1,8 +1,5 @@
-# Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
-# All rights reserved.
-#
-# This software may be modified and distributed under the terms of the
-# BSD-3-Clause license. See the accompanying LICENSE file for details.
+# SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+# SPDX-License-Identifier: BSD-3-Clause
 
 cmake_minimum_required(VERSION 3.12)
 
@@ -30,16 +27,28 @@ file(GLOB ContainerExample_QRC_FILES *.qrc)
 
 qt5_add_resources(ContainerExample_QRC_GEN_FILES ${ContainerExample_QRC_FILES})
 
-source_group("Resources Files" FILES ${ContainerExample_QRC_FILES})
-source_group("Generated Files" FILES ${ContainerExample_QRC_GEN_FILES})
+source_group(
+  "Resources Files"
+  FILES ${ContainerExample_QRC_FILES}
+)
+source_group(
+  "Generated Files"
+  FILES ${ContainerExample_QRC_GEN_FILES}
+)
 
 add_executable(ContainerExample WIN32)
-target_sources(ContainerExample PRIVATE ${ContainerExample_SRCS}
-                                        ${ContainerExample_HDRS}
-                                        ${ContainerExample_QRC_GEN_FILES})
-target_link_libraries(ContainerExample Qt5::Widgets
-                                       Qt5::Qml
-                                       Qt5::Quick)
+target_sources(ContainerExample
+  PRIVATE
+    ${ContainerExample_SRCS}
+    ${ContainerExample_HDRS}
+    ${ContainerExample_QRC_GEN_FILES}
+)
+target_link_libraries(ContainerExample
+  PRIVATE
+    Qt5::Widgets
+    Qt5::Qml
+    Qt5::Quick
+)
 
 
 #-------------------------------------------------------------------------------

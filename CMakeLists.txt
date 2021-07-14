@@ -1,9 +1,6 @@
-# Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
-# Copyright (C) 2006-2010 RobotCub Consortium
-# All rights reserved.
-#
-# This software may be modified and distributed under the terms of the
-# BSD-3-Clause license. See the accompanying LICENSE file for details.
+# SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+# SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+# SPDX-License-Identifier: BSD-3-Clause
 
 cmake_minimum_required(VERSION 3.12)
 
@@ -18,9 +15,11 @@ if(${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.14)
 endif()
 
 # Main project
-project(YARP
-        VERSION 3.4.101
-        LANGUAGES C CXX)
+project(
+  YARP
+  VERSION 3.4.102
+  LANGUAGES C CXX
+)
 set(PROJECT_DESCRIPTION "YARP: A thin middleware for humanoid robots and more")
 
 
@@ -30,7 +29,7 @@ list(APPEND CMAKE_MODULE_PATH ${YARP_MODULE_DIR})
 
 # Find YCM
 # This is required here, because YarpVersion uses GitInfo from YCM
-set(YCM_REQUIRED_VERSION 0.11.0) # Used also by YarpFindDependencies
+set(YCM_REQUIRED_VERSION 0.13.0) # Used also by YarpFindDependencies
 find_package(YCM ${YCM_REQUIRED_VERSION} REQUIRED)
 
 # Get the current YARP version.

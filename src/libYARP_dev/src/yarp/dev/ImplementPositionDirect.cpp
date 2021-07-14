@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <cstdio>
@@ -33,8 +30,9 @@ ImplementPositionDirect::~ImplementPositionDirect()
 
 bool ImplementPositionDirect::initialize(int size, const int *amap, const double *enc, const double *zos)
 {
-    if(helper != nullptr)
+    if (helper != nullptr) {
         return false;
+    }
 
     helper=(void *)(new ControlBoardHelper(size, amap, enc, zos));
     yAssert(helper != nullptr);
@@ -88,14 +86,16 @@ bool ImplementPositionDirect::setPosition(int j, double ref)
 
 bool ImplementPositionDirect::setPositions(const int n_joint, const int *joints, const double *refs)
 {
-    if(!castToMapper(helper)->checkAxesIds(n_joint, joints))
+    if (!castToMapper(helper)->checkAxesIds(n_joint, joints)) {
         return false;
+    }
 
     yarp::dev::impl::Buffer<int> buffJoints = intBuffManager->getBuffer();
     yarp::dev::impl::Buffer<double> buffValues = doubleBuffManager->getBuffer();
 
-    if(n_joint > (int)intBuffManager->getBufferSize())
+    if (n_joint > (int)intBuffManager->getBufferSize()) {
         return false;
+    }
 
     for(int idx=0; idx<n_joint; idx++)
     {
@@ -135,8 +135,9 @@ bool ImplementPositionDirect::getRefPosition(const int j, double* ref)
 
 bool ImplementPositionDirect::getRefPositions(const int n_joint, const int* joints, double* refs)
 {
-    if(!castToMapper(helper)->checkAxesIds(n_joint, joints))
+    if (!castToMapper(helper)->checkAxesIds(n_joint, joints)) {
         return false;
+    }
 
     yarp::dev::impl::Buffer<int> buffJoints = intBuffManager->getBuffer();
 
@@ -173,10 +174,11 @@ bool ImplementPositionDirect::getRefPositions(double* refs)
 
 bool StubImplPositionDirectRaw::NOT_YET_IMPLEMENTED(const char *func)
 {
-    if (func)
+    if (func) {
         yError("%s: not yet implemented\n", func);
-    else
+    } else {
         yError("Function not yet implemented\n");
+    }
 
     return false;
 }

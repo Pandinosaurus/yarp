@@ -1,11 +1,8 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * Copyright (C) 2006, 2011 Anne van Rossum <anne@almende.com>
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-FileCopyrightText: 2006, 2011 Anne van Rossum <anne@almende.com>
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/Contact.h>
@@ -211,7 +208,7 @@ std::string Contact::getName() const
         return mPriv->regName;
     }
     if (!mPriv->hostname.empty() && mPriv->port >= 0) {
-        std::string name = std::string("/") + mPriv->hostname + ":" + NetType::toString(mPriv->port);
+        std::string name = std::string("/") + mPriv->hostname + ":" + yarp::conf::numeric::to_string(mPriv->port);
         return name;
     }
     return {};
@@ -324,7 +321,7 @@ std::string Contact::toURI(bool includeCarrier) const
         result += "/";
         result += mPriv->hostname;
         result += ":";
-        result += NetType::toString(mPriv->port);
+        result += yarp::conf::numeric::to_string(mPriv->port);
         result += "/";
     }
     return result;

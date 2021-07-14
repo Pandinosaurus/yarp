@@ -1,19 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #define _USE_MATH_DEFINES
@@ -23,6 +10,7 @@
 #include <yarp/os/LogComponent.h>
 #include <yarp/os/LogStream.h>
 
+#include <yarp/dev/audioPlayerStatus.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
 
 #include <cmath>
@@ -41,11 +29,8 @@ constexpr double DEFAULT_BUFFER_DELAY = 5.0; // seconds
 
 AudioPlayerWrapper::AudioPlayerWrapper() :
         PeriodicThread(DEFAULT_THREAD_PERIOD),
-        m_irender(nullptr),
         m_period(DEFAULT_THREAD_PERIOD),
-        m_buffer_delay(DEFAULT_BUFFER_DELAY),
-        m_isDeviceOwned(false),
-        m_debug_enabled(false)
+        m_buffer_delay(DEFAULT_BUFFER_DELAY)
 {
 }
 
@@ -120,32 +105,62 @@ bool AudioPlayerWrapper::read(yarp::os::ConnectionReader& connection)
 
     if (command.get(0).asString() == "start")
     {
-        m_isPlaying = true;
         m_irender->startPlayback();
-        reply.addVocab(VOCAB_OK);
+        m_irender->isPlaying(m_isPlaying);
+        reply.addVocab32(VOCAB_OK);
     }
     else if (command.get(0).asString() == "stop")
     {
-        m_isPlaying = false;
         m_irender->stopPlayback();
-        reply.addVocab(VOCAB_OK);
+        m_irender->isPlaying(m_isPlaying);
+        reply.addVocab32(VOCAB_OK);
+    }
+    else if (command.get(0).asString() == "sw_audio_gain")
+    {
+        double val = command.get(1).asFloat64();
+        if (val>=0)
+        {
+            m_irender->setSWGain(val);
+            reply.addVocab32(VOCAB_OK);
+        }
+        else
+        {
+            yCError(AUDIOPLAYERWRAPPER) << "Invalid audio gain";
+            reply.addVocab32(VOCAB_ERR);
+        }
+    }
+    else if (command.get(0).asString() == "hw_audio_gain")
+    {
+        double val = command.get(1).asFloat64();
+        if (val >= 0)
+        {
+            m_irender->setHWGain(val);
+            reply.addVocab32(VOCAB_OK);
+        }
+        else
+        {
+            yCError(AUDIOPLAYERWRAPPER) << "Invalid audio gain";
+            reply.addVocab32(VOCAB_ERR);
+        }
     }
     else if (command.get(0).asString() == "clear")
     {
         m_irender->resetPlaybackAudioBuffer();
-        reply.addVocab(VOCAB_OK);
+        reply.addVocab32(VOCAB_OK);
     }
     else if (command.get(0).asString() == "help")
     {
-        reply.addVocab(yarp::os::Vocab::encode("many"));
+        reply.addVocab32("many");
         reply.addString("start");
         reply.addString("stop");
         reply.addString("clear");
+        reply.addString("sw_audio_gain <gain>");
+        reply.addString("hw_audio_gain <gain>");
     }
     else
     {
         yCError(AUDIOPLAYERWRAPPER) << "Invalid command";
-        reply.addVocab(VOCAB_ERR);
+        reply.addVocab32(VOCAB_ERR);
     }
 
     yarp::os::ConnectionWriter *returnToSender = connection.getWriter();
@@ -220,12 +235,6 @@ bool AudioPlayerWrapper::open(yarp::os::Searchable &config)
         m_isDeviceOwned = true;
     }
 
-    if (config.check("start"))
-    {
-        m_isPlaying = true;
-        m_irender->startPlayback();
-    }
-
     if (m_irender == nullptr)
     {
         yCError(AUDIOPLAYERWRAPPER, "m_irender is null\n");
@@ -237,6 +246,12 @@ bool AudioPlayerWrapper::open(yarp::os::Searchable &config)
     {
         yCError(AUDIOPLAYERWRAPPER, "getPlaybackAudioBufferMaxSize failed\n");
         return false;
+    }
+
+    if (config.check("start"))
+    {
+        m_irender->startPlayback();
+        m_irender->isPlaying(m_isPlaying);
     }
 
     return true;
@@ -280,6 +295,11 @@ void AudioPlayerWrapper::run()
     Sound* s = m_audioInPort.read(false);
     if (s != nullptr)
     {
+        if (m_debug_enabled)
+        {
+            yCDebug(AUDIOPLAYERWRAPPER) << "Received sound of:" << s->getSamples() << " samples";
+        }
+
         scheduled_sound_type ss;
 #if 1
         //This is simple, but we don't know how big the sound is...
@@ -310,6 +330,15 @@ void AudioPlayerWrapper::run()
             printer_wdt = yarp::os::Time::now();
         }
     }
+
+    m_irender->isPlaying(m_isPlaying);
+
+    //status port
+    yarp::dev::audioPlayerStatus status;
+    status.enabled = m_isPlaying;
+    status.current_buffer_size = m_current_buffer_size.getSamples();
+    status.max_buffer_size = m_max_buffer_size.getSamples();
+    m_statusPort.write(status);
 }
 
 bool AudioPlayerWrapper::close()

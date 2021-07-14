@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 /**
@@ -21,24 +18,20 @@
 
 inline bool isBayer8(int v)
 {
-    if ((v == VOCAB_PIXEL_ENCODING_BAYER_GRBG8) ||
-        (v == VOCAB_PIXEL_ENCODING_BAYER_BGGR8) ||
-        (v == VOCAB_PIXEL_ENCODING_BAYER_GBRG8) ||
-        (v == VOCAB_PIXEL_ENCODING_BAYER_RGGB8))
+    if ((v == VOCAB_PIXEL_ENCODING_BAYER_GRBG8) || (v == VOCAB_PIXEL_ENCODING_BAYER_BGGR8) || (v == VOCAB_PIXEL_ENCODING_BAYER_GBRG8) || (v == VOCAB_PIXEL_ENCODING_BAYER_RGGB8)) {
         return true;
-    else
+    } else {
         return false;
+    }
 }
 
 inline bool isBayer16(int v)
 {
-    if ((v == VOCAB_PIXEL_ENCODING_BAYER_GRBG16) ||
-        (v == VOCAB_PIXEL_ENCODING_BAYER_BGGR16) ||
-        (v == VOCAB_PIXEL_ENCODING_BAYER_GBRG16) ||
-        (v == VOCAB_PIXEL_ENCODING_BAYER_RGGB16))
+    if ((v == VOCAB_PIXEL_ENCODING_BAYER_GRBG16) || (v == VOCAB_PIXEL_ENCODING_BAYER_BGGR16) || (v == VOCAB_PIXEL_ENCODING_BAYER_GBRG16) || (v == VOCAB_PIXEL_ENCODING_BAYER_RGGB16)) {
         return true;
-    else
+    } else {
         return false;
+    }
 }
 
 /*

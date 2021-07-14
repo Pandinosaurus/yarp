@@ -1,38 +1,48 @@
-# Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
-# Copyright (C) 2006-2010 RobotCub Consortium
-# All rights reserved.
-#
-# This software may be modified and distributed under the terms of the
-# BSD-3-Clause license. See the accompanying LICENSE file for details.
+# SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+# SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+# SPDX-License-Identifier: BSD-3-Clause
 
 # this is set in the parent directory, but for some reason it does not get inherited
 set_source_files_properties(${SWIG_BINDINGS_SOURCE_FILE} PROPERTIES CPLUSPLUS ON)
 
 set(CMAKE_SWIG_FLAGS "-module;yarp;-threads;${SWIG_COMMON_FLAGS}")
 
-find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
-
-## in Windows it seems necessary to declare explictly the link_directory
-if(WIN32)
-  get_filename_component(Python3_DIR ${Python3_LIBRARY} DIRECTORY)
-  link_directories(${Python3_DIR})
+# https://github.com/pybind/pybind11/pull/2689
+if(${CMAKE_VERSION} VERSION_LESS "3.18.0")
+  set(YARP_Python_Development_Component "Development")
+else()
+  set(YARP_Python_Development_Component "Development.Module")
 endif()
+
+find_package(Python3 COMPONENTS Interpreter ${YARP_Python_Development_Component} REQUIRED)
 
 set(CMAKE_SWIG_OUTDIR "${CMAKE_BINARY_DIR}/lib/python3")
 set(SWIG_OUTFILE_DIR "${CMAKE_CURRENT_BINARY_DIR}")
 
-swig_add_library(yarp_python
-                 LANGUAGE python
-                 SOURCES ${SWIG_BINDINGS_SOURCE_FILE})
-swig_link_libraries(yarp_python Python3::Python ${SWIG_YARP_LIBRARIES})
+if(${CMAKE_VERSION} VERSION_LESS "3.15.0")
+  set(YARP_Python_Module_Target "Python3::Python")
+else()
+  set(YARP_Python_Module_Target "Python3::Module")
+endif()
 
-set_target_properties(${SWIG_MODULE_yarp_python_REAL_NAME} PROPERTIES OUTPUT_NAME "_yarp"
-                                                                      LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib/python3")
+swig_add_library(yarp_python
+  LANGUAGE python
+  SOURCES ${SWIG_BINDINGS_SOURCE_FILE}
+)
+swig_link_libraries(yarp_python ${YARP_Python_Module_Target} ${SWIG_YARP_LIBRARIES})
+
+set_target_properties(${SWIG_MODULE_yarp_python_REAL_NAME}
+  PROPERTIES
+    OUTPUT_NAME "_yarp"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib/python3"
+)
 
 # installation path is determined reliably on most platforms using distutils
-execute_process(COMMAND ${Python3_EXECUTABLE} -c "from distutils import sysconfig; print(sysconfig.get_python_lib(plat_specific=True,standard_lib=False,prefix=''))"
-                OUTPUT_VARIABLE Python3_INSTDIR
-                OUTPUT_STRIP_TRAILING_WHITESPACE )
+execute_process(
+  COMMAND ${Python3_EXECUTABLE} -c "from distutils import sysconfig; print(sysconfig.get_python_lib(plat_specific=True,standard_lib=False,prefix=''))"
+  OUTPUT_VARIABLE Python3_INSTDIR
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
 
 set(_CMAKE_INSTALL_PYTHON3DIR "${Python3_INSTDIR}")
 set(CMAKE_INSTALL_PYTHON3DIR ${_CMAKE_INSTALL_PYTHON3DIR} CACHE PATH "python3 bindings (${_CMAKE_INSTALL_PYTHON3DIR})")
@@ -44,7 +54,7 @@ else()
 endif()
 
 install(FILES ${CMAKE_BINARY_DIR}/lib/python3/yarp.py
-        DESTINATION ${Python3_INSTDIR})
+        DESTINATION ${CMAKE_INSTALL_PYTHON3DIR})
 
 
 # Update RPATH
@@ -59,8 +69,10 @@ if(NOT CMAKE_SKIP_RPATH AND NOT CMAKE_SKIP_INSTALL_RPATH)
   set_target_properties(${SWIG_MODULE_yarp_python_REAL_NAME} PROPERTIES INSTALL_RPATH "${_current_rpath}")
 endif()
 
-install(TARGETS ${SWIG_MODULE_yarp_python_REAL_NAME}
-        DESTINATION ${Python3_INSTDIR})
+install(
+  TARGETS ${SWIG_MODULE_yarp_python_REAL_NAME}
+  DESTINATION ${CMAKE_INSTALL_PYTHON3DIR}
+)
 
 if(YARP_COMPILE_TESTS)
   add_subdirectory(tests)

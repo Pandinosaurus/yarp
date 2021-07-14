@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_ROBOTINTERFACE_ROBOT_H
@@ -42,7 +39,9 @@ public:
     const unsigned int& build() const;
     const std::string& portprefix() const;
     const ParamList& params() const;
+
     const DeviceList& devices() const;
+    bool hasDevice(const std::string& name) const;
     const Device& device(const std::string& name) const;
 
     bool hasParam(const std::string& name) const;
@@ -63,7 +62,6 @@ private:
 } // namespace robotinterface
 } // namespace yarp
 
-YARP_robotinterface_API std::ostringstream& operator<<(std::ostringstream& oss, const yarp::robotinterface::experimental::Robot& t);
 YARP_robotinterface_API yarp::os::LogStream operator<<(yarp::os::LogStream dbg, const yarp::robotinterface::experimental::Robot& t);
 
 

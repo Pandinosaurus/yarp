@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_IROBOTDESCRIPTION_H
@@ -65,12 +62,12 @@ public:
 } // namespace dev
 } // namespace yarp
 
-constexpr yarp::conf::vocab32_t VOCAB_IROBOT_DESCRIPTION            = yarp::os::createVocab('i','r','o','b');
-constexpr yarp::conf::vocab32_t VOCAB_IROBOT_GET                    = yarp::os::createVocab('g','e','t');
-constexpr yarp::conf::vocab32_t VOCAB_IROBOT_SET                    = yarp::os::createVocab('s','e','t');
-constexpr yarp::conf::vocab32_t VOCAB_IROBOT_DELETE                 = yarp::os::createVocab('d','e','l');
-constexpr yarp::conf::vocab32_t VOCAB_IROBOT_ALL                    = yarp::os::createVocab('a','l','l');
-constexpr yarp::conf::vocab32_t VOCAB_IROBOT_DEVICE                 = yarp::os::createVocab('d','e','v');
-constexpr yarp::conf::vocab32_t VOCAB_IROBOT_BY_TYPE                = yarp::os::createVocab('t','y','p','e');
+constexpr yarp::conf::vocab32_t VOCAB_IROBOT_DESCRIPTION            = yarp::os::createVocab32('i','r','o','b');
+constexpr yarp::conf::vocab32_t VOCAB_IROBOT_GET                    = yarp::os::createVocab32('g','e','t');
+constexpr yarp::conf::vocab32_t VOCAB_IROBOT_SET                    = yarp::os::createVocab32('s','e','t');
+constexpr yarp::conf::vocab32_t VOCAB_IROBOT_DELETE                 = yarp::os::createVocab32('d','e','l');
+constexpr yarp::conf::vocab32_t VOCAB_IROBOT_ALL                    = yarp::os::createVocab32('a','l','l');
+constexpr yarp::conf::vocab32_t VOCAB_IROBOT_DEVICE                 = yarp::os::createVocab32('d','e','v');
+constexpr yarp::conf::vocab32_t VOCAB_IROBOT_BY_TYPE                = yarp::os::createVocab32('t','y','p','e');
 
 #endif // YARP_DEV_IROBOTDESCRIPTION_H

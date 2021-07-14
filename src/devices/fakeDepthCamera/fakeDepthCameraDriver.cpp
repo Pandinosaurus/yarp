@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include "fakeDepthCameraDriver.h"
@@ -254,7 +251,9 @@ bool fakeDepthCameraDriver::getRgbImage(FlexImage& rgbImage, Stamp* timeStamp)
     rgbImage.setPixelCode(VOCAB_PIXEL_RGB);
     rgbImage.resize(imageof);
     memcpy((void*)rgbImage.getRawImage(), (void*)imageof.getRawImage(), imageof.getRawImageSize());
-    if(timeStamp) timeStamp->update(yarp::os::Time::now());
+    if (timeStamp) {
+        timeStamp->update(yarp::os::Time::now());
+    }
     return true;
 }
 
@@ -270,8 +269,9 @@ bool fakeDepthCameraDriver::getDepthImage(ImageOf<PixelFloat>& depthImage, Stamp
             *(PixelFloat*)depthImage.getPixelAddress(i, j) = (float(pix.b) / 255.0)/3.0 + (float(pix.g) / 255.0) / 3.0 + (float(pix.r) / 255.0) / 3.0;
         }
     }
-    if(timeStamp)
+    if (timeStamp) {
         timeStamp->update(yarp::os::Time::now());
+    }
     return true;
 }
 

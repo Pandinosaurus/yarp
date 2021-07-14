@@ -1,8 +1,5 @@
-# Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
-# All rights reserved.
-#
-# This software may be modified and distributed under the terms of the
-# BSD-3-Clause license. See the accompanying LICENSE file for details.
+# SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+# SPDX-License-Identifier: BSD-3-Clause
 
 if(NOT YARP_ENABLE_INTEGRATION_TESTS)
   return()
@@ -26,9 +23,11 @@ endif()
 
 # Generate a matrix of SWIG tests
 foreach(lang PYTHON JAVA LUA RUBY CSHARP TCL PERL)
-  foreach(swig 1.3.40
-               2.0.12
-               3.0.8)
+  foreach(swig
+    1.3.40
+    2.0.12
+    3.0.8
+  )
     set(test_name "integration::swig::${lang}::${swig}")
     if("${test_name}" MATCHES "^integration::swig::PYTHON::1.3.37" OR
        "${test_name}" MATCHES "^integration::swig::(RUBY|LUA)::1.3.(37|38|39|40)$" OR

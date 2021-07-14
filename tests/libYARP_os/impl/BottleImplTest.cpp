@@ -1,11 +1,8 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * Copyright (C) 2006, 2008 Arjan Gijsberts
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-FileCopyrightText: 2006, 2008 Arjan Gijsberts
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/impl/BottleImpl.h>
@@ -40,7 +37,7 @@ TEST_CASE("os::BottleImplTest", "[yarp::os::impl]")
         ManagedBytes store2(bot3.byteCount());
         bot3.toBytes(store2.bytes());
         bot.fromBytes(store2.bytes());
-        CHECK(bot.get(0).isVocab()); // "type check"
+        CHECK(bot.get(0).isVocab32()); // "type check"
         CHECK(bot.get(1).isList()); //"type check"
 
         Bottle bot4("0 1 2.2 3");

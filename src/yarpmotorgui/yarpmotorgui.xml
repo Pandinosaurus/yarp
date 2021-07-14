@@ -1,6 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!--
+  SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+  SPDX-License-Identifier: BSD-3-Clause
+-->
+
 <module>
     <name>yarpmotorgui</name>
-    <description> Yarp motor GUI</description>
+    <description> YARP motor GUI</description>
     <version>1.0</version>
 
     <authors>

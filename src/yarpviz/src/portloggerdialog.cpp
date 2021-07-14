@@ -1,18 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
 #include <fstream>
@@ -94,8 +82,9 @@ void PortLoggerDialog::openCons()
     QString filename = QFileDialog::getOpenFileName(nullptr, "Load connections list",
                                                     QDir::homePath(),
                                                     filters, &defaultFilter);
-    if(filename.size() == 0)
+    if (filename.size() == 0) {
         return;
+    }
 
     fstream file;
     file.open(filename.toStdString().c_str());
@@ -121,9 +110,9 @@ void PortLoggerDialog::openCons()
             prop.append(sample.get(2).asString().c_str());
             item = new QTreeWidgetItem( ui->treeWidgetCons, prop);
             YARP_UNUSED(item);
+        } else {
+            yWarning() << "Wrong connection data at line" << count;
         }
-        else
-            yWarning()<<"Wrong connection data at line"<<count;
     }
     file.close();
 }
@@ -231,8 +220,9 @@ void PortLoggerDialog::startStopLoggers() {
                     QString filename = portname.c_str();
                     filename.replace("/", "_");
                     filename = ui->lineEditLogPath->text() + "/port." +filename + ".log";
-                    if(!saveLog(filename.toStdString(), samples))
-                        yError()<<"could not save the result into "<<filename.toStdString();
+                    if (!saveLog(filename.toStdString(), samples)) {
+                        yError() << "could not save the result into " << filename.toStdString();
+                    }
                 }
             }
             else {
@@ -285,7 +275,8 @@ void PortLoggerDialog::setLogPath() {
     //QString defaultFilter("Log file (*.log)");
     QString filename = QFileDialog::getExistingDirectory(nullptr, "Set the log files path",
                                                     QDir::homePath(),QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
-    if(filename.size() == 0)
+    if (filename.size() == 0) {
         return;
+    }
     ui->lineEditLogPath->setText(filename);
 }

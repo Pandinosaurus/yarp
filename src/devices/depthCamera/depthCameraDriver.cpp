@@ -1,19 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "depthCameraDriver.h"
@@ -163,12 +150,15 @@ depthCameraDriver::depthCameraDriver() : m_depthFrame(nullptr), m_imageFrame(nul
 depthCameraDriver::~depthCameraDriver()
 {
     close();
-    if (m_depthFrame)
+    if (m_depthFrame) {
         delete m_depthFrame;
-    if (m_imageFrame)
+    }
+    if (m_imageFrame) {
         delete m_imageFrame;
-    if (m_paramParser)
+    }
+    if (m_paramParser) {
         delete m_paramParser;
+    }
 }
 
 bool depthCameraDriver::initializeOpeNIDevice()
@@ -265,24 +255,29 @@ bool depthCameraDriver::setParams()
     //ACCURACY
     if (params_map[accuracy].isSetting && ret)
     {
-        if (!params_map[accuracy].val[0].isFloat64() )
+        if (!params_map[accuracy].val[0].isFloat64()) {
             settingErrorMsg("Param " + params_map[accuracy].name + " is not a double as it should be.", ret);
+        }
 
-        if (! setDepthAccuracy(params_map[accuracy].val[0].asFloat64() ) )
+        if (!setDepthAccuracy(params_map[accuracy].val[0].asFloat64())) {
             settingErrorMsg("Setting param " + params_map[accuracy].name + " failed... quitting.", ret);
+        }
     }
 
     //CLIP_PLANES
     if (params_map[clipPlanes].isSetting && ret)
     {
-        if (!params_map[clipPlanes].val[0].isFloat64() )
+        if (!params_map[clipPlanes].val[0].isFloat64()) {
             settingErrorMsg("Param " + params_map[clipPlanes].name + " is not a double as it should be.", ret);
+        }
 
-        if (!params_map[clipPlanes].val[1].isFloat64() )
+        if (!params_map[clipPlanes].val[1].isFloat64()) {
             settingErrorMsg("Param " + params_map[clipPlanes].name + " is not a double as it should be.", ret);
+        }
 
-        if (! setDepthClipPlanes(params_map[clipPlanes].val[0].asFloat64(), params_map[clipPlanes].val[1].asFloat64() ) )
+        if (!setDepthClipPlanes(params_map[clipPlanes].val[0].asFloat64(), params_map[clipPlanes].val[1].asFloat64())) {
             settingErrorMsg("Setting param " + params_map[clipPlanes].name + " failed... quitting.", ret);
+        }
     }
 
     //DEPTH_FOV
@@ -292,11 +287,13 @@ bool depthCameraDriver::setParams()
         p1 = params_map[depth_Fov].val[0];
         p2 = params_map[depth_Fov].val[1];
 
-        if (!p1.isFloat64() || !p2.isFloat64() )
+        if (!p1.isFloat64() || !p2.isFloat64()) {
             settingErrorMsg("Param " + params_map[depth_Fov].name + " is not a double as it should be.", ret);
+        }
 
-        if (! setDepthFOV(p1.asFloat64(), p2.asFloat64() ) )
+        if (!setDepthFOV(p1.asFloat64(), p2.asFloat64())) {
             settingErrorMsg("Setting param " + params_map[depth_Fov].name + " failed... quitting.", ret);
+        }
     }
 
 

@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP2_WIREIMAGE
@@ -74,13 +71,15 @@ public:
         image = &img;
         yarp::os::ConnectionWriter *pbuf =
             yarp::os::ConnectionWriter::createBufferedConnectionWriter();
-        if (!pbuf) ::exit(1);
+        if (!pbuf) {
+            ::exit(1);
+        }
         yarp::os::ConnectionWriter& buf = *pbuf;
         yarp::os::StringOutputStream ss;
         // probably need to translate encoding format better, but at
         // a guess "rgb" and "bgr" will work ok.
         std::string encoding =
-            yarp::os::Vocab::decode(image->getPixelCode()).c_str();
+            yarp::os::Vocab32::decode(image->getPixelCode()).c_str();
         switch (image->getPixelCode()) {
         case VOCAB_PIXEL_BGR:
             encoding = "bgr8";

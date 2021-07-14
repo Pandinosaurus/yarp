@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_OS_YARPPLUGINSETTINGS_H
@@ -27,11 +24,7 @@ public:
     /**
      * Constructor.
      */
-    YarpPluginSettings() :
-            wrapper_name("unknown")
-    {
-        selector = nullptr;
-    }
+    YarpPluginSettings() = default;
 
     /**
      * Set the name of the library to load and the method name to use
@@ -121,13 +114,16 @@ public:
         std::string iname = options.find("library").toString();
         std::string pname = options.find("part").toString();
 
-        if (iname == "")
+        if (iname == "") {
             iname = name;
-        if (pname == "")
+        }
+        if (pname == "") {
             pname = name;
+        }
 
-        if (this->name == "")
+        if (this->name == "") {
             this->name = iname;
+        }
         this->dll_name = iname;
         this->fn_name = pname;
         this->wrapper_name = options.find("wrapper").toString();
@@ -216,10 +212,10 @@ private:
     YARP_SUPPRESS_DLL_INTERFACE_WARNING_ARG(std::string) name;
     YARP_SUPPRESS_DLL_INTERFACE_WARNING_ARG(std::string) dll_name;
     YARP_SUPPRESS_DLL_INTERFACE_WARNING_ARG(std::string) fn_name;
-    YARP_SUPPRESS_DLL_INTERFACE_WARNING_ARG(std::string) wrapper_name;
+    YARP_SUPPRESS_DLL_INTERFACE_WARNING_ARG(std::string) wrapper_name {"unknown"};
     YARP_SUPPRESS_DLL_INTERFACE_WARNING_ARG(std::string) class_name;
     YARP_SUPPRESS_DLL_INTERFACE_WARNING_ARG(std::string) baseclass_name;
-    YarpPluginSelector* selector;
+    YarpPluginSelector* selector {nullptr};
 
     bool subopen(SharedLibraryFactory& factory,
                  const std::string& dll_name,

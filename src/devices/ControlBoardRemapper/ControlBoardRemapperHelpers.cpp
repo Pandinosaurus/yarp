@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include "ControlBoardRemapperHelpers.h"
@@ -172,13 +169,13 @@ bool RemappedSubControlBoard::attach(yarp::dev::PolyDriver *d, const std::string
     // checking minimum set of intefaces required
     if( !(pos) )
     {
-        yCError(CONTROLBOARDREMAPPER, "IPositionControl2 interface was not found in subdevice. Quitting");
+        yCError(CONTROLBOARDREMAPPER, "IPositionControl interface was not found in subdevice. Quitting");
         return false;
     }
 
     if( ! (vel) )
     {
-        yCError(CONTROLBOARDREMAPPER, "IVelocityControl2 interface was not found in subdevice. Quitting");
+        yCError(CONTROLBOARDREMAPPER, "IVelocityControl interface was not found in subdevice. Quitting");
         return false;
     }
 
@@ -190,7 +187,7 @@ bool RemappedSubControlBoard::attach(yarp::dev::PolyDriver *d, const std::string
 
     if(!iMode)
     {
-        yCError(CONTROLBOARDREMAPPER, "IControlMode2 interface was not found in subdevice, exiting.");
+        yCError(CONTROLBOARDREMAPPER, "IControlMode interface was not found in subdevice, exiting.");
         return false;
     }
 

@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef FfmpegGrabber_INC
@@ -23,6 +20,7 @@ extern "C" {
  */
 
 #include <yarp/dev/AudioVisualInterfaces.h>
+#include <yarp/dev/IFrameGrabberImage.h>
 #include <yarp/dev/DeviceDriver.h>
 
 #include "ffmpeg_api.h"
@@ -98,6 +96,10 @@ public:
         return true;
     }
 
+    bool isRecording(bool& recording_enabled) override {
+        return false;
+    }
+
     bool getRecordingAudioBufferMaxSize(yarp::dev::AudioBufferSize&) override {
         return false;
     }
@@ -107,6 +109,14 @@ public:
     }
 
     bool resetRecordingAudioBuffer() override {
+        return false;
+    }
+
+    bool setHWGain(double gain) override {
+        return false;
+    }
+
+    bool setSWGain(double gain) override {
         return false;
     }
 

@@ -1,9 +1,6 @@
-# Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
-# Copyright (C) 2006-2010 RobotCub Consortium
-# All rights reserved.
-#
-# This software may be modified and distributed under the terms of the
-# BSD-3-Clause license. See the accompanying LICENSE file for details.
+# SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+# SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+# SPDX-License-Identifier: BSD-3-Clause
 
 
 if(NOT YARP_COMPILE_TESTS)
@@ -98,23 +95,57 @@ endfunction()
 
 add_library(YARP_harness STATIC)
 
-target_sources(YARP_harness PRIVATE harness.cpp
-                                    harness.h)
+target_sources(YARP_harness
+  PRIVATE
+    harness.cpp
+    harness.h
+)
 
-target_link_libraries(YARP_harness PRIVATE YARP::YARP_os
-                                           YARP::YARP_init
-                                           YARP::YARP_serversql)
+target_link_libraries(YARP_harness
+  PRIVATE
+    YARP::YARP_conf
+    YARP::YARP_os
+    YARP::YARP_init
+    YARP::YARP_serversql
+)
 
-target_include_directories(YARP_harness PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
-                                               ${CMAKE_SOURCE_DIR}/extern/catch2)
+target_include_directories(YARP_harness
+  PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/extern/catch2
+)
 
 set_property(TARGET YARP_harness PROPERTY FOLDER "Test")
+
+#########################################################################
+# Main harness target without network
+
+add_library(YARP_harness_no_network STATIC)
+
+target_compile_definitions(YARP_harness_no_network PUBLIC WITHOUT_NETWORK)
+
+target_sources(YARP_harness_no_network
+  PRIVATE
+    harness.cpp
+    harness.h
+)
+
+target_link_libraries(YARP_harness_no_network PRIVATE YARP::YARP_conf)
+
+target_include_directories(YARP_harness_no_network
+  PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/extern/catch2
+)
+
+set_property(TARGET YARP_harness_no_network PROPERTY FOLDER "Test")
 
 #########################################################################
 # Add subdirectories containing the actual tests
 
 add_subdirectory(misc)
 
+add_subdirectory(libYARP_conf)
 add_subdirectory(libYARP_os)
 add_subdirectory(libYARP_os/impl)
 add_subdirectory(libYARP_sig)

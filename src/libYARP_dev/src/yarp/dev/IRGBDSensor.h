@@ -1,34 +1,18 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_IRGBDSENSOR_H
 #define YARP_DEV_IRGBDSENSOR_H
 
-#include <yarp/os/Vocab.h>
 #include <yarp/os/Stamp.h>
 #include <yarp/os/Property.h>
 #include <yarp/sig/Image.h>
 #include <yarp/sig/Matrix.h>
 #include <yarp/dev/api.h>
-#include <yarp/dev/IVisualParams.h>
-
-
-// Interface name
-constexpr yarp::conf::vocab32_t VOCAB_RGBD_SENSOR            = yarp::os::createVocab('r','g','d','b');
-constexpr yarp::conf::vocab32_t VOCAB_RGBD_PROTOCOL_VERSION  = yarp::os::createVocab('p','r','o','t');
-
-// Methods
-constexpr yarp::conf::vocab32_t VOCAB_EXTRINSIC_PARAM   = yarp::os::createVocab('e','x','t');
-constexpr yarp::conf::vocab32_t VOCAB_ERROR_MSG         = yarp::os::createVocab('m','e','s','s');
-constexpr yarp::conf::vocab32_t VOCAB_RGB_IMAGE         = yarp::os::createVocab('i','m','g','r');
-constexpr yarp::conf::vocab32_t VOCAB_DEPTH_IMAGE       = yarp::os::createVocab('i','m','g','d');
-constexpr yarp::conf::vocab32_t VOCAB_IMAGES            = yarp::os::createVocab('i','m','m','s');
-constexpr yarp::conf::vocab32_t VOCAB_STATUS            = yarp::os::createVocab('s','t','a','t');
+#include <yarp/dev/IRgbVisualParams.h>
+#include <yarp/dev/IDepthVisualParams.h>
 
 
 namespace yarp {
@@ -115,7 +99,7 @@ public:
      * Error message will be reset after any successful command
      * @return A string explaining the last error occurred.
      */
-    virtual std::string getLastErrorMsg(yarp::os::Stamp *timeStamp = NULL) = 0;
+    virtual std::string getLastErrorMsg(yarp::os::Stamp *timeStamp = nullptr) = 0;
 
     /**
      * Get the rgb frame from the device.
@@ -129,7 +113,7 @@ public:
      * @param timeStamp time in which the image was acquired. Optional, ignored if nullptr.
      * @return True on success
      */
-    virtual bool getRgbImage(yarp::sig::FlexImage &rgbImage, yarp::os::Stamp *timeStamp = NULL) = 0;
+    virtual bool getRgbImage(yarp::sig::FlexImage &rgbImage, yarp::os::Stamp *timeStamp = nullptr) = 0;
 
     /**
      * Get the depth frame from the device.
@@ -138,7 +122,7 @@ public:
      * @param timeStamp time in which the image was acquired. Optional, ignored if nullptr.
      * @return True on success
      */
-    virtual bool getDepthImage(yarp::sig::ImageOf<yarp::sig::PixelFloat> &depthImage, yarp::os::Stamp *timeStamp = NULL) = 0;
+    virtual bool getDepthImage(yarp::sig::ImageOf<yarp::sig::PixelFloat> &depthImage, yarp::os::Stamp *timeStamp = nullptr) = 0;
 
     /**
     * Get the both the color and depth frame in a single call. Implementation should assure the best possible synchronization
@@ -151,7 +135,7 @@ public:
     * @param depthStamp pointer to memory to hold the Stamp of the depth frame
     * @return true if able to get both data.
     */
-    virtual bool getImages(yarp::sig::FlexImage &colorFrame, yarp::sig::ImageOf<yarp::sig::PixelFloat> &depthFrame, yarp::os::Stamp *colorStamp=NULL, yarp::os::Stamp *depthStamp=NULL) = 0;
+    virtual bool getImages(yarp::sig::FlexImage &colorFrame, yarp::sig::ImageOf<yarp::sig::PixelFloat> &depthFrame, yarp::os::Stamp *colorStamp=nullptr, yarp::os::Stamp *depthStamp=nullptr) = 0;
 
     /**
      * Get the surrent status of the sensor, using enum type

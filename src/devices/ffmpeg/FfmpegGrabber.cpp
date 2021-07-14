@@ -1,12 +1,9 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * Copyright (C) 2006 Jonas Ruesch
- * Copyright (C) 2006 Arjan Gijsberts
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-FileCopyrightText: 2006 Jonas Ruesch
+ * SPDX-FileCopyrightText: 2006 Arjan Gijsberts
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include "FfmpegGrabber.h"
@@ -320,7 +317,9 @@ public:
 
 const char *xstrdup(const char *str)
 {
-    if (str[0]=='-') return nullptr;
+    if (str[0] == '-') {
+        return nullptr;
+    }
     return strdup(str);
 }
 
@@ -571,7 +570,9 @@ bool FfmpegGrabber::open(yarp::os::Searchable & config)
     if (_hasAudio) {
         ok = ok && audioDecoder.getCodec(pAudioFormatCtx);
     }
-    if (!ok) return false;
+    if (!ok) {
+        return false;
+    }
 
     if (_hasVideo) {
         ok = ok && videoDecoder.allocateImage();
@@ -579,7 +580,9 @@ bool FfmpegGrabber::open(yarp::os::Searchable & config)
     if (_hasAudio) {
         ok = ok && audioDecoder.allocateSound();
     }
-    if (!ok) return false;
+    if (!ok) {
+        return false;
+    }
 
     if (_hasVideo) {
         m_w = videoDecoder.getWidth();

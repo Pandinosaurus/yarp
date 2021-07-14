@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #define _USE_MATH_DEFINES
@@ -518,16 +515,16 @@ bool FakeLaser::read(yarp::os::ConnectionReader& connection)
         if (command.size() == 1)
         {
             trap_the_robot();
-            reply.addVocab(VOCAB_OK);
+            reply.addVocab32(VOCAB_OK);
         }
         else if (command.size() == 2)
         {
             trap_the_robot(command.get(1).asFloat64());
-            reply.addVocab(VOCAB_OK);
+            reply.addVocab32(VOCAB_OK);
         }
         else
         {
-            reply.addVocab(VOCAB_ERR);
+            reply.addVocab32(VOCAB_ERR);
         }
     }
     else if (command.get(0).asString() == "wall")
@@ -536,33 +533,33 @@ bool FakeLaser::read(yarp::os::ConnectionReader& connection)
         {
             wall_the_robot(1.0, 1.0);
             wall_the_robot(1.0, 1.05);
-            reply.addVocab(VOCAB_OK);
+            reply.addVocab32(VOCAB_OK);
         }
         else if (command.size() == 2)
         {
             wall_the_robot(command.get(1).asFloat64(), 1.0);
             wall_the_robot(command.get(1).asFloat64(), 1.05);
-            reply.addVocab(VOCAB_OK);
+            reply.addVocab32(VOCAB_OK);
         }
         else if (command.size() == 3)
         {
             wall_the_robot(command.get(1).asFloat64(), command.get(2).asFloat64());
             wall_the_robot(command.get(1).asFloat64(), command.get(2).asFloat64()+0.05);
-            reply.addVocab(VOCAB_OK);
+            reply.addVocab32(VOCAB_OK);
         }
         else
         {
-            reply.addVocab(VOCAB_ERR);
+            reply.addVocab32(VOCAB_ERR);
         }
     }
     else if (command.get(0).asString() == "free")
     {
         free_the_robot();
-        reply.addVocab(VOCAB_OK);
+        reply.addVocab32(VOCAB_OK);
     }
     else if (command.get(0).asString() == "help")
     {
-        reply.addVocab(yarp::os::Vocab::encode("many"));
+        reply.addVocab32("many");
         reply.addString("wall <size> <distance>: creates a wall in front of the robot");
         reply.addString("trap <size>: traps the robot in a box obstacle");
         reply.addString("free: removes all generated obstacles");
@@ -570,7 +567,7 @@ bool FakeLaser::read(yarp::os::ConnectionReader& connection)
     else
     {
         yCError(FAKE_LASER) << "Invalid command";
-        reply.addVocab(VOCAB_ERR);
+        reply.addVocab32(VOCAB_ERR);
     }
 
     yarp::os::ConnectionWriter* returnToSender = connection.getWriter();

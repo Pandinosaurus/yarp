@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_MANAGER_PRIMRESOURCE
@@ -81,9 +78,21 @@ public:
     Node* clone() override;
     bool satisfy(GenericResource* resource) override;
 
-    void setIP4(const char* ip) { if(ip) strIP4 = ip; }
-    void setIP6(const char* ip) { if(ip) strIP6 = ip; }
-    void setMAC(const char* mac) { if(mac) strMAC = mac; }
+    void setIP4(const char* ip) {
+        if (ip) {
+            strIP4 = ip;
+        }
+    }
+    void setIP6(const char* ip) {
+        if (ip) {
+            strIP6 = ip;
+        }
+    }
+    void setMAC(const char* mac) {
+        if (mac) {
+            strMAC = mac;
+        }
+    }
     const char* getIP4() { return strIP4.c_str(); }
     const char* getIP6() { return strIP6.c_str(); }
     const char* getMAC() { return strMAC.c_str(); }
@@ -116,8 +125,16 @@ public:
     Node* clone() override;
     bool satisfy(GenericResource* resource) override;
 
-    void setArchitecture(const char* arch) {if(arch) strArchitecure = arch; }
-    void setModel(const char* model) {if(model) strModel = model; }
+    void setArchitecture(const char* arch) {
+        if (arch) {
+            strArchitecure = arch;
+        }
+    }
+    void setModel(const char* model) {
+        if (model) {
+            strModel = model;
+        }
+    }
     void setCores(size_t n) { cores = n; }
     void setSiblings(size_t n) { siblings = n; }
     void setFrequency(double f) { frequency = f; }

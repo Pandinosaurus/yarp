@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include "TcpRosLogComponent.h"
@@ -68,7 +65,9 @@ public:
     bool read(yarp::os::ConnectionReader& reader) override {
         yarp::os::Bottle cmd, reply;
         bool ok = cmd.read(reader);
-        if (!ok) return false;
+        if (!ok) {
+            return false;
+        }
         yCDebug(TCPROSCARRIER, "slave got request %s", cmd.toString().c_str());
         reply.addInt32(1);
         reply.addString("");

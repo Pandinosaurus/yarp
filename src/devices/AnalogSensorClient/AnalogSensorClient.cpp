@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include "AnalogSensorClient.h"
@@ -58,10 +55,12 @@ void InputPortProcessor::onRead(yarp::sig::Vector &v)
     {
         double tmpDT=now-prev;
         deltaT+=tmpDT;
-        if (tmpDT>deltaTMax)
-            deltaTMax=tmpDT;
-        if (tmpDT<deltaTMin)
-            deltaTMin=tmpDT;
+        if (tmpDT > deltaTMax) {
+            deltaTMax = tmpDT;
+        }
+        if (tmpDT < deltaTMin) {
+            deltaTMin = tmpDT;
+        }
 
         //compare network time
         if (tmpDT*1000<ANALOG_TIMEOUT)
@@ -178,9 +177,9 @@ void  AnalogSensorClient::removeLeadingTrailingSlashesOnly(std::string &name)
         {
             done = false;       // we could have both leading and trailing, so let's check again
             name.erase(found,1);
+        } else {
+            done = true; // there is some '/', but their are in the middle and they are allowed
         }
-        else
-            done = true;        // there is some '/', but their are in the middle and they are allowed
     }
 
     yCDebug(ANALOGSENSORCLIENT) << name;
@@ -188,6 +187,10 @@ void  AnalogSensorClient::removeLeadingTrailingSlashesOnly(std::string &name)
 
 bool AnalogSensorClient::open(yarp::os::Searchable &config)
 {
+    yCWarning(ANALOGSENSORCLIENT) << "The 'inertial' device is deprecated in favour of 'multipleanalogsensorsclient'";
+    yCWarning(ANALOGSENSORCLIENT) << "The old device is no longer supported, and it will be deprecated in YARP 3.6 and removed in YARP 4.";
+    yCWarning(ANALOGSENSORCLIENT) << "Please update your scripts.";
+
     std::string carrier = config.check("carrier", Value("udp"), "default carrier for streaming robot state").asString();
 
     local.clear();
@@ -268,8 +271,8 @@ int AnalogSensorClient::getChannels()
 int AnalogSensorClient::calibrateSensor()
 {
     Bottle cmd, response;
-    cmd.addVocab(VOCAB_IANALOG);
-    cmd.addVocab(VOCAB_CALIBRATE);
+    cmd.addVocab32(VOCAB_IANALOG);
+    cmd.addVocab32(VOCAB_CALIBRATE);
     bool ok = rpcPort.write(cmd, response);
     return checkResponse(ok, response);
 }
@@ -277,11 +280,12 @@ int AnalogSensorClient::calibrateSensor()
 int AnalogSensorClient::calibrateSensor(const yarp::sig::Vector& value)
 {
     Bottle cmd, response;
-    cmd.addVocab(VOCAB_IANALOG);
-    cmd.addVocab(VOCAB_CALIBRATE);
+    cmd.addVocab32(VOCAB_IANALOG);
+    cmd.addVocab32(VOCAB_CALIBRATE);
     Bottle& l = cmd.addList();
-    for (int i = 0; i < this->getChannels(); i++)
-         l.addFloat64(value[i]);
+    for (int i = 0; i < this->getChannels(); i++) {
+        l.addFloat64(value[i]);
+    }
     bool ok = rpcPort.write(cmd, response);
     return checkResponse(ok, response);
 }
@@ -289,8 +293,8 @@ int AnalogSensorClient::calibrateSensor(const yarp::sig::Vector& value)
 int AnalogSensorClient::calibrateChannel(int ch)
 {
     Bottle cmd, response;
-    cmd.addVocab(VOCAB_IANALOG);
-    cmd.addVocab(VOCAB_CALIBRATE_CHANNEL);
+    cmd.addVocab32(VOCAB_IANALOG);
+    cmd.addVocab32(VOCAB_CALIBRATE_CHANNEL);
     cmd.addInt32(ch);
     bool ok = rpcPort.write(cmd, response);
     return checkResponse(ok, response);
@@ -299,8 +303,8 @@ int AnalogSensorClient::calibrateChannel(int ch)
 int AnalogSensorClient::calibrateChannel(int ch, double value)
 {
     Bottle cmd, response;
-    cmd.addVocab(VOCAB_IANALOG);
-    cmd.addVocab(VOCAB_CALIBRATE_CHANNEL);
+    cmd.addVocab32(VOCAB_IANALOG);
+    cmd.addVocab32(VOCAB_CALIBRATE_CHANNEL);
     cmd.addInt32(ch);
     cmd.addFloat64(value);
     bool ok = rpcPort.write(cmd, response);

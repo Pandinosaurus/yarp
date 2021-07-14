@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_CONTROLBOARDWRAPPER_CONTROLBOARDWRAPPER_H
@@ -78,9 +75,9 @@ class SubDevice;
 
 
 /**
- *  @ingroup dev_impl_wrapper
+ *  @ingroup dev_impl_wrapper dev_impl_deprecated
  *
- * \brief `controlboardwrapper2`: An updated version of the controlBoard network wrapper.
+ * \brief `controlboardwrapper2` *deprecated*: An updated version of the controlBoard network wrapper.
  * It can merge together more than one control board device, or use only a
  * portion of it by remapping functionality.
  * Allows also deferred attach/detach of a subdevice.

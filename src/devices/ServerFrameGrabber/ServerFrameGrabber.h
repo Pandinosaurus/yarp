@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_SERVERFRAMEGRABBER_H
@@ -12,8 +9,7 @@
 
 #include <cstdio>
 
-#include <yarp/dev/FrameGrabberInterfaces.h>
-#include <yarp/dev/FrameGrabberControlImpl.h>
+#include <yarp/dev/IFrameGrabberImage.h>
 #include <yarp/dev/AudioGrabberInterfaces.h>
 #include <yarp/dev/AudioVisualInterfaces.h>
 #include <yarp/dev/ServiceInterfaces.h>
@@ -23,12 +19,19 @@
 #include <yarp/os/Network.h>
 #include <yarp/os/Vocab.h>
 #include <yarp/os/Bottle.h>
-#include <yarp/dev/IVisualParamsImpl.h>
 
+// #define YARP_INCLUDING_DEPRECATED_HEADER_YARP_OS_RATETHREAD_H_ON_PURPOSE
 #define YARP_INCLUDING_DEPRECATED_HEADER_ON_PURPOSE
 #include <yarp/os/RateThread.h>
-#include <yarp/dev/DataSource.h>
 #undef YARP_INCLUDING_DEPRECATED_HEADER_ON_PURPOSE
+// #undef YARP_INCLUDING_DEPRECATED_HEADER_YARP_OS_RATETHREAD_H_ON_PURPOSE
+
+#define YARP_INCLUDING_DEPRECATED_HEADER_YARP_DEV_DATASOURCE_H_ON_PURPOSE
+#include <yarp/dev/DataSource.h>
+#undef YARP_INCLUDING_DEPRECATED_HEADER_YARP_DEV_DATASOURCE_H_ON_PURPOSE
+
+#include <yarp/proto/framegrabber/RgbVisualParams_Responder.h>
+#include <yarp/proto/framegrabber/FrameGrabberControls_Responder.h>
 
 YARP_WARNING_PUSH
 YARP_DISABLE_DEPRECATED_WARNING
@@ -88,7 +91,7 @@ class ServerFrameGrabber :
         public yarp::dev::DataSource2<yarp::sig::ImageOf<yarp::sig::PixelRgb>,yarp::sig::Sound>
 {
 private:
-    yarp::dev::Implement_RgbVisualParams_Parser  rgbParser;
+    yarp::proto::framegrabber::RgbVisualParams_Responder rgbParser;
     yarp::dev::IRgbVisualParams* rgbVis_p{nullptr};
     yarp::os::Port p;
     yarp::os::Port *p2{nullptr};
@@ -109,7 +112,7 @@ YARP_WARNING_POP
     bool active{false};
     bool singleThreaded{false};
 
-    yarp::dev::FrameGrabberControls_Parser ifgCtrl_Parser;
+    yarp::proto::framegrabber::FrameGrabberControls_Responder ifgCtrl_Responder;
 
 public:
     ServerFrameGrabber() = default;

@@ -1,19 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #define _USE_MATH_DEFINES
@@ -73,8 +60,9 @@ yarpdev --device Rangefinder2DWrapper --subdevice laserFromExternalPort \
 double constrainAngle(double x)
 {
     x = fmod(x, 360);
-    if (x < 0)
+    if (x < 0) {
         x += 360;
+    }
     return x;
 }
 
@@ -132,8 +120,9 @@ bool LaserFromExternalPort::open(yarp::os::Searchable& config)
         yarp::os::Bottle* portlist = general_config.find("input_ports_name").asList();
         if (portlist)
         {
-            for (size_t i = 0; i < portlist->size(); i++)
+            for (size_t i = 0; i < portlist->size(); i++) {
                 m_port_names.push_back(portlist->get(i).asString());
+            }
         }
         else
         {
@@ -163,15 +152,21 @@ bool LaserFromExternalPort::open(yarp::os::Searchable& config)
     m_empty_laser_data = m_laser_data;
     if (m_base_type == base_enum::BASE_IS_INF)
     {
-        for (size_t i = 0; i < m_empty_laser_data.size(); i++) m_empty_laser_data[i] = std::numeric_limits<double>::infinity();
+        for (size_t i = 0; i < m_empty_laser_data.size(); i++) {
+            m_empty_laser_data[i] = std::numeric_limits<double>::infinity();
+        }
     }
     else if (m_base_type == base_enum::BASE_IS_NAN)
     {
-        for (size_t i = 0; i < m_empty_laser_data.size(); i++) m_empty_laser_data[i] = std::nanf("");
+        for (size_t i = 0; i < m_empty_laser_data.size(); i++) {
+            m_empty_laser_data[i] = std::nanf("");
+        }
     }
     else if (m_base_type == base_enum::BASE_IS_ZERO)
     {
-        for (size_t i = 0; i < m_empty_laser_data.size(); i++) m_empty_laser_data[i] = 0;
+        for (size_t i = 0; i < m_empty_laser_data.size(); i++) {
+            m_empty_laser_data[i] = 0;
+        }
     }
     else
     {
@@ -416,7 +411,9 @@ bool LaserFromExternalPort::acquireDataFromHW()
             m_max_distance = m_last_scan_data[0].range_max;
             m_min_distance = m_last_scan_data[0].range_min;
             m_resolution = received_scans / (m_max_angle - m_min_angle);
-            if (m_laser_data.size() != m_sensorsNum) m_laser_data.resize(m_sensorsNum);
+            if (m_laser_data.size() != m_sensorsNum) {
+                m_laser_data.resize(m_sensorsNum);
+            }
         }
 
         if (m_iTc == nullptr)

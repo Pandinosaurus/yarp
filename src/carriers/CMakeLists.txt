@@ -1,15 +1,15 @@
-# Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
-# Copyright (C) 2006-2010 RobotCub Consortium
-# All rights reserved.
-#
-# This software may be modified and distributed under the terms of the
-# BSD-3-Clause license. See the accompanying LICENSE file for details.
+# SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+# SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+# SPDX-License-Identifier: BSD-3-Clause
 
 include(YarpPlugin)
 include(YarpPrintFeature)
 
-yarp_begin_plugin_library(yarpcar OPTION YARP_COMPILE_CARRIER_PLUGINS
-                                  DEFAULT ON)
+yarp_begin_plugin_library(yarpcar
+  OPTION YARP_COMPILE_CARRIER_PLUGINS
+  DEFAULT ON
+)
+
   add_subdirectory(shmem_carrier)
   add_subdirectory(human_carrier)
   add_subdirectory(mpi_carrier)
@@ -19,33 +19,27 @@ yarp_begin_plugin_library(yarpcar OPTION YARP_COMPILE_CARRIER_PLUGINS
   add_subdirectory(bayer_carrier)
   add_subdirectory(priority_carrier)
   add_subdirectory(portmonitor_carrier)
-  add_subdirectory(depthimage_portmonitor)
-  add_subdirectory(depthimage2_portmonitor)
-  add_subdirectory(segmentationimage_portmonitor)
-  add_subdirectory(zfp_portmonitor)
   add_subdirectory(h264_carrier)
   add_subdirectory(unix)
-  add_subdirectory(libffmpeg_portmonitor)
+  add_subdirectory(websocket)
+
 yarp_end_plugin_library(yarpcar QUIET)
 add_library(YARP::yarpcar ALIAS yarpcar)
 
-install(TARGETS yarpcar
-        EXPORT YARP_yarpcar
-        COMPONENT yarpcar
-        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
-        LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
-        ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+install(
+  TARGETS yarpcar
+  EXPORT YARP_yarpcar
+  COMPONENT yarpcar
+  RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+  LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+  ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+)
 
 include(YarpInstallBasicPackageFiles)
-if(NOT "${YARP_yarpcar_PUBLIC_DEPS}" STREQUAL "")
-  list(REMOVE_DUPLICATES YARP_yarpcar_PUBLIC_DEPS)
-endif()
-if(NOT "${YARP_yarpcar_PRIVATE_DEPS}" STREQUAL "")
-  list(REMOVE_DUPLICATES YARP_yarpcar_PRIVATE_DEPS)
-endif()
 yarp_install_basic_package_files(YARP_yarpcar
-                                 DEPENDENCIES ${YARP_yarpcar_PUBLIC_DEPS}
-                                 PRIVATE_DEPENDENCIES ${YARP_yarpcar_PRIVATE_DEPS})
+  DEPENDENCIES ${YARP_yarpcar_PUBLIC_DEPS}
+  PRIVATE_DEPENDENCIES ${YARP_yarpcar_PRIVATE_DEPS}
+)
 
 set_property(TARGET yarpcar PROPERTY FOLDER "Plugins/Carrier")
 

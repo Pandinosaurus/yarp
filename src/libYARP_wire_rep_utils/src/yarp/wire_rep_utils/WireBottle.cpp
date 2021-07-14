@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <cstdio>
@@ -40,7 +37,7 @@ static char *checkBottle(char *cursor, int& remaining, int ct, int list_tag) {
         //printf("tag is %d\n", tag);
         switch (tag) {
         case BOTTLE_TAG_INT32:
-        case BOTTLE_TAG_VOCAB:
+        case BOTTLE_TAG_VOCAB32:
             if (remaining<4) { return nullptr; }
             cursor += 4;
             remaining -= 4;

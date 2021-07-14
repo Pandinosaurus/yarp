@@ -1,19 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #define _USE_MATH_DEFINES
@@ -213,8 +200,9 @@ bool RpLidar::close()
         HW_reset();
     }
 
-    if(driver.isValid())
+    if (driver.isValid()) {
         driver.close();
+    }
 
     yCInfo(RPLIDAR) << "rpLidar closed";
     return true;
@@ -638,7 +626,9 @@ void RpLidar::run()
         double distance = i_distance / 4.0 / 1000; //m
         double angle = i_angle / 64.0; //deg
         angle = (360 - angle) + 90;
-        if (angle >= 360) angle -= 360;
+        if (angle >= 360) {
+            angle -= 360;
+        }
 
         if (i_distance == 0)
         {
@@ -656,8 +646,9 @@ void RpLidar::run()
 
         if (clip_min_enable)
         {
-            if (distance < min_distance)
+            if (distance < min_distance) {
                 distance = max_distance;
+            }
         }
         if (clip_max_enable)
         {

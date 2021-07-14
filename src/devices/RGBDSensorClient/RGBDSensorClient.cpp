@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include "RGBDSensorClient.h"
@@ -11,7 +8,7 @@
 #include <yarp/os/Portable.h>
 #include <yarp/os/LogComponent.h>
 #include <yarp/os/LogStream.h>
-#include <yarp/dev/GenericVocabs.h>
+#include <yarp/proto/framegrabber/CameraVocabs.h>
 
 using namespace yarp::os;
 using namespace yarp::sig;
@@ -24,9 +21,9 @@ YARP_LOG_COMPONENT(RGBDSENSORCLIENT, "yarp.devices.RGBDSensorClient")
 
 
 RGBDSensorClient::RGBDSensorClient() :
-        FrameGrabberControls_Sender(rpcPort),
-        RgbMsgSender(new Implement_RgbVisualParams_Sender(rpcPort)),
-        DepthMsgSender(new Implement_DepthVisualParams_Sender(rpcPort)),
+        yarp::proto::framegrabber::FrameGrabberControls_Forwarder(rpcPort),
+        RgbMsgSender(new yarp::proto::framegrabber::RgbVisualParams_Forwarder(rpcPort)),
+        DepthMsgSender(new yarp::proto::framegrabber::DepthVisualParams_Forwarder(rpcPort)),
         streamingReader(new RGBDSensor_StreamingMsgParser)
 {
 }
@@ -200,9 +197,9 @@ bool RGBDSensorClient::initialize_YARP(yarp::os::Searchable& /*config*/)
     // Check protocol version
     yarp::os::Bottle cmd;
     yarp::os::Bottle response;
-    cmd.addVocab(VOCAB_RGBD_SENSOR);
-    cmd.addVocab(VOCAB_GET);
-    cmd.addVocab(VOCAB_RGBD_PROTOCOL_VERSION);
+    cmd.addVocab32(VOCAB_RGBD_SENSOR);
+    cmd.addVocab32(VOCAB_GET);
+    cmd.addVocab32(VOCAB_RGBD_PROTOCOL_VERSION);
     rpcPort.write(cmd, response);
     int major = response.get(3).asInt32();
     int minor = response.get(4).asInt32();
@@ -261,13 +258,13 @@ bool RGBDSensorClient::close()
 /*
  * IDepthVisualParams interface. Look at IVisualParams.h for documentation
  *
- * Implemented by Implement_DepthVisualParams_Sender
+ * Implemented by DepthVisualParams_Forwarder
  */
 
 /*
  * IDepthVisualParams interface. Look at IVisualParams.h for documentation
  *
- * Implemented by Implement_DepthVisualParams_Sender
+ * Implemented by DepthVisualParams_Forwarder
  */
 
 
@@ -279,13 +276,13 @@ bool RGBDSensorClient::getExtrinsicParam(yarp::sig::Matrix &extrinsic)
 {
     yarp::os::Bottle cmd;
     yarp::os::Bottle response;
-    cmd.addVocab(VOCAB_RGBD_SENSOR);
-    cmd.addVocab(VOCAB_GET);
-    cmd.addVocab(VOCAB_EXTRINSIC_PARAM);
+    cmd.addVocab32(VOCAB_RGBD_SENSOR);
+    cmd.addVocab32(VOCAB_GET);
+    cmd.addVocab32(VOCAB_EXTRINSIC_PARAM);
     rpcPort.write(cmd, response);
 
     // Minimal check on response, we suppose the response is always correctly formatted
-    if((response.get(0).asVocab()) == VOCAB_FAILED)
+    if((response.get(0).asVocab32()) == VOCAB_FAILED)
     {
         extrinsic.zero();
         return false;
@@ -299,9 +296,9 @@ IRGBDSensor::RGBDSensor_status RGBDSensorClient::getSensorStatus()
 {
     yarp::os::Bottle cmd;
     yarp::os::Bottle response;
-    cmd.addVocab(VOCAB_RGBD_SENSOR);
-    cmd.addVocab(VOCAB_GET);
-    cmd.addVocab(VOCAB_STATUS);
+    cmd.addVocab32(VOCAB_RGBD_SENSOR);
+    cmd.addVocab32(VOCAB_GET);
+    cmd.addVocab32(VOCAB_STATUS);
     rpcPort.write(cmd, response);
     return static_cast<IRGBDSensor::RGBDSensor_status>(response.get(3).asInt32());
 }
@@ -311,9 +308,9 @@ std::string RGBDSensorClient::getLastErrorMsg(yarp::os::Stamp* /*timeStamp*/)
 {
     yarp::os::Bottle cmd;
     yarp::os::Bottle response;
-    cmd.addVocab(VOCAB_RGBD_SENSOR);
-    cmd.addVocab(VOCAB_GET);
-    cmd.addVocab(VOCAB_ERROR_MSG);
+    cmd.addVocab32(VOCAB_RGBD_SENSOR);
+    cmd.addVocab32(VOCAB_GET);
+    cmd.addVocab32(VOCAB_ERROR_MSG);
     rpcPort.write(cmd, response);
     return response.get(3).asString();
 }
@@ -337,7 +334,7 @@ bool RGBDSensorClient::getImages(FlexImage &rgbImage, ImageOf<PixelFloat> &depth
 }
 
 //
-// IFrame Grabber Control 2 interface is implemented by FrameGrabberControls2_Sender
+// IFrame Grabber Control 2 interface is implemented by FrameGrabberControls2_Forwarder
 //
 
 //

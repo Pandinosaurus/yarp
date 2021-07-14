@@ -1,19 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "builderwindow.h"
@@ -115,8 +102,9 @@ bool BuilderWindow::save()
         return true;
     }
     Application* application = manager.getKnowledgeBase()->getApplication();
-    if(!application)
+    if (!application) {
         return true;
+    }
 
     foreach (QGraphicsItem *it, scene->items()) {
         if(it->type() == QGraphicsItem::UserType+SourcePortItemType){
@@ -139,29 +127,33 @@ bool BuilderWindow::save()
 QString BuilderWindow::getFileName()
 {
     Application* application = manager.getKnowledgeBase()->getApplication();
-    if(!application)
+    if (!application) {
         return {};
+    };
     return QString(application->getXmlFile());
 }
 void BuilderWindow::setFileName(QString filename)
 {
     Application* application = manager.getKnowledgeBase()->getApplication();
-    if(application)
+    if (application) {
         application->setXmlFile(filename.toStdString().c_str());
+    }
     return;
 }
 QString BuilderWindow::getAppName()
 {
     Application* application = manager.getKnowledgeBase()->getApplication();
-    if(!application)
+    if (!application) {
         return {};
+    };
     return QString(application->getName());
 }
 void BuilderWindow::setAppName(QString appName)
 {
     Application* application = manager.getKnowledgeBase()->getApplication();
-    if(application)
+    if (application) {
         application->setName(appName.toStdString().c_str());
+    }
     return;
 }
 
@@ -173,16 +165,19 @@ void BuilderWindow::prepareManagerFrom(Manager* lazy,
     KnowledgeBase* lazy_kb = lazy->getKnowledgeBase();
 
     ModulePContainer mods =  lazy_kb->getModules();
-    for(auto& mod : mods)
+    for (auto& mod : mods) {
         manager.getKnowledgeBase()->addModule(mod);
+    }
 
     ResourcePContainer res =  lazy_kb->getResources();
-    for(auto& re : res)
+    for (auto& re : res) {
         manager.getKnowledgeBase()->addResource(re);
+    }
 
     ApplicaitonPContainer apps =  lazy_kb->getApplications();
-    for(auto& app : apps)
+    for (auto& app : apps) {
         manager.getKnowledgeBase()->addApplication(app);
+    }
 
     // loading application
     manager.loadApplication(szAppName);
@@ -848,8 +843,9 @@ void BuilderWindow::onAddedApplication(void *app,QPointF pos)
     iapp.setModelBase(modBase);
 
     Application* mainApplication = manager.getKnowledgeBase()->getApplication();
-    if(!mainApplication)
+    if (!mainApplication) {
         return;
+    }
 
     string strPrefix = "/";
     string  uniqeId = manager.getKnowledgeBase()->getUniqueAppID(mainApplication, iapp.getName());

@@ -4,16 +4,111 @@ on:
   push:
   pull_request_target:
     types: [opened, synchronize, reopened]
+    branches:
+      - 'master'
+      - 'yarp-*'
+      - 'feature/*'
+      - 'CI/*'
   release:
     types: [published]
 
 jobs:
+
+  select_environment:
+    name: 'Prepare Environment'
+    runs-on: ubuntu-20.04
+    outputs:
+      timestamp: ${{ steps.select.outputs.timestamp }}
+      repository_owner: ${{ steps.select.outputs.repository_owner }}
+      repository_name: ${{ steps.select.outputs.repository_name }}
+      repository: ${{ steps.select.outputs.repository }}
+      ref: ${{ steps.select.outputs.ref }}
+      environment: ${{ steps.select.outputs.environment }}
+      sha: ${{ steps.select.outputs.sha }}
+      head_ref: ${{ steps.select.outputs.head_ref }}
+      base_ref: ${{ steps.select.outputs.base_ref }}
+      pr_number: ${{ steps.select.outputs.pr_number }}
+      yarp_version: ${{ steps.select.outputs.yarp_version }}
+    steps:
+    - name: "Set output variables"
+      id: select
+      run: |
+        echo "::set-output name=timestamp::$(/bin/date -u +%Y%m%d-%H%M%S)"
+
+        echo "::set-output name=repository_owner::${{ github.repository_owner }}
+        echo "::set-output name=repository_name::$(cat $GITHUB_EVENT_PATH | jq -r .repository.name)
+        echo "::set-output name=repository::${{ github.repository }}"
+
+        if [[ "$GITHUB_EVENT_NAME" = "pull_request_target" ]]; then
+          echo "::set-output name=environment::code-analysis_unsafe"
+          echo "::set-output name=ref::refs/pull/$(cat $GITHUB_EVENT_PATH | jq -r .number)/merge"
+        else
+          echo "::set-output name=environment::code-analysis"
+          echo "::set-output name=ref::${{ github.ref }}"
+        fi
+        if [[ "$GITHUB_EVENT_NAME" = "pull_request" || "$GITHUB_EVENT_NAME" == "pull_request_target" ]]; then
+          echo "::set-output name=sha::${{ github.event.pull_request.head.sha }}"
+          echo "::set-output name=head_ref::${GITHUB_HEAD_REF}"
+          echo "::set-output name=base_ref::${GITHUB_BASE_REF}"
+          echo "::set-output name=pr_number::$(cat $GITHUB_EVENT_PATH | jq -r .number)"
+        else
+          echo "::set-output name=sha::${{ github.sha }}"
+        fi
+
+        # Get YARP Project Version
+        if [[ "$GITHUB_EVENT_NAME" = "release" ]]; then
+          echo "::set-output name=yarp_version::$(awk '/ VERSION /{print $2}' CMakeLists.txt)"
+        fi
+
+    - name: 'Debug output variables'
+      env:
+        TIMESTAMP: ${{ steps.select.outputs.timestamp }}
+        REPOSITORY_OWNER: ${{ steps.select.outputs.repository_owner }}
+        REPOSITORY_NAME: ${{ steps.select.outputs.repository_name }}
+        REPOSITORY: ${{ steps.select.outputs.repository }}
+        REF: ${{ steps.select.outputs.ref }}
+        ENVIRONMENT: ${{ steps.select.outputs.environment }}
+        SHA: ${{ steps.select.outputs.sha }}
+        HEAD_REF: ${{ steps.select.outputs.head_ref }}
+        BASE_REF: ${{ steps.select.outputs.base_ref }}
+        PR_NUMBER: ${{ steps.select.outputs.pr_number }}
+        YARP_VERSION: ${{ steps.select.outputs.yarp_version }}
+      run: |
+        echo "TIMESTAMP = ${TIMESTAMP}"
+        echo "REPOSITORY_OWNER = ${REPOSITORY_OWNER}"
+        echo "REPOSITORY_NAME = ${REPOSITORY_NAME}"
+        echo "REPOSITORY = ${REPOSITORY}"
+        echo "REF = ${REF}"
+        echo "ENVIRONMENT = ${ENVIRONMENT}"
+        echo "SHA = ${SHA}"
+        echo "HEAD_REF = ${HEAD_REF}"
+        echo "BASE_REF = ${BASE_REF}"
+        echo "PR_NUMBER = ${PR_NUMBER}"
+        echo "YARP_VERSION = ${YARP_VERSION}"
+
+    - name: "Print Environment"
+      run: |
+        env
+
+    - name: "Print Event Json"
+      run: |
+        echo "::group::install jq"
+        sudo apt-get update -qq
+        sudo apt-get install -qq -y jq
+        echo "::endgroup::"
+
+        cat $GITHUB_EVENT_PATH | jq -C
+
   check-license:
     name: 'Check License'
+    needs: select_environment
     runs-on: ubuntu-20.04
     steps:
-    - name: Checkout
-      uses: actions/checkout@master
+    - name: Clone repository
+      uses: actions/checkout@v2
+      with:
+        repository: ${{ needs.select_environment.outputs.repository }}
+        ref: ${{ needs.select_environment.outputs.ref }}
 
     - name: Install Dependencies
       run: |
@@ -27,10 +122,14 @@ jobs:
 
   check-style:
     name: 'Check Style'
+    needs: select_environment
     runs-on: ubuntu-20.04
     steps:
-    - name: Checkout
-      uses: actions/checkout@master
+    - name: Clone repository
+      uses: actions/checkout@v2
+      with:
+        repository: ${{ needs.select_environment.outputs.repository }}
+        ref: ${{ needs.select_environment.outputs.ref }}
 
     - name: Install Dependencies
       run: |
@@ -44,7 +143,7 @@ jobs:
 
   run-cmake:
     name: 'Run CMake [CMake ${{ matrix.config.cmake_version }} (${{ matrix.config.cmake_generator }}), YCM ${{ matrix.config.ycm_version }}]'
-    needs: [check-license, check-style]
+    needs: [select_environment, check-license, check-style]
     runs-on: ubuntu-20.04
     container:
       image: ghcr.io/robotology/ycm:cmake-${{ matrix.config.cmake_version }}_ycm-${{ matrix.config.ycm_version }}
@@ -55,51 +154,65 @@ jobs:
         - {
             cmake_version: "3.12",
             cmake_generator: "Unix Makefiles",
-            ycm_version: "0.12.1",
+            ycm_version: "0.13.0",
           }
         - {
             cmake_version: "3.13",
             cmake_generator: "Unix Makefiles",
-            ycm_version: "0.12.1",
+            ycm_version: "0.13.0",
           }
         - {
             cmake_version: "3.14",
             cmake_generator: "Unix Makefiles",
-            ycm_version: "0.12.1",
+            ycm_version: "0.13.0",
           }
         - {
             cmake_version: "3.15",
             cmake_generator: "Unix Makefiles",
-            ycm_version: "0.12.1",
+            ycm_version: "0.13.0",
           }
         - {
             cmake_version: "3.16",
             cmake_generator: "Unix Makefiles",
-            ycm_version: "0.12.1",
+            ycm_version: "0.13.0",
           }
         - {
             cmake_version: "3.17",
             cmake_generator: "Unix Makefiles",
-            ycm_version: "0.12.1",
+            ycm_version: "0.13.0",
           }
         - {
             cmake_version: "3.18",
             cmake_generator: "Unix Makefiles",
-            ycm_version: "0.12.1",
+            ycm_version: "0.13.0",
           }
         - {
             cmake_version: "3.19",
             cmake_generator: "Unix Makefiles",
-            ycm_version: "0.12.1",
+            ycm_version: "0.13.0",
           }
         - {
-            cmake_version: "3.19",
+            cmake_version: "3.20",
+            cmake_generator: "Unix Makefiles",
+            ycm_version: "0.13.0",
+          }
+        - {
+            cmake_version: "3.20",
             cmake_generator: "Ninja",
-            ycm_version: "0.12.1",
+            ycm_version: "0.13.0",
+          }
+        # CMake 3.21 is still a release candidate
+        - {
+            cmake_version: "3.21",
+            cmake_generator: "Unix Makefiles",
+            ycm_version: "0.13.0",
           }
     steps:
-    - name: Checkout
-      uses: actions/checkout@master
+    - name: Clone repository
+      uses: actions/checkout@v2
+      with:
+        repository: ${{ needs.select_environment.outputs.repository }}
+        ref: ${{ needs.select_environment.outputs.ref }}
 
     - name: Print CMake version
       run: |
@@ -118,7 +231,7 @@ jobs:
 
   build:
     name: '[${{ matrix.config.id }}][${{ matrix.config.os }}|${{ matrix.config.cc }}|${{ matrix.config.cmake_generator }} (${{ matrix.config.cmake_toolset }} ${{ matrix.config.cmake_platform }})|${{ matrix.config.build_type }}] ${{ matrix.config.description }}'
-    needs: run-cmake
+    needs: [select_environment, run-cmake]
     runs-on: ${{ matrix.config.os }}
     strategy:
       fail-fast: false
@@ -379,9 +492,10 @@ jobs:
                                   -DYARP_DISABLE_FAILING_TESTS:BOOL=ON
                                   -DYARP_ENABLE_EXAMPLES_AS_TESTS:BOOL=OFF
                                   -DYARP_COMPILE_BINDINGS:BOOL=OFF
+                                  -DCMAKE_DISABLE_FIND_PACKAGE_FFMPEG=ON
                                   -DENABLE_yarpcar_h264:BOOL=OFF
                                   -DENABLE_yarpcar_mjpeg:BOOL=OFF
-                                  -DENABLE_yarpcar_libffmpeg:BOOL=OFF
+                                  -DENABLE_yarppm_image_compression_ffmpeg:BOOL=OFF
                                   -DENABLE_yarpmod_usbCamera:BOOL=OFF
                                   -DENABLE_yarpmod_usbCameraRaw:BOOL=OFF
                                   -DENABLE_yarpmod_ffmpeg_grabber:BOOL=OFF
@@ -409,9 +523,10 @@ jobs:
                                   -DYARP_DISABLE_FAILING_TESTS:BOOL=ON
                                   -DYARP_ENABLE_EXAMPLES_AS_TESTS:BOOL=OFF
                                   -DYARP_COMPILE_BINDINGS:BOOL=OFF
+                                  -DCMAKE_DISABLE_FIND_PACKAGE_FFMPEG=ON
                                   -DENABLE_yarpcar_h264:BOOL=OFF
                                   -DENABLE_yarpcar_mjpeg:BOOL=OFF
-                                  -DENABLE_yarpcar_libffmpeg:BOOL=OFF
+                                  -DENABLE_yarppm_image_compression_ffmpeg:BOOL=OFF
                                   -DENABLE_yarpmod_usbCamera:BOOL=OFF
                                   -DENABLE_yarpmod_usbCameraRaw:BOOL=OFF
                                   -DENABLE_yarpmod_ffmpeg_grabber:BOOL=OFF
@@ -511,31 +626,18 @@ jobs:
 
     steps:
 
-    - name: Clone repository [push]
-      if: github.event_name == 'push'
-      uses: actions/checkout@v2
-
-    - name: Clone repository [pull_request_target]
-      if: github.event_name == 'pull_request_target'
+    - name: Clone repository
       uses: actions/checkout@v2
       with:
-        repository: ${{ github.event.pull_request.head.repo.full_name }}
-        ref: ${{ github.event.pull_request.head.ref }}
-
-    - name: Prepare cache timestamp
-      id: prepare_cache_timestamp
-      shell: cmake -P {0}
-      run: |
-        cmake_minimum_required(VERSION 3.17)
-        string(TIMESTAMP current_date "%Y%m%d-%H%M%S" UTC)
-        message("::set-output name=timestamp::${current_date}")
+        repository: ${{ needs.select_environment.outputs.repository }}
+        ref: ${{ needs.select_environment.outputs.ref }}
 
     - name: Handle cache
       uses: actions/cache@v2
       with:
         path: |
           .ccache
-        key: build-${{ matrix.config.id }}-ccache-${{ github.ref }}-${{ steps.prepare_cache_timestamp.outputs.timestamp }}
+        key: build-${{ matrix.config.id }}-ccache-${{ github.ref }}-${{ needs.select_environment.outputs.timestamp }}
         restore-keys: |
           build-${{ matrix.config.id }}-${{ github.base_ref }}-ccache-
           build-${{ matrix.config.id }}-${{ github.ref }}-ccache-
@@ -557,8 +659,7 @@ jobs:
           sudo apt-get install -qq -y cmake \
                                       ccache \
                                       ninja-build \
-                                      valgrind \
-                                      lcov
+                                      valgrind
 
           sudo apt-get install -qq -y libace-dev \
                                       libsqlite3-dev \
@@ -606,7 +707,16 @@ jobs:
           # Other tools useful in github actions
           sudo apt-get install -qq -y jq \
                                       wget \
-                                      curl
+                                      curl \
+                                      lcov \
+                                      gcovr \
+                                      wget \
+                                      curl \
+                                      clang-11 \
+                                      clang-tidy-11 \
+                                      xsltproc \
+                                      libxml2-utils \
+                                      source-highlight
 
           # Remove old packages from apt cache
           sudo apt-get autoclean -qq
@@ -633,7 +743,7 @@ jobs:
           7z x -oC:\ vcpkg-robotology-yarp-only.zip &
           echo &
           echo # Download and install YCM &
-          wget -nv https://github.com/robotology/ycm/releases/download/v0.12.1/YCM-0.12.1-all.tar.gz -O ycm.tar.gz &
+          wget -nv https://github.com/robotology/ycm/releases/download/v0.13.0/YCM-0.13.0-all.tar.gz -O ycm.tar.gz &
           7z x ycm.tar.gz &
           7z x -ttar -oC:\robotology ycm.tar &
           echo &
@@ -690,7 +800,7 @@ jobs:
           file(APPEND "${_env_script}" "set(ENV{PATH} \"\$ENV{PATH};\$ENV{GITHUB_WORKSPACE}\")\n")
 
           # YCM is installed manually, set YCM_DIR to allow CMake to find it
-          file(APPEND "${_env_script}" "set(ENV{YCM_DIR} \"C:\\\\robotology\\\\YCM-0.12.1-all\")\n")
+          file(APPEND "${_env_script}" "set(ENV{YCM_DIR} \"C:\\\\robotology\\\\YCM-0.13.0-all\")\n")
 
           # Append vcpkg bin directory to the PATH
           if("${{ matrix.config.build_type }}" STREQUAL "Release")
@@ -971,6 +1081,34 @@ jobs:
           message(FATAL_ERROR "Test step failed")
         endif()
 
+    - name: Status Check
+      shell: cmake -P {0}
+      run: |
+        cmake_minimum_required(VERSION 3.17)
+        include(${{ steps.prepare_environment_script.outputs.environment_script }})
+
+        execute_process_x(
+          COMMAND git status --porcelain=v1
+          WORKING_DIRECTORY .
+          RESULT_VARIABLE result
+          OUTPUT_VARIABLE output
+        )
+        if(NOT result EQUAL 0)
+          message(FATAL_ERROR "Test step failed")
+        endif()
+
+        string(REGEX REPLACE "\n" ";" output "${output}")
+
+        foreach(f IN LISTS output)
+          string(REGEX REPLACE ".+ " "" f "${f}")
+          message("::error file=${f},line=1,col=1::File modified.")
+        endforeach()
+        list(LENGTH output output_size)
+
+        if(NOT output_size EQUAL 0)
+          message(FATAL_ERROR "During build and tests, ${output_size} files were modified")
+        endif()
+
     - name: Test installation
       shell: cmake -P {0}
       run: |
@@ -1171,19 +1309,14 @@ jobs:
   codacy-clang-tidy:
     environment: code-analysis
     name: 'Codacy - clang-tidy'
-    needs: run-cmake
+    needs: [select_environment, run-cmake]
     runs-on: ubuntu-20.04
     steps:
-    - name: Clone repository [push]
-      if: github.event_name == 'push'
-      uses: actions/checkout@v2
-
-    - name: Clone repository [pull_request_target]
-      if: github.event_name == 'pull_request_target'
+    - name: Clone repository
       uses: actions/checkout@v2
       with:
-        repository: ${{ github.event.pull_request.head.repo.full_name }}
-        ref: ${{ github.event.pull_request.head.ref }}
+        repository: ${{ needs.select_environment.outputs.repository }}
+        ref: ${{ needs.select_environment.outputs.ref }}
 
     # This step is copied from the build step, please keep them in sync until we
     # find a better way to do it automatically
@@ -1204,8 +1337,7 @@ jobs:
           sudo apt-get install -qq -y cmake \
                                       ccache \
                                       ninja-build \
-                                      valgrind \
-                                      lcov
+                                      valgrind
 
           sudo apt-get install -qq -y libace-dev \
                                       libsqlite3-dev \
@@ -1253,7 +1385,16 @@ jobs:
           # Other tools useful in github actions
           sudo apt-get install -qq -y jq \
                                       wget \
-                                      curl
+                                      curl \
+                                      lcov \
+                                      gcovr \
+                                      wget \
+                                      curl \
+                                      clang-11 \
+                                      clang-tidy-11 \
+                                      xsltproc \
+                                      libxml2-utils \
+                                      source-highlight
 
           # Remove old packages from apt cache
           sudo apt-get autoclean -qq
@@ -1276,12 +1417,7 @@ jobs:
         echo "CLICOLOR_FORCE=1" >> $GITHUB_ENV
         echo "YARP_COLORED_OUTPUT=1" >> $GITHUB_ENV
         echo "PROJECT_TOKEN=${CODACY_TOKEN}" >> $GITHUB_ENV
-        if [[ "$GITHUB_EVENT_NAME" = "pull_request" ]]; then
-          COMMIT=$(cat $GITHUB_EVENT_PATH | jq -r .pull_request.head.sha)
-        else
-          COMMIT=${GITHUB_SHA}
-        fi
-        echo "COMMIT=${COMMIT}" >> $GITHUB_ENV
+        echo "COMMIT=${{ needs.select_environment.outputs.sha }}" >> $GITHUB_ENV
         echo "CODACY_URL=https://api.codacy.com" >> $GITHUB_ENV
         echo "CODACY_CLANG_TIDY_VERSION=${CODACY_CLANG_TIDY_VERSION}" >> $GITHUB_ENV
 
@@ -1361,19 +1497,14 @@ jobs:
   codacy-coverage:
     environment: code-analysis
     name: 'Codacy - coverage'
-    needs: run-cmake
+    needs: [select_environment, run-cmake]
     runs-on: ubuntu-20.04
     steps:
-    - name: Clone repository [push]
-      if: github.event_name == 'push'
-      uses: actions/checkout@v2
-
-    - name: Clone repository [pull_request_target]
-      if: github.event_name == 'pull_request_target'
+    - name: Clone repository
       uses: actions/checkout@v2
       with:
-        repository: ${{ github.event.pull_request.head.repo.full_name }}
-        ref: ${{ github.event.pull_request.head.ref }}
+        repository: ${{ needs.select_environment.outputs.repository }}
+        ref: ${{ needs.select_environment.outputs.ref }}
 
     # This step is copied from the build step, please keep them in sync until we
     # find a better way to do it automatically
@@ -1394,8 +1525,7 @@ jobs:
           sudo apt-get install -qq -y cmake \
                                       ccache \
                                       ninja-build \
-                                      valgrind \
-                                      lcov
+                                      valgrind
 
           sudo apt-get install -qq -y libace-dev \
                                       libsqlite3-dev \
@@ -1443,7 +1573,16 @@ jobs:
           # Other tools useful in github actions
           sudo apt-get install -qq -y jq \
                                       wget \
-                                      curl
+                                      curl \
+                                      lcov \
+                                      gcovr \
+                                      wget \
+                                      curl \
+                                      clang-11 \
+                                      clang-tidy-11 \
+                                      xsltproc \
+                                      libxml2-utils \
+                                      source-highlight
 
           # Remove old packages from apt cache
           sudo apt-get autoclean -qq
@@ -1486,33 +1625,24 @@ jobs:
   sonarcloud:
     environment: code-analysis
     name: 'SonarCloud'
-    needs: run-cmake
+    needs: [select_environment, run-cmake]
     runs-on: ubuntu-20.04
     steps:
     - name: Clone repository
       uses: actions/checkout@v2
       with:
+        repository: ${{ needs.select_environment.outputs.repository }}
+        ref: ${{ needs.select_environment.outputs.ref }}
         fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-
-    - name: Get YARP Project Version
-      if: github.event_name == 'release'
-      id: get_yarp_version
-      run: |
-        echo "::set-output name=yarp_version::$(awk '/ VERSION /{print $2}' CMakeLists.txt)"
-
-    - name: Get Timestamp
-      id: get_timestamp
-      run: |
-        echo "::set-output name=timestamp::$(/bin/date -u +%Y%m%d-%H%M%S)"
 
     - name: Get Sonar and Prepare Environment
       id: get_sonar
       env:
-        SONAR_ORGANIZATION: 'robotology'
-        SONAR_PROJECT_KEY: 'robotology_yarp'
-        SONAR_PROJECT_NAME: 'yarp'
+        SONAR_ORGANIZATION: ${{ needs.select_environment.outputs.repository_owner }}
+        SONAR_PROJECT_KEY: ${{ needs.select_environment.outputs.repository_owner }}_${{ needs.select_environment.outputs.repository_name }}
+        SONAR_PROJECT_NAME: ${{ needs.select_environment.outputs.repository_name }}
         SONAR_PROJECT_DESCRIPTION: 'Yet Another Robot Platform'
-        SONAR_PROJECT_VERSION: ${{ steps.get_yarp_version.outputs.yarp_version }}
+        SONAR_PROJECT_VERSION: ${{ needs.select_environment.outputs.yarp_version }}
         SONAR_LINKS_HOMEPAGE: 'https://www.yarp.it/'
         SONAR_SOURCES: 'src'
         SONAR_TESTS: 'tests'
@@ -1559,8 +1689,6 @@ jobs:
         echo "SONAR_SOURCEENCODING=${SONAR_SOURCEENCODING:-UTF-8}" >> $GITHUB_ENV
         echo "SONAR_THREADS=${SONAR_THREADS:-1}" >> $GITHUB_ENV
 
-        [[ -v SONAR_CFAMILY_GCOV_REPORTSPATH ]] && echo "SONAR_CFAMILY_GCOV_REPORTSPATH=${SONAR_CFAMILY_GCOV_REPORTSPATH}" >> $GITHUB_ENV
-
         echo "SONAR_CFAMILY_CACHE_ENABLED=$([[ $SONAR_CFAMILY_CACHE_ENABLED = true ]] && echo true || echo false)" >> $GITHUB_ENV
         [[ $SONAR_CFAMILY_CACHE_ENABLED = true ]] && echo "SONAR_CFAMILY_CACHE_PATH=${SONAR_CACHE_PATH}" >> $GITHUB_ENV
 
@@ -1601,8 +1729,7 @@ jobs:
           sudo apt-get install -qq -y cmake \
                                       ccache \
                                       ninja-build \
-                                      valgrind \
-                                      lcov
+                                      valgrind
 
           sudo apt-get install -qq -y libace-dev \
                                       libsqlite3-dev \
@@ -1650,7 +1777,16 @@ jobs:
           # Other tools useful in github actions
           sudo apt-get install -qq -y jq \
                                       wget \
-                                      curl
+                                      curl \
+                                      lcov \
+                                      gcovr \
+                                      wget \
+                                      curl \
+                                      clang-11 \
+                                      clang-tidy-11 \
+                                      xsltproc \
+                                      libxml2-utils \
+                                      source-highlight
 
           # Remove old packages from apt cache
           sudo apt-get autoclean -qq
@@ -1696,7 +1832,7 @@ jobs:
         path: |
           ${{ steps.init_ccache.outputs.ccache_path }}
           ${{ steps.get_sonar.outputs.sonar_cache_path }}
-        key: sonar-cache-${{ steps.get_timestamp.outputs.timestamp }}
+        key: sonar-cache-${{ needs.select_environment.outputs.timestamp }}
         restore-keys: |
           sonar-cache-
 
@@ -1769,11 +1905,18 @@ jobs:
         [[ -v SONAR_PROJECT_DESCRIPTION ]] && SONAR_PROJECT_DESCRIPTION_CMD_ARG="-Dsonar.projectDescription=${SONAR_PROJECT_DESCRIPTION}"
         [[ -v SONAR_PROJECT_VERSION ]] && SONAR_PROJECT_VERSION_CMD_ARG="-Dsonar.projectVersion=${SONAR_PROJECT_VERSION}"
 
+        if [[ "$GITHUB_EVENT_NAME" = "pull_request" || "$GITHUB_EVENT_NAME" == "pull_request_target" ]]; then
+          SONAR_PR_CMD_ARGS="\
+            -Dsonar.pullrequest.provider=github \
+            -Dsonar.pullrequest.github.repository=${SONAR_ORGANIZATION}/${SONAR_PROJECT_NAME} \
+            -Dsonar.pullrequest.branch=${{ needs.select_environment.outputs.head_ref }} \
+            -Dsonar.pullrequest.key=${{ needs.select_environment.outputs.pr_number }} \
+            -Dsonar.pullrequest.base=${{ needs.select_environment.outputs.base_ref }} \
+            -Dsonar.pullrequest.github.endpoint=https://api.github.com"
+        fi
+
         # Paths to test files
         [[ -v SONAR_TESTS ]] && SONAR_TESTS_CMD_ARG="-Dsonar.tests=${SONAR_TESTS}"
-
-        # Path to coverage files
-        [[ -v SONAR_CFAMILY_GCOV_REPORTSPATH ]] && SONAR_CFAMILY_GCOV_REPORTSPATH_CMD_ARG="-Dsonar.cfamily.gcov.reportsPath=${SONAR_CFAMILY_GCOV_REPORTSPATH}"
 
         # Path to cache
         [[ -v SONAR_CFAMILY_CACHE_PATH ]] && SONAR_CFAMILY_CACHE_PATH_CMD_ARG="-Dsonar.cfamily.cache.path=${SONAR_CFAMILY_CACHE_PATH}"
@@ -1797,11 +1940,12 @@ jobs:
             -Dsonar.junit.reportPaths=build/JUnitTestResults.xml \
             -Dsonar.exclusions="src/yarp*/**/* src/carriers/**/* src/devices/**/* src/idls/**/* src/libyarp*/**/* src/robottestingframework-plugins/**/* tests/**/*" \
             -Dsonar.coverage.exclusions="src/yarp*/**/* src/carriers/**/* src/devices/**/* src/idls/**/* src/libyarp*/**/* src/robottestingframework-plugins/**/*" \
-            -Dsonar.branch.longLivedBranches.regex="yarp-.*" \
+            -Dsonar.branch.longLivedBranches.regex="^(master|yarp-.+)$" \
             ${SONAR_TESTS_CMD_ARG} \
             ${SONAR_PROJECT_NAME_CMD_ARG} \
             ${SONAR_PROJECT_DESCRIPTION_CMD_ARG} \
             ${SONAR_PROJECT_VERSION_CMD_ARG} \
+            ${SONAR_PR_CMD_ARGS} \
             ${SONAR_TOKEN_CMD_ARG} \
             ${SONAR_ORGANIZATION_CMD_ARG} \
             ${SONAR_CFAMILY_CACHE_PATH_CMD_ARG}

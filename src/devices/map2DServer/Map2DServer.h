@@ -1,19 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #ifndef YARP_DEV_MAP2DSERVER_H
@@ -55,11 +42,11 @@
 #define DEFAULT_THREAD_PERIOD 20 //ms
 
 /**
- *  @ingroup dev_impl_wrapper dev_impl_navigation
+ *  @ingroup dev_impl_wrapper dev_impl_navigation dev_impl_deprecated
  *
  * \section Map2DServer
  *
- * \brief `map2DServer`: A device capable of read/save collections of maps from disk, and make them accessible to any Map2DClient device.
+ * \brief `map2DServer` *deprecated*: A device capable of read/save collections of maps from disk, and make them accessible to any Map2DClient device.
  *
  *  Parameters required by this device are:
  * | Parameter name | SubParameter   | Type    | Units          | Default Value    | Required     | Description                                                       | Notes |

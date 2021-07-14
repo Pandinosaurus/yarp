@@ -1,19 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 
@@ -510,7 +497,7 @@ bool V4L_camera::fromConfig(yarp::os::Searchable& config)
     configFy = config.check("verticalFov");
     configPPx = config.check("principalPointX");
     configPPy = config.check("principalPointY");
-    configRet = config.check("retificationMatrix");
+    configRet = config.check("rectificationMatrix");
     configDistM = config.check("distortionModel");
     Bottle bt;
     bt = config.findGroup("cameraDistortionModelGroup");
@@ -545,7 +532,7 @@ bool V4L_camera::fromConfig(yarp::os::Searchable& config)
     param.intrinsic.put("focalLengthY", config.check("focalLengthY", Value(0.0), "Vertical component of the focal lenght").asFloat64());
     param.intrinsic.put("principalPointX", config.check("principalPointX", Value(0.0), "X coordinate of the principal point").asFloat64());
     param.intrinsic.put("principalPointY", config.check("principalPointY", Value(0.0), "Y coordinate of the principal point").asFloat64());
-    param.intrinsic.put("retificationMatrix", config.check("retificationMatrix", *retM, "Matrix that describes the lens' distortion"));
+    param.intrinsic.put("rectificationMatrix", config.check("rectificationMatrix", *retM, "Matrix that describes the lens' distortion"));
     param.intrinsic.put("distortionModel", config.check("distortionModel", Value(""), "Reference to group of parameters describing the distortion model of the camera").asString());
     if (bt.isNull()) {
         param.intrinsic.put("name", "");
@@ -898,10 +885,10 @@ bool V4L_camera::close()
     return true;
 }
 
-
-// IFrameGrabberRgb Interface 777
-bool V4L_camera::getRgbBuffer(unsigned char* buffer)
+bool V4L_camera::getImage(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image)
 {
+    image.resize(width(), height());
+
     bool res = false;
     mutex.wait();
     if (configured) {
@@ -909,9 +896,9 @@ bool V4L_camera::getRgbBuffer(unsigned char* buffer)
         imageProcess();
 
         if (!param.addictionalResize) {
-            memcpy(buffer, param.dst_image_rgb, param.dst_image_size_rgb);
+            memcpy(image.getRawImage(), param.dst_image_rgb, param.dst_image_size_rgb);
         } else {
-            memcpy(buffer, param.outMat.data, param.outMat.total() * 3);
+            memcpy(image.getRawImage(), param.outMat.data, param.outMat.total() * 3);
         }
         mutex.post();
         res = true;
@@ -923,14 +910,15 @@ bool V4L_camera::getRgbBuffer(unsigned char* buffer)
     return res;
 }
 
-// IFrameGrabber Interface
-bool V4L_camera::getRawBuffer(unsigned char* buffer)
+bool V4L_camera::getImage(yarp::sig::ImageOf<yarp::sig::PixelMono>& image)
 {
+    image.resize(width(), height());
+
     bool res = false;
     mutex.wait();
     if (configured) {
         imagePreProcess();
-        memcpy(buffer, param.src_image, param.src_image_size);
+        memcpy(image.getRawImage(), param.src_image, param.src_image_size);
         res = true;
     } else {
         yCError(USBCAMERA) << "unable to get the buffer, device uninitialized";
@@ -938,11 +926,6 @@ bool V4L_camera::getRawBuffer(unsigned char* buffer)
     }
     mutex.post();
     return res;
-}
-
-int V4L_camera::getRawBufferSize()
-{
-    return param.src_image_size;
 }
 
 /**

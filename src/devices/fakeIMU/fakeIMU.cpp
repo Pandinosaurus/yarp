@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include "fakeIMU.h"
@@ -80,8 +77,9 @@ bool fakeIMU::close()
 
 bool fakeIMU::read(Vector &out)
 {
-    if(out.size() != nchannels)
+    if (out.size() != nchannels) {
         out.resize(nchannels);
+    }
 
     out.zero();
 
@@ -149,8 +147,9 @@ void fakeIMU::run()
         count++;
     }
 
-    if(count >= 360)
+    if (count >= 360) {
         count = 0;
+    }
 }
 
 yarp::os::Stamp fakeIMU::getLastInputStamp()

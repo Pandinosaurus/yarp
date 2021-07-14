@@ -1,19 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "BatteryClient.h"
@@ -59,10 +46,12 @@ void BatteryInputPortProcessor::onRead(yarp::os::Bottle &b)
     {
         double tmpDT=now-prev;
         deltaT+=tmpDT;
-        if (tmpDT>deltaTMax)
-            deltaTMax=tmpDT;
-        if (tmpDT<deltaTMin)
-            deltaTMin=tmpDT;
+        if (tmpDT > deltaTMax) {
+            deltaTMax = tmpDT;
+        }
+        if (tmpDT < deltaTMin) {
+            deltaTMin = tmpDT;
+        }
 
         //compare network time
         if (tmpDT*1000<BATTERY_TIMEOUT)
@@ -281,8 +270,8 @@ bool BatteryClient::getBatteryTemperature(double &temperature)
 bool BatteryClient::getBatteryInfo(std::string &battery_info)
 {
     Bottle cmd, response;
-    cmd.addVocab(VOCAB_IBATTERY);
-    cmd.addVocab(VOCAB_BATTERY_INFO);
+    cmd.addVocab32(VOCAB_IBATTERY);
+    cmd.addVocab32(VOCAB_BATTERY_INFO);
     bool ok = rpcPort.write(cmd, response);
     if (CHECK_FAIL(ok, response)!=false)
     {

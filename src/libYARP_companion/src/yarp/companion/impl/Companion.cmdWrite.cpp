@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/companion/impl/Companion.h>
@@ -14,9 +11,9 @@
 #include <yarp/os/impl/Terminal.h>
 
 #ifdef YARP_HAS_Libedit
+#include <yarp/conf/dirs.h>
 #include <yarp/conf/filesystem.h>
 #include <yarp/os/Os.h>
-#include <yarp/os/ResourceFinder.h>
 #include <yarp/os/impl/PlatformUnistd.h>
 #include <yarp/os/impl/PlatformStdio.h>
 #include <algorithm>
@@ -28,10 +25,6 @@ using yarp::os::Bottle;
 using yarp::os::Port;
 using yarp::os::SystemClock;
 
-#ifdef YARP_HAS_Libedit
-using yarp::os::ResourceFinder;
-#endif
-
 int Companion::write(const char *name, int ntargets, char *targets[]) {
     Port port;
     applyArgs(port);
@@ -41,14 +34,11 @@ int Companion::write(const char *name, int ntargets, char *targets[]) {
     bool disable_file_history=false;
     if (yarp::os::impl::isatty(yarp::os::impl::fileno(stdin))) //if interactive mode
     {
-        hist_file=yarp::os::ResourceFinder::getDataHome();
-        std::string slash{yarp::conf::filesystem::preferred_separator};
-        hist_file += slash;
-        hist_file += "yarp_write";
+        auto yarpdatahome = yarp::conf::dirs::yarpdatahome();
+        std::string hist_file = yarpdatahome + yarp::conf::filesystem::preferred_separator + "yarp_write";
         if (yarp::os::mkdir_p(hist_file.c_str(), 1) != 0)
         {
-            yCError(COMPANION, "Unable to create directory into \"%s\"",
-                    yarp::os::ResourceFinder::getDataHome().c_str());
+            yCError(COMPANION, "Unable to create directory into \"%s\"", yarpdatahome.c_str());
             return 1;
         }
         std::string temp;
@@ -58,13 +48,13 @@ int Companion::write(const char *name, int ntargets, char *targets[]) {
             temp = "any";
         }
         std::replace(temp.begin(), temp.end(), '/', '_');
-        hist_file += slash;
+        hist_file += yarp::conf::filesystem::preferred_separator;
         hist_file += temp;
         read_history(hist_file.c_str());
         disable_file_history=false;
+    } else {
+        disable_file_history = true;
     }
-    else
-        disable_file_history=true;
 #endif
     if (Companion::getActivePort() == nullptr) {
         Companion::installHandler();
@@ -113,13 +103,16 @@ int Companion::write(const char *name, int ntargets, char *targets[]) {
                 while (port.getOutputCount()<1) {
                     SystemClock::delaySystem(delay);
                     delay *= 2;
-                    if (delay>4) delay = 4;
+                    if (delay > 4) {
+                        delay = 4;
+                    }
                 }
             }
             port.write(bot);
 #ifdef YARP_HAS_Libedit
-            if (!disable_file_history)
+            if (!disable_file_history) {
                 write_history(hist_file.c_str());
+            }
 #endif
         }
     }
@@ -129,7 +122,9 @@ int Companion::write(const char *name, int ntargets, char *targets[]) {
         while (port.isWriting()) {
             SystemClock::delaySystem(delay);
             delay *= 2;
-            if (delay>4) delay = 4;
+            if (delay > 4) {
+                delay = 4;
+            }
         }
     }
 

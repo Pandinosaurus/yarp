@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/impl/DgramTwoWayStream.h>
@@ -189,18 +186,18 @@ void DgramTwoWayStream::allocate(int readSize, int writeSize)
     int _read_size = -1;
     int _write_size = -1;
 
-    std::string _env_dgram = yarp::conf::environment::getEnvironment("YARP_DGRAM_SIZE");
+    std::string _env_dgram = yarp::conf::environment::get_string("YARP_DGRAM_SIZE");
     std::string _env_mode;
     if (multiMode) {
-        _env_mode = yarp::conf::environment::getEnvironment("YARP_MCAST_SIZE");
+        _env_mode = yarp::conf::environment::get_string("YARP_MCAST_SIZE");
     } else {
-        _env_mode = yarp::conf::environment::getEnvironment("YARP_UDP_SIZE");
+        _env_mode = yarp::conf::environment::get_string("YARP_UDP_SIZE");
     }
     if (!_env_mode.empty()) {
         _env_dgram = _env_mode;
     }
     if (!_env_dgram.empty()) {
-        int sz = NetType::toInt(_env_dgram);
+        int sz = yarp::conf::numeric::from_string<int>(_env_dgram);
         if (sz != 0) {
             _read_size = _write_size = sz;
         }
@@ -259,24 +256,24 @@ void DgramTwoWayStream::configureSystemBuffers()
     //By default the buffers are forced to the datagram size limit.
     //These can be overwritten by environment variables
     //Generic variable
-    std::string socketBufferSize = yarp::conf::environment::getEnvironment("YARP_DGRAM_BUFFER_SIZE");
+    std::string socketBufferSize = yarp::conf::environment::get_string("YARP_DGRAM_BUFFER_SIZE");
     //Specific read
-    std::string socketReadBufferSize = yarp::conf::environment::getEnvironment("YARP_DGRAM_RECV_BUFFER_SIZE");
+    std::string socketReadBufferSize = yarp::conf::environment::get_string("YARP_DGRAM_RECV_BUFFER_SIZE");
     //Specific write
-    std::string socketSendBufferSize = yarp::conf::environment::getEnvironment("YARP_DGRAM_SND_BUFFER_SIZE");
+    std::string socketSendBufferSize = yarp::conf::environment::get_string("YARP_DGRAM_SND_BUFFER_SIZE");
 
     int readBufferSize = -1;
     if (!socketReadBufferSize.empty()) {
-        readBufferSize = NetType::toInt(socketReadBufferSize);
+        readBufferSize = yarp::conf::numeric::from_string<int>(socketReadBufferSize);
     } else if (!socketBufferSize.empty()) {
-        readBufferSize = NetType::toInt(socketBufferSize);
+        readBufferSize = yarp::conf::numeric::from_string<int>(socketBufferSize);
     }
 
     int writeBufferSize = -1;
     if (!socketSendBufferSize.empty()) {
-        writeBufferSize = NetType::toInt(socketSendBufferSize);
+        writeBufferSize = yarp::conf::numeric::from_string<int>(socketSendBufferSize);
     } else if (!socketBufferSize.empty()) {
-        writeBufferSize = NetType::toInt(socketBufferSize);
+        writeBufferSize = yarp::conf::numeric::from_string<int>(socketBufferSize);
     }
     // The writeBufferSize can't be set greater than udp datagram
     // maximum size

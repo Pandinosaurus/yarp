@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_ICONTROLCALIBRATION_H
@@ -141,13 +138,13 @@ public:
 
 /* Vocabs representing the above interfaces */
 
-constexpr yarp::conf::vocab32_t VOCAB_CALIBRATE_JOINT        = yarp::os::createVocab('c','a','l','j');
-constexpr yarp::conf::vocab32_t VOCAB_CALIBRATE_JOINT_PARAMS = yarp::os::createVocab('c','l','j','p');
-constexpr yarp::conf::vocab32_t VOCAB_CALIBRATE              = yarp::os::createVocab('c','a','l');
-constexpr yarp::conf::vocab32_t VOCAB_CALIBRATE_CHANNEL      = yarp::os::createVocab('c','a','l','c');
-constexpr yarp::conf::vocab32_t VOCAB_ABORTCALIB             = yarp::os::createVocab('a','b','c','a');
-constexpr yarp::conf::vocab32_t VOCAB_ABORTPARK              = yarp::os::createVocab('a','b','p','a');
-constexpr yarp::conf::vocab32_t VOCAB_CALIBRATE_DONE         = yarp::os::createVocab('c','a','l','d');
-constexpr yarp::conf::vocab32_t VOCAB_PARK                   = yarp::os::createVocab('p','a','r','k');
+constexpr yarp::conf::vocab32_t VOCAB_CALIBRATE_JOINT        = yarp::os::createVocab32('c','a','l','j');
+constexpr yarp::conf::vocab32_t VOCAB_CALIBRATE_JOINT_PARAMS = yarp::os::createVocab32('c','l','j','p');
+constexpr yarp::conf::vocab32_t VOCAB_CALIBRATE              = yarp::os::createVocab32('c','a','l');
+constexpr yarp::conf::vocab32_t VOCAB_CALIBRATE_CHANNEL      = yarp::os::createVocab32('c','a','l','c');
+constexpr yarp::conf::vocab32_t VOCAB_ABORTCALIB             = yarp::os::createVocab32('a','b','c','a');
+constexpr yarp::conf::vocab32_t VOCAB_ABORTPARK              = yarp::os::createVocab32('a','b','p','a');
+constexpr yarp::conf::vocab32_t VOCAB_CALIBRATE_DONE         = yarp::os::createVocab32('c','a','l','d');
+constexpr yarp::conf::vocab32_t VOCAB_PARK                   = yarp::os::createVocab32('p','a','r','k');
 
 #endif // YARP_DEV_ICONTROLCALIBRATION_H

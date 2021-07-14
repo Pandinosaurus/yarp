@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include "RobotDescriptionClient.h"
@@ -84,14 +81,14 @@ bool RobotDescriptionClient::getAllDevicesByType(const std::string &type, std::v
     yarp::os::Bottle resp;
     dev_list.clear();
 
-    b.addVocab(VOCAB_IROBOT_DESCRIPTION);
-    b.addVocab(VOCAB_IROBOT_GET);
-    b.addVocab(VOCAB_IROBOT_BY_TYPE);
+    b.addVocab32(VOCAB_IROBOT_DESCRIPTION);
+    b.addVocab32(VOCAB_IROBOT_GET);
+    b.addVocab32(VOCAB_IROBOT_BY_TYPE);
     b.addString(type);
     bool ret = m_rpc_port.write(b, resp);
     if (ret)
     {
-        if (resp.get(0).asVocab() != VOCAB_OK)
+        if (resp.get(0).asVocab32() != VOCAB_OK)
         {
             yCError(ROBOTDESCRIPTIONCLIENT) << "getAllDevices(): Received error from server";
             return false;
@@ -122,14 +119,14 @@ bool RobotDescriptionClient::unregisterDevice(const std::string& device_name)
     yarp::os::Bottle b;
     yarp::os::Bottle resp;
 
-    b.addVocab(VOCAB_IROBOT_DESCRIPTION);
-    b.addVocab(VOCAB_IROBOT_DELETE);
-    b.addVocab(VOCAB_IROBOT_DEVICE);
+    b.addVocab32(VOCAB_IROBOT_DESCRIPTION);
+    b.addVocab32(VOCAB_IROBOT_DELETE);
+    b.addVocab32(VOCAB_IROBOT_DEVICE);
     b.addString(device_name);
     bool ret = m_rpc_port.write(b, resp);
     if (ret)
     {
-        if (resp.get(0).asVocab() != VOCAB_OK)
+        if (resp.get(0).asVocab32() != VOCAB_OK)
         {
             yCError(ROBOTDESCRIPTIONCLIENT) << "unregisterDevice(): Received error from server";
             return false;
@@ -148,15 +145,15 @@ bool RobotDescriptionClient::registerDevice(const DeviceDescription& dev)
     yarp::os::Bottle b;
     yarp::os::Bottle resp;
 
-    b.addVocab(VOCAB_IROBOT_DESCRIPTION);
-    b.addVocab(VOCAB_IROBOT_SET);
-    b.addVocab(VOCAB_IROBOT_DEVICE);
+    b.addVocab32(VOCAB_IROBOT_DESCRIPTION);
+    b.addVocab32(VOCAB_IROBOT_SET);
+    b.addVocab32(VOCAB_IROBOT_DEVICE);
     b.addString(dev.device_name);
     b.addString(dev.device_type);
     bool ret = m_rpc_port.write(b, resp);
     if (ret)
     {
-        if (resp.get(0).asVocab() != VOCAB_OK)
+        if (resp.get(0).asVocab32() != VOCAB_OK)
         {
             yCError(ROBOTDESCRIPTIONCLIENT) << "registerDevice(): Received error from server";
             return false;
@@ -176,13 +173,13 @@ bool RobotDescriptionClient::getAllDevices(std::vector<DeviceDescription>& dev_l
     yarp::os::Bottle resp;
     dev_list.clear();
 
-    b.addVocab(VOCAB_IROBOT_DESCRIPTION);
-    b.addVocab(VOCAB_IROBOT_GET);
-    b.addVocab(VOCAB_IROBOT_ALL);
+    b.addVocab32(VOCAB_IROBOT_DESCRIPTION);
+    b.addVocab32(VOCAB_IROBOT_GET);
+    b.addVocab32(VOCAB_IROBOT_ALL);
     bool ret = m_rpc_port.write(b, resp);
     if (ret)
     {
-        if (resp.get(0).asVocab() != VOCAB_OK)
+        if (resp.get(0).asVocab32() != VOCAB_OK)
         {
             yCError(ROBOTDESCRIPTIONCLIENT) << "getAllDevices(): Received error from server";
             return false;

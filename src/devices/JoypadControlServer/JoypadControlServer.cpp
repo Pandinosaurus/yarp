@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include "JoypadControlServer.h"
@@ -63,19 +60,19 @@ bool JoypadCtrlParser::respond(const yarp::os::Bottle& cmd, yarp::os::Bottle& re
     bool ret;
 
     ret = false;
-    if(cmd.get(0).asVocab() != VOCAB_IJOYPADCTRL || !cmd.get(1).isVocab() || !cmd.get(2).isVocab() || !cmd.get(3).isVocab())
+    if(cmd.get(0).asVocab32() != VOCAB_IJOYPADCTRL || !cmd.get(1).isVocab32() || !cmd.get(2).isVocab32() || !cmd.get(3).isVocab32())
     {
-        response.addVocab(VOCAB_FAILED);
+        response.addVocab32(VOCAB_FAILED);
         return ret;
     }
 
-    if(cmd.get(1).asVocab() == VOCAB_GET)
+    if(cmd.get(1).asVocab32() == VOCAB_GET)
     {
         int toGet;
 
-        toGet = cmd.get(2).asVocab();
+        toGet = cmd.get(2).asVocab32();
 
-        if(cmd.get(3).asVocab() == VOCAB_COUNT)
+        if(cmd.get(3).asVocab32() == VOCAB_COUNT)
         {
             if(countGetters.find(toGet) != countGetters.end())
             {
@@ -84,7 +81,7 @@ bool JoypadCtrlParser::respond(const yarp::os::Bottle& cmd, yarp::os::Bottle& re
                 getter = countGetters[toGet];
                 if((device->*getter)(count))
                 {
-                    response.addVocab(VOCAB_OK);
+                    response.addVocab32(VOCAB_OK);
                     response.addInt32(count);
                     ret = true;
                 }
@@ -94,31 +91,31 @@ bool JoypadCtrlParser::respond(const yarp::os::Bottle& cmd, yarp::os::Bottle& re
                 unsigned int count;
                 if (device->getStickDoF(cmd.get(4).asInt32(), count))
                 {
-                    response.addVocab(VOCAB_OK);
+                    response.addVocab32(VOCAB_OK);
                     response.addInt32(count);
                     ret = true;
                 }
                 else
                 {
-                    response.addVocab(VOCAB_FAILED);
+                    response.addVocab32(VOCAB_FAILED);
                     ret = false;
                 }
             }
             else
             {
-                response.addVocab(VOCAB_FAILED);
+                response.addVocab32(VOCAB_FAILED);
                 ret = false;
             }
         }
-        else if(cmd.get(3).asVocab() == VOCAB_VALUE)
+        else if(cmd.get(3).asVocab32() == VOCAB_VALUE)
         {
-            switch (cmd.get(2).asVocab()) {
+            switch (cmd.get(2).asVocab32()) {
             case VOCAB_BUTTON:
             {
                 float value;
                 if(cmd.get(4).isInt32() && device->getButton(cmd.get(4).asInt32(), value))
                 {
-                    response.addVocab(VOCAB_OK);
+                    response.addVocab32(VOCAB_OK);
                     response.addFloat64(value);
                     ret = true;
                 }
@@ -129,7 +126,7 @@ bool JoypadCtrlParser::respond(const yarp::os::Bottle& cmd, yarp::os::Bottle& re
                 double value;
                 if(cmd.get(4).isInt32() && device->getAxis(cmd.get(4).asInt32(), value))
                 {
-                    response.addVocab(VOCAB_OK);
+                    response.addVocab32(VOCAB_OK);
                     response.addFloat64(value);
                     ret = true;
                 }
@@ -137,14 +134,14 @@ bool JoypadCtrlParser::respond(const yarp::os::Bottle& cmd, yarp::os::Bottle& re
             }
             case VOCAB_STICK:
             {
-                if(cmd.get(4).isVocab())
+                if(cmd.get(4).isVocab32())
                 {
                     yarp::sig::Vector frame;
 
-                    auto mode = cmd.get(4).asVocab() == VOCAB_CARTESIAN ? yarp::dev::IJoypadController::JypCtrlcoord_CARTESIAN : yarp::dev::IJoypadController::JypCtrlcoord_POLAR;
+                    auto mode = cmd.get(4).asVocab32() == VOCAB_CARTESIAN ? yarp::dev::IJoypadController::JypCtrlcoord_CARTESIAN : yarp::dev::IJoypadController::JypCtrlcoord_POLAR;
                     if(cmd.get(5).isInt32() && device->getStick(cmd.get(5).asInt32(), frame, mode))
                     {
-                        response.addVocab(VOCAB_OK);
+                        response.addVocab32(VOCAB_OK);
                         for(size_t i = 0; i < frame.size(); ++i)
                         {
                             response.addFloat64(frame[i]);
@@ -162,7 +159,7 @@ bool JoypadCtrlParser::respond(const yarp::os::Bottle& cmd, yarp::os::Bottle& re
 
                 if(cmd.get(5).isInt32() && device->getStickDoF(cmd.get(5).asInt32(), dofCount))
                 {
-                    response.addVocab(VOCAB_OK);
+                    response.addVocab32(VOCAB_OK);
                     response.addInt32(dofCount);
                     ret = true;
                 }
@@ -177,7 +174,7 @@ bool JoypadCtrlParser::respond(const yarp::os::Bottle& cmd, yarp::os::Bottle& re
                 id = cmd.get(4).asInt32();
                 if(cmd.get(4).isInt32() && device->getTouch(id, pos))
                 {
-                    response.addVocab(VOCAB_OK);
+                    response.addVocab32(VOCAB_OK);
                     for(size_t i = 0; i < pos.size(); ++i)
                     {
                         response.addFloat64(pos[i]);
@@ -194,7 +191,7 @@ bool JoypadCtrlParser::respond(const yarp::os::Bottle& cmd, yarp::os::Bottle& re
                 id = cmd.get(4).asInt32();
                 if(cmd.get(4).isInt32() && device->getTrackball(id, axes))
                 {
-                    response.addVocab(VOCAB_OK);
+                    response.addVocab32(VOCAB_OK);
                     for(size_t i = 0; i < axes.size(); ++i)
                     {
                         response.addFloat64(axes[i]);
@@ -208,7 +205,7 @@ bool JoypadCtrlParser::respond(const yarp::os::Bottle& cmd, yarp::os::Bottle& re
                 unsigned char value;
                 if(cmd.get(4).isInt32() && device->getHat(cmd.get(4).asInt32(), value))
                 {
-                    response.addVocab(VOCAB_OK);
+                    response.addVocab32(VOCAB_OK);
                     response.addInt32(value);
                     ret = true;
                 }
@@ -343,8 +340,9 @@ bool JoypadControlServer::openAndAttachSubDevice(Searchable& prop)
         return false;
     }
     m_isSubdeviceOwned = true;
-    if(!attach(m_subDeviceOwned))
+    if (!attach(m_subDeviceOwned)) {
         return false;
+    }
 
     if(!m_parser.configure(m_device) )
     {
@@ -359,8 +357,9 @@ bool JoypadControlServer::openAndAttachSubDevice(Searchable& prop)
 
 bool JoypadControlServer::attach(PolyDriver* poly)
 {
-    if(poly)
+    if (poly) {
         poly->view(m_device);
+    }
 
     if(m_device == nullptr)
     {
@@ -666,7 +665,9 @@ void JoypadControlServer::run()
                 }
                 b.push_back(v);
             }
-            if(write)m_portButtons.write();
+            if (write) {
+                m_portButtons.write();
+            }
         }
 
         if (m_portHats.valid)
@@ -686,7 +687,9 @@ void JoypadControlServer::run()
                 }
                 b.push_back(v);
             }
-            if(write)m_portHats.write();
+            if (write) {
+                m_portHats.write();
+            }
         }
 
         if (m_portAxis.valid)
@@ -707,7 +710,9 @@ void JoypadControlServer::run()
                 }
                 b.push_back(v);
             }
-            if(write)m_portAxis.write();
+            if (write) {
+                m_portAxis.write();
+            }
         }
 
         if (m_portTrackball.valid)
@@ -728,7 +733,9 @@ void JoypadControlServer::run()
                 }
                 cat(b, v);
             }
-            if(write)m_portTrackball.write();
+            if (write) {
+                m_portTrackball.write();
+            }
         }
 
         if (m_portStick.valid)
@@ -748,7 +755,9 @@ void JoypadControlServer::run()
                 }
                 cat(b, v);
             }
-            if(write)m_portStick.write();
+            if (write) {
+                m_portStick.write();
+            }
         }
 
         if (m_portTouch.valid)
@@ -768,7 +777,9 @@ void JoypadControlServer::run()
                 cat(b, v);
             }
 
-            if(write)m_portTouch.write();
+            if (write) {
+                m_portTouch.write();
+            }
         }
     }
     else
@@ -810,12 +821,14 @@ bool JoypadControlServer::attachAll(const PolyDriverList& p)
     }
 
     Idevice2attach->view(m_device);
-    if(!attach(m_device))
+    if (!attach(m_device)) {
         return false;
+    }
 
     PeriodicThread::setPeriod(m_period);
-    if (!PeriodicThread::start())
+    if (!PeriodicThread::start()) {
         return false;
+    }
 
     openPorts();
     return true;
@@ -823,12 +836,14 @@ bool JoypadControlServer::attachAll(const PolyDriverList& p)
 
 bool JoypadControlServer::detachAll()
 {
-    if (yarp::os::PeriodicThread::isRunning())
+    if (yarp::os::PeriodicThread::isRunning()) {
         yarp::os::PeriodicThread::stop();
+    }
 
     //check if we already instantiated a subdevice previously
-    if (m_isSubdeviceOwned)
+    if (m_isSubdeviceOwned) {
         return false;
+    }
 
     m_device = nullptr;
     return true;
@@ -841,7 +856,9 @@ bool JoypadControlServer::close()
     // close subdevice if it was created inside the open (--subdevice option)
     if(m_isSubdeviceOwned)
     {
-        if(m_subDeviceOwned)m_subDeviceOwned->close();
+        if (m_subDeviceOwned) {
+            m_subDeviceOwned->close();
+        }
 
         m_subDeviceOwned   = nullptr;
         m_device           = nullptr;

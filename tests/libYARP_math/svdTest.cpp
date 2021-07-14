@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 /**
@@ -35,14 +32,18 @@ const double TOL = 1e-8;
 void assertEqual(const Matrix &A, const Matrix &B, string testName, bool verbose=false)
 {
     if(A.cols() != B.cols() || A.rows()!=B.rows()){
-        if(verbose) printf("A != B: %s != %s\n", A.toString(3).c_str(), B.toString(3).c_str());
+        if (verbose) {
+            printf("A != B: %s != %s\n", A.toString(3).c_str(), B.toString(3).c_str());
+        }
         CHECK(false);
         INFO(testName);
     }
     for(size_t r=0; r<A.rows(); r++){
         for(size_t c=0; c<A.cols(); c++){
             if(fabs(A(r,c)-B(r,c))>TOL){
-                if(verbose) printf("A != B: %s != %s\n", A.toString(3).c_str(), B.toString(3).c_str());
+                if (verbose) {
+                    printf("A != B: %s != %s\n", A.toString(3).c_str(), B.toString(3).c_str());
+                }
                 CHECK(false);
                 INFO(testName);
             }
@@ -60,13 +61,15 @@ void assertNotEqual(const Matrix &A, const Matrix &B, string testName, bool verb
         INFO(testName);
         return;
     }
-    for(size_t r=0; r<A.rows(); r++)
-        for(size_t c=0; c<A.cols(); c++)
+    for (size_t r = 0; r < A.rows(); r++) {
+        for (size_t c = 0; c < A.cols(); c++) {
             if(fabs(A(r,c)-B(r,c))>TOL){
                 CHECK(true);
                 INFO(testName);
                 return;
             }
+        }
+    }
     CHECK(false);
     INFO(testName);
 }

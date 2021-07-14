@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 
@@ -190,8 +187,8 @@ public:
     virtual bool getRefPositionsRaw(const int n_joint, const int *joints, double *refs) {return false;}
 };
 
-constexpr yarp::conf::vocab32_t VOCAB_POSITION_DIRECT           = yarp::os::createVocab('d','p','o');
-constexpr yarp::conf::vocab32_t VOCAB_POSITION_DIRECTS          = yarp::os::createVocab('d','p','o','s');
-constexpr yarp::conf::vocab32_t VOCAB_POSITION_DIRECT_GROUP     = yarp::os::createVocab('d','p','o','g');
+constexpr yarp::conf::vocab32_t VOCAB_POSITION_DIRECT           = yarp::os::createVocab32('d','p','o');
+constexpr yarp::conf::vocab32_t VOCAB_POSITION_DIRECTS          = yarp::os::createVocab32('d','p','o','s');
+constexpr yarp::conf::vocab32_t VOCAB_POSITION_DIRECT_GROUP     = yarp::os::createVocab32('d','p','o','g');
 
 #endif // YARP_IPOSITIONDIRECT_H

@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_IAUDIORENDER_H
@@ -47,11 +44,32 @@ public:
      */
     virtual bool stopPlayback() = 0;
 
+    /**
+     * Check if the playback has been enabled (e.g. via startPlayback()/stopPlayback())
+     * @param playback_enabled the status of the device
+     * @return true/false upon success/failure
+     */
+    virtual bool isPlaying(bool& playback_enabled) = 0;
+
     virtual bool getPlaybackAudioBufferMaxSize(yarp::dev::AudioBufferSize& size) = 0;
 
     virtual bool getPlaybackAudioBufferCurrentSize(yarp::dev::AudioBufferSize& size) = 0;
 
     virtual bool resetPlaybackAudioBuffer() = 0;
+
+    /**
+     * Sets a software gain for the played audio
+     * @param gain the audio gain (1.0 is the default value)
+     * @return true/false upon success/failure
+     */
+    virtual bool setSWGain(double gain) = 0;
+
+    /**
+     * Sets the hardware gain of the playback device (if supported by the hardware)
+     * @param gain the audio gain (1.0 is the default value)
+     * @return true/false upon success/failure
+     */
+    virtual bool setHWGain(double gain) = 0;
 };
 
 } // namespace dev

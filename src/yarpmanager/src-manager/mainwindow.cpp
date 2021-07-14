@@ -1,19 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "mainwindow.h"
@@ -232,14 +219,16 @@ void MainWindow::init(yarp::os::Property config)
             string::size_type pos=modPaths.find(';');
             strPath=modPaths.substr(0, pos);
             yarp::manager::trimString(strPath);
-            if (!isAbsolute(strPath.c_str()))
+            if (!isAbsolute(strPath.c_str())) {
                 strPath.insert(0, basepath);
-            if((strPath.rfind(directorySeparator)==string::npos) ||
-            (strPath.rfind(directorySeparator)!=strPath.size()-1))
+            }
+            if ((strPath.rfind(directorySeparator) == string::npos) || (strPath.rfind(directorySeparator) != strPath.size() - 1)) {
                 strPath.append(directorySeparator);
+            }
             lazyManager.addModules(strPath.c_str());
-            if (pos==string::npos || pos==0)
+            if (pos == string::npos || pos == 0) {
                 break;
+            }
             modPaths=modPaths.substr(pos+1);
         }
     }
@@ -251,16 +240,18 @@ void MainWindow::init(yarp::os::Property config)
             string::size_type pos=resPaths.find(';');
             strPath=resPaths.substr(0, pos);
             yarp::manager::trimString(strPath);
-            if (!isAbsolute(strPath.c_str()))
+            if (!isAbsolute(strPath.c_str())) {
                 strPath.insert(0, basepath);
+            }
 
-            if((strPath.rfind(directorySeparator)==string::npos) ||
-            (strPath.rfind(directorySeparator)!=strPath.size()-1))
+            if ((strPath.rfind(directorySeparator) == string::npos) || (strPath.rfind(directorySeparator) != strPath.size() - 1)) {
                 strPath.append(directorySeparator);
+            }
 
             lazyManager.addResources(strPath.c_str());
-            if (pos==string::npos)
+            if (pos == string::npos) {
                 break;
+            }
             resPaths=resPaths.substr(pos+1);
         }
     }
@@ -444,8 +435,9 @@ bool MainWindow::loadRecursiveTemplates(const char* szPath)
 
     DIR *dir;
     struct dirent *entry;
-    if ((dir = opendir(strPath.c_str())) == nullptr)
+    if ((dir = opendir(strPath.c_str())) == nullptr) {
         return false;
+    }
 
     // loading from current folder
     yarp::manager::AppTemplate* tmp;
@@ -479,14 +471,15 @@ bool MainWindow::loadRecursiveApplications(const char* szPath)
 {
     const std::string directorySeparator{yarp::conf::filesystem::preferred_separator};
     string strPath = szPath;
-    if((strPath.rfind(directorySeparator)==string::npos) ||
-            (strPath.rfind(directorySeparator)!=strPath.size()-1))
-            strPath = strPath + directorySeparator;
+    if ((strPath.rfind(directorySeparator) == string::npos) || (strPath.rfind(directorySeparator) != strPath.size() - 1)) {
+        strPath = strPath + directorySeparator;
+    }
 
     DIR *dir;
     struct dirent *entry;
-    if ((dir = opendir(strPath.c_str())) == nullptr)
+    if ((dir = opendir(strPath.c_str())) == nullptr) {
         return false;
+    }
 
     lazyManager.addApplications(strPath.c_str());
 
@@ -515,14 +508,15 @@ bool MainWindow::initializeFile(string _class)
                  "      </authors>\n"
                  "</application>\n";
     if(b){
-        if(_class == "Resource")
+        if (_class == "Resource") {
             f.write(str_res_template.c_str());
-        else if(_class == "Module")
+        } else if (_class == "Module") {
             f.write(str_mod_template.c_str());
-        else if(_class == "Application")
+        } else if (_class == "Application") {
             f.write(appTemplate.toStdString().c_str());
-        else
+        } else {
             return false;
+        }
         f.flush();
         f.close();
         return true;
@@ -1094,12 +1088,14 @@ void MainWindow::onImportFiles()
                                                     | QFileDialog::DontResolveSymlinks);
     if(!dir.isEmpty()){
         if(config.find("load_subfolders").asString() == "yes"){
-            if(loadRecursiveApplications(dir.toLatin1().data()))
+            if (loadRecursiveApplications(dir.toLatin1().data())) {
                 syncApplicationList();
+            }
         }
         else{
-            if(lazyManager.addApplications(dir.toLatin1().data()))
+            if (lazyManager.addApplications(dir.toLatin1().data())) {
                 syncApplicationList();
+            }
         }
 
         if(lazyManager.addResources(dir.toLatin1().data())){
@@ -1157,8 +1153,9 @@ void MainWindow::onFileChanged(const QString &path)
     reply = QMessageBox::question(this, "File changed", "Xml file '" + path +
                                   "' changed.\nDo you want to reload the application? If open, the respective tab will be closed",
                                   QMessageBox::Yes|QMessageBox::No);
-    if (reply == QMessageBox::No)
+    if (reply == QMessageBox::No) {
         return;
+    }
 
     Application* app = (Application*) lazyManager.getNode(appName.toStdString());
     if (app)
@@ -1211,7 +1208,7 @@ void MainWindow::onYarpClean()
                                            "Timeout(seconds):", 0.3, 0, 2147483647, 1, &ok);
     if (ok)
     {
-        onLogMessage(QString("Yarp clean: cleaning death ports..."));
+        onLogMessage(QString("YARP clean: cleaning death ports..."));
         yarp::profiler::NetworkProfiler::yarpClean(timeout);
         onYarpNameList();
     }

@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 
@@ -25,21 +22,21 @@ using namespace std;
 
 bool Map2DPath::operator!=(const Map2DPath& r) const
 {
-    for (size_t i = 0; i < waypoints.size(); i++)
-        if (this->waypoints[i].map_id == r.waypoints[i].map_id ||
-            this->waypoints[i].x == r.waypoints[i].x ||
-            this->waypoints[i].y == r.waypoints[i].y ||
-            this->waypoints[i].theta == r.waypoints[i].theta) return false;
+    for (size_t i = 0; i < waypoints.size(); i++) {
+        if (this->waypoints[i].map_id == r.waypoints[i].map_id || this->waypoints[i].x == r.waypoints[i].x || this->waypoints[i].y == r.waypoints[i].y || this->waypoints[i].theta == r.waypoints[i].theta) {
+            return false;
+        }
+    }
     return true;
 }
 
 bool Map2DPath::operator==(const Map2DPath& r) const
 {
-    for (size_t i = 0; i < waypoints.size(); i++)
-        if (this->waypoints[i].map_id != r.waypoints[i].map_id ||
-            this->waypoints[i].x != r.waypoints[i].x ||
-            this->waypoints[i].y != r.waypoints[i].y ||
-            this->waypoints[i].theta != r.waypoints[i].theta) return false;
+    for (size_t i = 0; i < waypoints.size(); i++) {
+        if (this->waypoints[i].map_id != r.waypoints[i].map_id || this->waypoints[i].x != r.waypoints[i].x || this->waypoints[i].y != r.waypoints[i].y || this->waypoints[i].theta != r.waypoints[i].theta) {
+            return false;
+        }
+    }
     return true;
 }
 
@@ -94,11 +91,15 @@ double Map2DPath::getLength() const
 
 bool Map2DPath::isOnSingleMap() const
 {
-    if (waypoints.size() == 0) return true;
+    if (waypoints.size() == 0) {
+        return true;
+    }
     string mapname = waypoints[0].map_id;
     for (auto it = waypoints.begin(); it != waypoints.end(); it++)
     {
-        if (it->map_id != mapname) return false;
+        if (it->map_id != mapname) {
+            return false;
+        }
     }
     return true;
 }

@@ -1,8 +1,5 @@
-# Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
-# All rights reserved.
-#
-# This software may be modified and distributed under the terms of the
-# BSD-3-Clause license. See the accompanying LICENSE file for details.
+# SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+# SPDX-License-Identifier: BSD-3-Clause
 
 include(GetAllCMakeProperties)
 
@@ -23,16 +20,20 @@ function(YARP_MACOS_DUPLICATE_AND_ADD_BUNDLE)
 
   if(APPLE AND NOT YARP_DISABLE_MACOS_BUNDLES)
     set(_options )
-    set(_oneValueArgs TARGET
-                      APP_ICON
-                      INSTALL_DESTINATION
-                      INSTALL_COMPONENT)
+    set(_oneValueArgs
+      TARGET
+      APP_ICON
+      INSTALL_DESTINATION
+      INSTALL_COMPONENT
+    )
     set(_multiValueArgs )
 
-    cmake_parse_arguments(_DADB "${_options}"
-                                "${_oneValueArgs}"
-                                "${_multiValueArgs}"
-                                "${ARGN}")
+    cmake_parse_arguments(_DADB
+      "${_options}"
+      "${_oneValueArgs}"
+      "${_multiValueArgs}"
+      "${ARGN}"
+    )
 
     if(NOT DEFINED _DADB_TARGET)
       message(FATAL_ERROR "TARGET is required")

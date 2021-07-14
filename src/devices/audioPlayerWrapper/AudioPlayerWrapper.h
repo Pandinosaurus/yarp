@@ -1,19 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #ifndef YARP_DEV_AUDIOPLAYERWRAPPER_H
@@ -59,6 +46,8 @@
  * | debug          |      -         | bool    | -              |   -                     | No                          | developers use only                                                        | |
  * | playback_network_buffer_size  | - | float | s              |   5.0                   | No                          | size of the audio buffer in seconds, increasing this value to robustify the real-time audio stream (it will increase latency too) | Audio playback will start when the buffer is full |
  * | start          |      -         | bool    | -              |   false                 | No                          | automatically activates the playback when the device is started            | if false, the playback is enabled via rpc port |
+ *
+ * See \ref AudioDoc for additional documentation on YARP audio.
 */
 
 class AudioPlayerWrapper :
@@ -70,7 +59,7 @@ class AudioPlayerWrapper :
 
     struct scheduled_sound_type
     {
-        double scheduled_time;
+        double scheduled_time=0;
         yarp::sig::Sound sound_data;
     };
 
@@ -107,17 +96,17 @@ private:
     std::string  m_audioInPortName;
     yarp::os::BufferedPort<yarp::sig::Sound> m_audioInPort;
     std::string  m_statusPortName;
-    yarp::os::BufferedPort<yarp::os::Bottle>  m_statusPort;
+    yarp::os::Port m_statusPort;
 
-    yarp::dev::IAudioRender *m_irender;
+    yarp::dev::IAudioRender *m_irender = nullptr;
     yarp::os::Stamp m_lastStateStamp;
     yarp::dev::AudioBufferSize m_current_buffer_size;
     yarp::dev::AudioBufferSize m_max_buffer_size;
     std::queue<scheduled_sound_type> m_sound_buffer;
     double m_period;
     double m_buffer_delay;
-    bool   m_isDeviceOwned;
-    bool   m_debug_enabled;
+    bool   m_isDeviceOwned = false;
+    bool   m_debug_enabled = false;
     bool   m_isPlaying = false;
 
     bool initialize_YARP(yarp::os::Searchable &config);

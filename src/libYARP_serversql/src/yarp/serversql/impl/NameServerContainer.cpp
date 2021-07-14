@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/serversql/impl/NameServerContainer.h>
@@ -129,7 +126,7 @@ bool NameServerContainer::open(Searchable& options)
         }
     }
 
-    if (options.check("ros") || yarp::conf::environment::getEnvironment("YARP_USE_ROS")!="") {
+    if (options.check("ros") || yarp::conf::environment::get_string("YARP_USE_ROS")!="") {
         yarp::os::Bottle lst = yarp::os::Carriers::listCarriers();
         std::string lstStr(lst.toString());
         if (lstStr.find("rossrv") == std::string::npos ||
@@ -141,7 +138,7 @@ bool NameServerContainer::open(Searchable& options)
             yCError(NAMESERVERCONTAINER, "Aborting.\n");
             return false;
         }
-        std::string addr = yarp::conf::environment::getEnvironment("ROS_MASTER_URI");
+        std::string addr = yarp::conf::environment::get_string("ROS_MASTER_URI");
         Contact c = Contact::fromString(addr);
         if (c.isValid()) {
             c.setCarrier("xmlrpc");

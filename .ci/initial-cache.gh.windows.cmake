@@ -1,8 +1,5 @@
-# Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
-# All rights reserved.
-#
-# This software may be modified and distributed under the terms of the
-# BSD-3-Clause license. See the accompanying LICENSE file for details.
+# SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+# SPDX-License-Identifier: BSD-3-Clause
 
 set(CMAKE_SKIP_INSTALL_RPATH ON CACHE BOOL "")
 set(YARP_COMPILE_EXAMPLES OFF CACHE BOOL "")
@@ -13,9 +10,9 @@ set(YARP_COMPILE_GUIS ON CACHE BOOL "")
 set(YARP_COMPILE_libYARP_math ON CACHE BOOL "")
 
 set(ENABLE_yarpcar_human ON CACHE BOOL "")
-set(ENABLE_yarpcar_depthimage ON CACHE BOOL "")
-set(ENABLE_yarpcar_depthimage2 ON CACHE BOOL "")
-set(ENABLE_yarpcar_segmentationimage ON CACHE BOOL "")
+set(ENABLE_yarppm_depthimage_to_mono ON CACHE BOOL "")
+set(ENABLE_yarppm_depthimage_to_rgb ON CACHE BOOL "")
+set(ENABLE_yarppm_segmentationimage_to_rgb ON CACHE BOOL "")
 # set(ENABLE_yarpcar_mjpeg ON CACHE BOOL "")
 
 set(ENABLE_yarpmod_fakebot ON CACHE BOOL "")
@@ -28,3 +25,5 @@ set(ENABLE_yarpmod_imuBosch_BNO055 ON CACHE BOOL "")
 set(ENABLE_yarpmod_fakeLaser ON CACHE BOOL "")
 set(ENABLE_yarpmod_rpLidar ON CACHE BOOL "")
 set(ENABLE_yarpmod_laserHokuyo ON CACHE BOOL "")
+set(ENABLE_yarpcar_websocket ON CACHE BOOL "")
+

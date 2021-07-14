@@ -1,16 +1,14 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include "ServerFrameGrabber.h"
 
 #include <yarp/os/LogComponent.h>
 #include <yarp/os/LogStream.h>
+#include <yarp/proto/framegrabber/CameraVocabs.h>
 
 using namespace yarp::os;
 using namespace yarp::dev;
@@ -97,8 +95,9 @@ bool ServerFrameGrabber::open(yarp::os::Searchable& config)
             poly.view(fgAv);
         }
         poly.view(fgCtrl);
-        if(fgCtrl)
-            ifgCtrl_Parser.configure(fgCtrl);
+        if (fgCtrl) {
+            ifgCtrl_Responder.configure(fgCtrl);
+        }
         poly.view(fgTimed);
         poly.view(rgbVis_p);
 
@@ -196,7 +195,7 @@ bool ServerFrameGrabber::open(yarp::os::Searchable& config)
 bool ServerFrameGrabber::respond(const yarp::os::Bottle& cmd,
                                  yarp::os::Bottle& response)
 {
-    int code = cmd.get(0).asVocab();
+    int code = cmd.get(0).asVocab32();
 
     auto* fgCtrlDC1394=dynamic_cast<IFrameGrabberControlsDC1394*>(fgCtrl);
 
@@ -205,7 +204,7 @@ bool ServerFrameGrabber::respond(const yarp::os::Bottle& cmd,
     // first check if requests are coming from new iFrameGrabberControl2 interface and process them
     case VOCAB_FRAMEGRABBER_CONTROL:
     {
-        return ifgCtrl_Parser.respond(cmd, response);    // I don't like all those returns everywhere!!! :-(
+        return ifgCtrl_Responder.respond(cmd, response);    // I don't like all those returns everywhere!!! :-(
     } break;
     case VOCAB_RGB_VISUAL_PARAMS:
     {
@@ -218,7 +217,7 @@ bool ServerFrameGrabber::respond(const yarp::os::Bottle& cmd,
     {
         if (fgCtrlDC1394)
         {
-            int codeDC1394 = cmd.get(1).asVocab();
+            int codeDC1394 = cmd.get(1).asVocab32();
             switch(codeDC1394)
             {
             case VOCAB_DRGETMSK: // VOCAB_DRGETMSK 12
@@ -340,13 +339,13 @@ bool ServerFrameGrabber::read(ConnectionReader& connection)
     yarp::os::Bottle cmd, response;
     if (!cmd.read(connection)) { return false; }
     yCDebug(SERVERFRAMEGRABBER, "command received: %s\n", cmd.toString().c_str());
-    int code = cmd.get(0).asVocab();
+    int code = cmd.get(0).asVocab32();
     switch (code) {
     case VOCAB_SET:
         yCDebug(SERVERFRAMEGRABBER, "set command received\n");
         {
             bool ok = false;
-            switch(cmd.get(1).asVocab()) {
+            switch(cmd.get(1).asVocab32()) {
             case VOCAB_BRIGHTNESS:
                 ok = setBrightness(cmd.get(2).asFloat64());
                 break;
@@ -367,9 +366,9 @@ bool ServerFrameGrabber::read(ConnectionReader& connection)
         yCDebug(SERVERFRAMEGRABBER, "get command received\n");
         {
             bool ok = false;
-            response.addVocab(VOCAB_IS);
+            response.addVocab32(VOCAB_IS);
             response.add(cmd.get(1));
-            switch(cmd.get(1).asVocab()) {
+            switch(cmd.get(1).asVocab32()) {
             case VOCAB_BRIGHTNESS:
                 ok = true;
                 response.addFloat64(getBrightness());

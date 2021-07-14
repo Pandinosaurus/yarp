@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/Property.h>
@@ -56,12 +53,15 @@ YARP_WARNING_POP
 #endif // YARP_NO_DEPRECATED
         if(options.check("user") || options.check("sysadm") || options.check("installed"))
         {
-            if (options.check("user"))
+            if (options.check("user")) {
                 printUserFolders(rf, CONTEXTS);
-            if (options.check("sysadm"))
+            }
+            if (options.check("sysadm")) {
                 printSysadmFolders(rf, CONTEXTS);
-            if (options.check("installed"))
+            }
+            if (options.check("installed")) {
                 printInstalledFolders(rf, CONTEXTS);
+            }
         }
         else
         {
@@ -114,12 +114,15 @@ YARP_WARNING_POP
         if (options.check("user") || options.check("sysadm") || options.check("installed"))
         {
             opts.searchLocations=ResourceFinderOptions::NoLocation;
-            if(options.check("user"))
-                opts.searchLocations= ResourceFinderOptions::SearchLocations ( opts.searchLocations | ResourceFinderOptions::User);
-            if(options.check("sysadm"))
-                opts.searchLocations= ResourceFinderOptions::SearchLocations ( opts.searchLocations | ResourceFinderOptions::Sysadmin);
-            if (options.check("installed"))
-                opts.searchLocations= ResourceFinderOptions::SearchLocations ( opts.searchLocations | ResourceFinderOptions::Installed);
+            if (options.check("user")) {
+                opts.searchLocations = ResourceFinderOptions::SearchLocations(opts.searchLocations | ResourceFinderOptions::User);
+            }
+            if (options.check("sysadm")) {
+                opts.searchLocations = ResourceFinderOptions::SearchLocations(opts.searchLocations | ResourceFinderOptions::Sysadmin);
+            }
+            if (options.check("installed")) {
+                opts.searchLocations = ResourceFinderOptions::SearchLocations(opts.searchLocations | ResourceFinderOptions::Installed);
+            }
         }
         yarp::os::ResourceFinder rf;
 #ifndef YARP_NO_DEPRECATED // Since YARP 3.4
@@ -131,8 +134,9 @@ YARP_DISABLE_DEPRECATED_WARNING
 YARP_WARNING_POP
 #endif // YARP_NO_DEPRECATED
         yarp::os::Bottle paths=rf.findPaths(std::string("contexts") + PATH_SEPARATOR +contextName, opts);
-        for (size_t curCont=0; curCont<paths.size(); ++curCont)
+        for (size_t curCont = 0; curCont < paths.size(); ++curCont) {
             printf("%s\n", paths.get(curCont).asString().c_str());
+        }
         return 0;
     }
 

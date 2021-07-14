@@ -1,17 +1,13 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_CONTROLBOARD_NWS_ROS_H
 #define YARP_DEV_CONTROLBOARD_NWS_ROS_H
 
 #include <yarp/dev/DeviceDriver.h>
-#include <yarp/dev/IMultipleWrapper.h>
-#include <yarp/dev/IWrapper.h>
+#include <yarp/dev/WrapperSingle.h>
 #include <yarp/os/PeriodicThread.h>
 
 #include <yarp/dev/IPositionControl.h>
@@ -31,19 +27,19 @@
 
 
 /**
- *  @ingroup dev_impl_wrapper
+ *  @ingroup dev_impl_nws_ros
  *
  * \brief `controlBoard_nws_ros`: A controlBoard network wrapper server for ROS.
  *
  * \section controlBoard_nws_ros_device_parameters Description of input parameters
  *
  *  Parameters required by this device are:
- * | Parameter name | SubParameter   | Type    | Units          | Default Value | Required                    | Description                                                       | Notes |
- * |:--------------:|:--------------:|:-------:|:--------------:|:-------------:|:--------------------------: |:-----------------------------------------------------------------:|:-----:|
- * | nodeName       |      -         | string  | -              |   -           | Yes                         | set the name for ROS node                                         | must start with a leading '/' |
- * | topicName      |      -         | string  | -              |   -           | Yes                         | set the name for ROS topic                                        | must start with a leading '/' |
- * | period         |      -         | double  | s              |   0.02        | No                          | refresh period of the broadcasted values in s                     | optional, default 20ms |
- * | subdevice      |      -         | string  | -              |   -           | No                          | name of the subdevice to instantiate                              | when used, parameters for the subdevice must be provided as well |
+ * | Parameter name  | SubParameter   | Type    | Units          | Default Value | Required                    | Description                                                       | Notes |
+ * |:---------------:|:--------------:|:-------:|:--------------:|:-------------:|:--------------------------: |:-----------------------------------------------------------------:|:-----:|
+ * | node_name       |      -         | string  | -              |   -           | Yes                         | set the name for ROS node                                         | must start with a leading '/' |
+ * | topic_name      |      -         | string  | -              |   -           | Yes                         | set the name for ROS topic                                        | must start with a leading '/' |
+ * | period          |      -         | double  | s              |   0.02        | No                          | refresh period of the broadcasted values in s                     | optional, default 20ms |
+ * | subdevice       |      -         | string  | -              |   -           | No                          | name of the subdevice to instantiate                              | when used, parameters for the subdevice must be provided as well |
  *
  * ROS message type used is sensor_msgs/JointState.msg (http://docs.ros.org/api/sensor_msgs/html/msg/JointState.html)
  */
@@ -51,8 +47,7 @@
 class ControlBoard_nws_ros :
         public yarp::dev::DeviceDriver,
         public yarp::os::PeriodicThread,
-        public yarp::dev::IMultipleWrapper,
-        public yarp::dev::IWrapper
+        public yarp::dev::WrapperSingle
 {
 private:
     yarp::rosmsg::sensor_msgs::JointState ros_struct;
@@ -66,8 +61,8 @@ private:
     yarp::os::Node* node; // ROS node
     std::uint32_t counter {0}; // incremental counter in the ROS message
 
-    yarp::os::PortWriterBuffer<yarp::rosmsg::sensor_msgs::JointState> rosOutputState_buffer; // Buffer associated to the ROS topic
-    yarp::os::Publisher<yarp::rosmsg::sensor_msgs::JointState> rosPublisherPort;             // Dedicated ROS topic publisher
+    yarp::os::PortWriterBuffer<yarp::rosmsg::sensor_msgs::JointState> outputState_buffer; // Buffer associated to the ROS topic
+    yarp::os::Publisher<yarp::rosmsg::sensor_msgs::JointState> publisherPort;             // Dedicated ROS topic publisher
 
     static constexpr double default_period = 0.02; // s
     double period {default_period};
@@ -103,13 +98,9 @@ public:
     bool close() override;
     bool open(yarp::os::Searchable& prop) override;
 
-    // yarp::dev::IWrapper
+    // yarp::dev::WrapperSingle
     bool attach(yarp::dev::PolyDriver* poly) override;
     bool detach() override;
-
-    // yarp::dev::IMultipleWrapper
-    bool attachAll(const yarp::dev::PolyDriverList &l) override;
-    bool detachAll() override;
 
     // yarp::os::PeriodicThread
     void run() override;

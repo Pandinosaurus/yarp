@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_SIG_INTRINSICPARAMS_H
@@ -29,11 +26,15 @@ namespace sig {
  */
 enum class YarpDistortion : std::int32_t
 {
-    YARP_DISTORTION_NONE, /**< Rectilinear images. No distortion compensation required. */
-    YARP_PLUM_BOB,        /**< Plumb bob distortion model */
-    YARP_FISH_EYE,        /**< Fish eye distortion model */
-    YARP_UNSUPPORTED,     /**< Unsupported distortion model */
-    YARP_DISTORTION_COUNT /**< Number of enumeration values. Not a valid input: intended to be used in for-loops. */
+    YARP_DISTORTION_NONE,  /**< Rectilinear images. No distortion compensation required. */
+    YARP_PLUMB_BOB,        /**< Plumb bob distortion model */
+    YARP_FISH_EYE,         /**< Fish eye distortion model */
+    YARP_UNSUPPORTED,      /**< Unsupported distortion model */
+    YARP_DISTORTION_COUNT, /**< Number of enumeration values. Not a valid input: intended to be used in for-loops. */
+
+#ifndef YARP_NO_DEPRECATED // Since YARP 3.5
+    YARP_PLUM_BOB YARP_DEPRECATED_MSG("Use YARP_PLUMB_BOB instead") = YARP_PLUMB_BOB, /**< Deprecated name for plumb bob distortion model */
+#endif
 };
 
 /**

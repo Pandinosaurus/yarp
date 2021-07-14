@@ -1,8 +1,5 @@
-# Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
-# All rights reserved.
-#
-# This software may be modified and distributed under the terms of the
-# BSD-3-Clause license. See the accompanying LICENSE file for details.
+# SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+# SPDX-License-Identifier: BSD-3-Clause
 
 # disable all warnings for current folder and subfolders
 # (unless explicitly added by the user)
@@ -61,7 +58,6 @@ endif()
 
 # Apache Thrift
 set(THRIFT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/thrift/thrift" PARENT_SCOPE)
-set(THRIFT_VERSION 0.12.0 PARENT_SCOPE)
 
 # libdc1394_bayer
 set(libdc1394_bayer_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/libdc1394_bayer" PARENT_SCOPE)
@@ -79,6 +75,9 @@ endif()
 
 # md5
 set(md5_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/md5" PARENT_SCOPE)
+
+# WebSocket
+set(WebSocket_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/websocket/WebSocket" PARENT_SCOPE)
 
 # ROS messages
 unset(ROS_MSG_PACKAGES)
@@ -121,3 +120,4 @@ set(ROS_tf2_msgs_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/ros/geometry2/tf2_msgs" PAREN
 list(APPEND ROS_MSG_PACKAGES tf2_msgs)
 
 set(ROS_MSG_PACKAGES ${ROS_MSG_PACKAGES} PARENT_SCOPE)
+

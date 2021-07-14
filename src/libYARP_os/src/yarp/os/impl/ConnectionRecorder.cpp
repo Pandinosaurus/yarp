@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/impl/ConnectionRecorder.h>
@@ -267,8 +264,8 @@ bool yarp::os::impl::ConnectionRecorder::write(yarp::os::ConnectionWriter& conne
     if (hasReply()) {
         connection.appendInt32(BOTTLE_TAG_LIST); // nested structure
         connection.appendInt32(3); // with three elements
-        connection.appendInt32(BOTTLE_TAG_VOCAB);
-        connection.appendInt32(yarp::os::createVocab('r', 'p', 'c'));
+        connection.appendInt32(BOTTLE_TAG_VOCAB32);
+        connection.appendInt32(yarp::os::createVocab32('r', 'p', 'c'));
         bool ok = readerStore.write(connection);
         if (ok) {
             writerStore.write(connection);

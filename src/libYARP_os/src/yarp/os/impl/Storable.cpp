@@ -1,11 +1,8 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * Copyright (C) 2006, 2008 Arjan Gijsberts
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-FileCopyrightText: 2006, 2008 Arjan Gijsberts
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/impl/Storable.h>
@@ -39,7 +36,7 @@ using yarp::os::impl::StoreInt64;
 using yarp::os::impl::StoreInt8;
 using yarp::os::impl::StoreList;
 using yarp::os::impl::StoreString;
-using yarp::os::impl::StoreVocab;
+using yarp::os::impl::StoreVocab32;
 
 
 YARP_OS_LOG_COMPONENT(STORABLE, "yarp.os.impl.Storable")
@@ -51,7 +48,7 @@ const int StoreInt32::code = BOTTLE_TAG_INT32;
 const int StoreInt64::code = BOTTLE_TAG_INT64;
 const int StoreFloat32::code = BOTTLE_TAG_FLOAT32;
 const int StoreFloat64::code = BOTTLE_TAG_FLOAT64;
-const int StoreVocab::code = BOTTLE_TAG_VOCAB;
+const int StoreVocab32::code = BOTTLE_TAG_VOCAB32;
 const int StoreString::code = BOTTLE_TAG_STRING;
 const int StoreBlob::code = BOTTLE_TAG_BLOB;
 const int StoreList::code = BOTTLE_TAG_LIST;
@@ -81,8 +78,8 @@ Storable* Storable::createByCode(std::int32_t id)
     case StoreInt64::code:
         storable = new StoreInt64();
         break;
-    case StoreVocab::code:
-        storable = new StoreVocab();
+    case StoreVocab32::code:
+        storable = new StoreVocab32();
         break;
     case StoreFloat32::code:
         storable = new StoreFloat32();
@@ -269,9 +266,9 @@ bool StoreInt64::writeRaw(ConnectionWriter& writer) const
 
 
 ////////////////////////////////////////////////////////////////////////////
-// StoreVocab
+// StoreVocab32
 
-std::string StoreVocab::toString() const
+std::string StoreVocab32::toString() const
 {
     if (x == 0) {
         return "false";
@@ -279,15 +276,15 @@ std::string StoreVocab::toString() const
     if (x == '1') {
         return "true";
     }
-    return Vocab::decode(x);
+    return Vocab32::decode(x);
 }
 
-void StoreVocab::fromString(const std::string& src)
+void StoreVocab32::fromString(const std::string& src)
 {
-    x = Vocab::encode(src);
+    x = Vocab32::encode(src);
 }
 
-std::string StoreVocab::toStringNested() const
+std::string StoreVocab32::toStringNested() const
 {
     if (x == 0) {
         return "false";
@@ -298,7 +295,7 @@ std::string StoreVocab::toStringNested() const
     return std::string("[") + toString() + "]";
 }
 
-void StoreVocab::fromStringNested(const std::string& src)
+void StoreVocab32::fromStringNested(const std::string& src)
 {
     x = 0;
     if (src.length() > 0) {
@@ -313,13 +310,13 @@ void StoreVocab::fromStringNested(const std::string& src)
     }
 }
 
-bool StoreVocab::readRaw(ConnectionReader& reader)
+bool StoreVocab32::readRaw(ConnectionReader& reader)
 {
     x = reader.expectInt32();
     return true;
 }
 
-bool StoreVocab::writeRaw(ConnectionWriter& writer) const
+bool StoreVocab32::writeRaw(ConnectionWriter& writer) const
 {
     writer.appendInt32(x);
     return true;
@@ -332,12 +329,12 @@ bool StoreVocab::writeRaw(ConnectionWriter& writer) const
 
 std::string StoreFloat32::toString() const
 {
-    return NetType::toString(x);
+    return yarp::conf::numeric::to_string(x);
 }
 
 void StoreFloat32::fromString(const std::string& src)
 {
-    x = NetType::toFloat32(src);
+    x = yarp::conf::numeric::from_string<yarp::conf::float32_t>(src);
 }
 
 bool StoreFloat32::readRaw(ConnectionReader& reader)
@@ -358,12 +355,12 @@ bool StoreFloat32::writeRaw(ConnectionWriter& writer) const
 
 std::string StoreFloat64::toString() const
 {
-    return NetType::toString(x);
+    return yarp::conf::numeric::to_string(x);
 }
 
 void StoreFloat64::fromString(const std::string& src)
 {
-    x = NetType::toFloat64(src);
+    x = yarp::conf::numeric::from_string<yarp::conf::float64_t>(src);
 }
 
 bool StoreFloat64::readRaw(ConnectionReader& reader)
@@ -523,7 +520,7 @@ std::string StoreBlob::toString() const
             result += " ";
         }
         const auto* src = reinterpret_cast<const unsigned char*>(&x[i]);
-        result += NetType::toString(*src);
+        result += yarp::conf::numeric::to_string(*src);
     }
     return result;
 }

@@ -1,18 +1,15 @@
-% Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
-% All rights reserved.
-%
-% This software may be modified and distributed under the terms of the
-% BSD-3-Clause license. See the accompanying LICENSE file for details.
+% SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+% SPDX-License-Identifier: BSD-3-Clause
 
 % Setting yarp binding library path
 % you can avoid this if the 'yarp.oct' is already
 % the octave load path
 addpath([getenv('YARP_ROOT') '/build/lib/octave']);
 
-% Import Yarp library
+% Import YARP library
 yarp;
 
-% Initialize Yarp network
+% Initialize YARP network
 yarp.Network.init();
 
 

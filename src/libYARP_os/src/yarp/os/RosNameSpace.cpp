@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/RosNameSpace.h>
@@ -556,7 +553,7 @@ Contact RosNameSpace::detectNameServer(bool useDetectedServer,
     if (!c.isValid()) {
         scanNeeded = true;
         yCInfo(ROSNAMESPACE, "Checking for ROS_MASTER_URI...");
-        std::string addr = yarp::conf::environment::getEnvironment("ROS_MASTER_URI");
+        std::string addr = yarp::conf::environment::get_string("ROS_MASTER_URI");
         c = Contact::fromString(addr);
         if (c.isValid()) {
             c.setCarrier("xmlrpc");
@@ -607,7 +604,7 @@ bool RosNameSpace::writeToNameServer(PortWriter& cmd,
         }
 
         Bottle out;
-        out.addVocab(Vocab::encode("many"));
+        out.addVocab32("many");
         Bottle* parts = cache.get(2).asList();
         Property nodes;
         Property topics;

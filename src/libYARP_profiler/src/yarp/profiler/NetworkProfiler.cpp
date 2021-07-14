@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/profiler/NetworkProfiler.h>
@@ -60,8 +57,9 @@ bool NetworkProfiler::yarpNameList(ports_name_set &ports, bool complete) {
             }
             if (shouldTake) {
                 Contact c = Contact::fromConfig(*entry);
-                if(c.getCarrier() != "mcast")
+                if (c.getCarrier() != "mcast") {
                     ports.push_back(*entry);
+                }
             }
         }
     }
@@ -96,10 +94,11 @@ bool NetworkProfiler::getPortDetails(const string& portName, PortDetails& info) 
         Bottle reply2;
         cmd.clear();
         cmd.addString("list"); cmd.addString("out"); cmd.addString(cnn.name);
-        if(!ping.write(cmd, reply2))
+        if (!ping.write(cmd, reply2)) {
             yWarning()<<"Cannot write (list out"<<cnn.name<<") to"<<portName;
-        else
-            cnn.carrier =  reply2.find("carrier").asString();
+        } else {
+            cnn.carrier = reply2.find("carrier").asString();
+        }
         info.outputs.push_back(cnn);
     }
 
@@ -114,8 +113,9 @@ bool NetworkProfiler::getPortDetails(const string& portName, PortDetails& info) 
     for(size_t i=0; i<reply.size(); i++) {
         ConnectionInfo cnn;
         cnn.name = reply.get(i).asString();
-        if(cnn.name != ping.getName())
+        if (cnn.name != ping.getName()) {
             info.inputs.push_back(cnn);
+        }
     }
 
     // Getting owner info
@@ -128,9 +128,9 @@ bool NetworkProfiler::getPortDetails(const string& portName, PortDetails& info) 
     }
 
     Property* process = reply.find("process").asDict();
-    if(!process)
+    if (!process) {
         yWarning()<<"Cannot find 'process' property of port "<<portName;
-    else {
+    } else {
         info.owner.name = process->find("name").asString();
         info.owner.arguments = process->find("arguments").asString();
         info.owner.pid = process->find("pid").asInt32();
@@ -139,9 +139,9 @@ bool NetworkProfiler::getPortDetails(const string& portName, PortDetails& info) 
     }
 
     Property* platform = reply.find("platform").asDict();
-    if(!platform)
+    if (!platform) {
         yWarning()<<"Cannot find 'platform' property of port "<<portName;
-    else {
+    } else {
         info.owner.os = platform->find("os").asString();
         info.owner.hostname = platform->find("hostname").asString();
     }
@@ -154,8 +154,9 @@ bool NetworkProfiler::getPortDetails(const string& portName, PortDetails& info) 
 bool NetworkProfiler::creatNetworkGraph(ports_detail_set details, yarp::profiler::graph::Graph& graph) {
 
     // adding the ports and processor nodes
-    if(NetworkProfiler::progCallback)
+    if (NetworkProfiler::progCallback) {
         NetworkProfiler::progCallback->onProgress(0);
+    }
 
     ports_detail_iterator itr;
     unsigned int itr_count = 0;
@@ -164,8 +165,9 @@ bool NetworkProfiler::creatNetworkGraph(ports_detail_set details, yarp::profiler
 
         // port node
         PortVertex* port = new PortVertex(info.name);
-        if(!info.inputs.size() && !info.outputs.size())
+        if (!info.inputs.size() && !info.outputs.size()) {
             port->property.put("orphan", true);
+        }
         graph.insert(*port);
 
         //process node (owner)
@@ -180,9 +182,9 @@ bool NetworkProfiler::creatNetworkGraph(ports_detail_set details, yarp::profiler
         process->property.put("hidden", false);
         auto itrVert=graph.insert(*process);
         // create connection between ports and its process
-        if(dynamic_cast<ProcessVertex*> (*itrVert))
+        if (dynamic_cast<ProcessVertex*>(*itrVert)) {
             port->setOwner((ProcessVertex*)(*itrVert));
-
+        }
 
 
         //machine node (owner of the process)
@@ -191,8 +193,9 @@ bool NetworkProfiler::creatNetworkGraph(ports_detail_set details, yarp::profiler
         //todo do the same done for the process.
         process->setOwner(machine);
 
-        if(!info.inputs.size() && !info.outputs.size())
+        if (!info.inputs.size() && !info.outputs.size()) {
             graph.insertEdge(*process, *port, Property("(type ownership) (dir unknown)"));
+        }
 
         // calculate progress
         if(NetworkProfiler::progCallback) {
@@ -214,24 +217,27 @@ bool NetworkProfiler::creatNetworkGraph(ports_detail_set details, yarp::profiler
                 Property edge_prop("(type connection)");
                 edge_prop.put("carrier", cnn.carrier);
                 graph.insertEdge(vi1, vi2, edge_prop);
+            } else {
+                yWarning() << "Found a nonexistent port (" << cnn.name << ")"
+                           << "in the output list of" << (*vi1)->property.find("name").asString();
             }
-            else
-                yWarning()<<"Found a nonexistent port ("<<cnn.name<<")"<<"in the output list of"<<(*vi1)->property.find("name").asString();
         }
         // calculate progress
         if(NetworkProfiler::progCallback) {
             NetworkProfiler::progCallback->onProgress((unsigned int) (++itr_count/((float)(details.size()*2)) * 100.0) );
         }
     }
-    if(NetworkProfiler::progCallback)
+    if (NetworkProfiler::progCallback) {
         NetworkProfiler::progCallback->onProgress(100); // is it really needed? :p
+    }
     return true;
 }
 
 bool NetworkProfiler::yarpClean(float timeout) {
 
-    if (timeout <= 0)
+    if (timeout <= 0) {
         timeout = -1;
+    }
 
     stringstream sstream;
     sstream<<timeout;
@@ -249,10 +255,9 @@ bool NetworkProfiler::creatSimpleModuleGraph(yarp::profiler::graph::Graph& graph
     //insert machines
     for(itr = vertices.begin(); itr!=vertices.end(); itr++) {
 
-        if(!dynamic_cast<MachineVertex*>(*itr))
-                continue;
-        else
-        {
+        if (!dynamic_cast<MachineVertex*>(*itr)) {
+            continue;
+        } else {
             auto* mv1 = dynamic_cast<MachineVertex*>(*itr);
             if (mv1)
             {
@@ -265,8 +270,9 @@ bool NetworkProfiler::creatSimpleModuleGraph(yarp::profiler::graph::Graph& graph
     }
 
     for(itr = vertices.begin(); itr!=vertices.end(); itr++) {
-        if(!dynamic_cast<ProcessVertex*>(*itr))
+        if (!dynamic_cast<ProcessVertex*>(*itr)) {
             continue;
+        }
         auto* pv1 = dynamic_cast<ProcessVertex*>(*itr);
         if (pv1)
         {
@@ -278,8 +284,9 @@ bool NetworkProfiler::creatSimpleModuleGraph(yarp::profiler::graph::Graph& graph
     }
     // insert edges
     for(itr = vertices.begin(); itr!=vertices.end(); itr++) {
-        if(!dynamic_cast<ProcessVertex*>(*itr))
+        if (!dynamic_cast<ProcessVertex*>(*itr)) {
             continue;
+        }
         Vertex* v1 = (*itr);
         const edge_set& outs = v1->outEdges();
         edge_const_iterator eitr;
@@ -333,11 +340,21 @@ std::string NetworkProfiler::packetPrioToString(yarp::os::QosStyle::PacketPriori
 }
 
 yarp::os::QosStyle::PacketPriorityLevel NetworkProfiler::packetStringToPrio(std::string level) {
-    if(level=="NORMAL") return yarp::os::QosStyle::PacketPriorityNormal;
-    if(level=="LOW") return yarp::os::QosStyle::PacketPriorityLow;
-    if(level=="HIGH") return yarp::os::QosStyle::PacketPriorityHigh;
-    if(level=="CRITIC") return yarp::os::QosStyle::PacketPriorityCritical;
-    if(level=="INVALID") return yarp::os::QosStyle::PacketPriorityInvalid;
+    if (level == "NORMAL") {
+        return yarp::os::QosStyle::PacketPriorityNormal;
+    }
+    if (level == "LOW") {
+        return yarp::os::QosStyle::PacketPriorityLow;
+    }
+    if (level == "HIGH") {
+        return yarp::os::QosStyle::PacketPriorityHigh;
+    }
+    if (level == "CRITIC") {
+        return yarp::os::QosStyle::PacketPriorityCritical;
+    }
+    if (level == "INVALID") {
+        return yarp::os::QosStyle::PacketPriorityInvalid;
+    }
     return yarp::os::QosStyle::PacketPriorityInvalid;
 }
 
@@ -364,9 +381,9 @@ bool NetworkProfiler::updateConnectionQosStatus(yarp::profiler::graph::Graph& gr
                         edge.property.put("ToThreadPriority", toStyle.getThreadPriority());
                         edge.property.put("ToThreadPolicy", toStyle.getThreadPolicy());
                         edge.property.put("ToPacketPriority", toStyle.getPacketPriorityAsLevel());
+                    } else {
+                        yWarning() << "Cannot retrieve Qos property of" << v1.property.find("name").asString() << "->" << v2.property.find("name").asString();
                     }
-                    else
-                        yWarning()<<"Cannot retrieve Qos property of"<<v1.property.find("name").asString()<<"->"<<v2.property.find("name").asString();
                 }
             }
         }

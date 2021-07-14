@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/companion/impl/Companion.h>
@@ -50,7 +47,7 @@ int Companion::detectRos(bool write)
         return 1;
     }
 
-    std::string uri = yarp::conf::environment::getEnvironment("ROS_MASTER_URI");
+    std::string uri = yarp::conf::environment::get_string("ROS_MASTER_URI");
     if (uri=="") {
         yCError(COMPANION, "ROS_MASTER_URI environment variable not set.");
         uri = "http://127.0.0.1:11311/";
@@ -60,7 +57,9 @@ int Companion::detectRos(bool write)
     yCError(COMPANION, "Trying ROS_MASTER_URI=%s...", uri.c_str());
     OutputProtocol *out = Carriers::connect(root);
     bool ok = (out != nullptr);
-    if (ok) delete out;
+    if (ok) {
+        delete out;
+    }
     if (!ok) {
         yCError(COMPANION, "Could not reach server.");
         return 1;
@@ -113,7 +112,9 @@ int Companion::cmdDetect(int argc, char *argv[])
     }
     OutputProtocol *out = Carriers::connect(addr);
     bool ok = (out != nullptr);
-    if (ok) delete out;
+    if (ok) {
+        delete out;
+    }
     if (ok) {
         yCInfo(COMPANION);
         yCInfo(COMPANION, "=========================================================");

@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/NetType.h>
@@ -99,13 +96,16 @@ TEST_CASE("sig::ImageTest", "[yarp::sig]")
         CHECK(total == 0); // pixel assignment check
     }
 
-    SECTION("test image copying.")
+    SECTION("test Image::copy().")
     {
+        constexpr size_t width = 128;
+        constexpr size_t height = 64;
         ImageOf<PixelRgb> img1;
-        img1.resize(128,64);
-        for (size_t x=0; x<img1.width(); x++) {
-            for (size_t y=0; y<img1.height(); y++) {
-                PixelRgb& pixel = img1.pixel(x,y);
+        img1.resize(width, height);
+
+        for (size_t x = 0; x < img1.width(); x++) {
+            for (size_t y = 0; y < img1.height(); y++) {
+                PixelRgb& pixel = img1.pixel(x, y);
                 pixel.r = x;
                 pixel.g = y;
                 pixel.b = 42;
@@ -117,22 +117,114 @@ TEST_CASE("sig::ImageTest", "[yarp::sig]")
 
         CHECK(img1.width() == result.width()); // width check
         CHECK(img1.height() == result.height()); // height check
-        if (img1.width()==result.width() &&
-            img1.height()==result.height()) {
+        if (img1.width() == result.width() && img1.height() == result.height()) {
             int mismatch = 0;
-            for (size_t x=0; x<img1.width(); x++) {
-                for (size_t y=0; y<img1.height(); y++) {
-                    PixelRgb& pix0 = img1.pixel(x,y);
-                    PixelRgb& pix1 = result.pixel(x,y);
-                    if (pix0.r!=pix1.r ||
-                        pix0.g!=pix1.g ||
-                        pix0.b!=pix1.b) {
+            for (size_t x = 0; x < img1.width(); x++) {
+                for (size_t y = 0; y < img1.height(); y++) {
+                    PixelRgb& pix0 = img1.pixel(x, y);
+                    PixelRgb& pix1 = result.pixel(x, y);
+                    if (pix0.r != pix1.r || pix0.g != pix1.g || pix0.b != pix1.b) {
                         mismatch++;
                     }
                 }
             }
-            CHECK(mismatch==0); // pixel match check
+            CHECK(mismatch == 0); // pixel match check
         }
+    }
+
+    SECTION("test Image::move().")
+    {
+        constexpr size_t width = 128;
+        constexpr size_t height = 64;
+        ImageOf<PixelRgb> img1;
+        img1.resize(width, height);
+
+        for (size_t x = 0; x < img1.width(); x++) {
+            for (size_t y = 0; y < img1.height(); y++) {
+                PixelRgb& pixel = img1.pixel(x, y);
+                pixel.r = x;
+                pixel.g = y;
+                pixel.b = 42;
+            }
+        }
+
+        ImageOf<PixelRgb> result;
+        result.move(std::move(img1));
+
+        CHECK(result.width() == width); // width check
+        CHECK(result.height() == height); // height check
+        int mismatch = 0;
+        for (size_t x = 0; x < result.width(); x++) {
+            for (size_t y = 0; y < result.height(); y++) {
+                PixelRgb& pix = result.pixel(x, y);
+                if (pix.r != x || pix.g != y || pix.b != 42) {
+                    mismatch++;
+                }
+            }
+        }
+        CHECK(mismatch == 0); // pixel match check
+    }
+
+
+    SECTION("test Image::swap().")
+    {
+        constexpr size_t width1 = 128;
+        constexpr size_t height1 = 64;
+        ImageOf<PixelRgb> img1;
+        img1.resize(width1, height1);
+
+        for (size_t x = 0; x < img1.width(); x++) {
+            for (size_t y = 0; y < img1.height(); y++) {
+                PixelRgb& pixel = img1.pixel(x, y);
+                pixel.r = x;
+                pixel.g = y;
+                pixel.b = 42;
+            }
+        }
+
+        constexpr size_t width2 = 64;
+        constexpr size_t height2 = 32;
+        ImageOf<PixelRgb> img2;
+        img2.resize(width2, height2);
+
+        for (size_t x = 0; x < img2.width(); x++) {
+            for (size_t y = 0; y < img2.height(); y++) {
+                PixelRgb& pixel = img2.pixel(x, y);
+                pixel.r = y;
+                pixel.g = x;
+                pixel.b = 255 - 42;
+            }
+        }
+
+        img2.swap(img1);
+
+        // Check img1
+        int mismatch = 0;
+        CHECK(img1.width() == width2);
+        CHECK(img1.height() == height2);
+        for (size_t x = 0; x < img1.width(); x++) {
+            for (size_t y = 0; y < img1.height(); y++) {
+                PixelRgb& pix = img1.pixel(x, y);
+                if (pix.r != y || pix.g != x || pix.b != 255 - 42) {
+                    mismatch++;
+                }
+            }
+        }
+        CHECK(mismatch == 0); // pixel match check
+
+        // Check img2
+        mismatch = 0;
+        CHECK(img2.width() == width1);
+        CHECK(img2.height() == height1);
+        for (size_t x = 0; x < img2.width(); x++) {
+            for (size_t y = 0; y < img2.height(); y++) {
+                PixelRgb& pix = img2.pixel(x, y);
+                if (pix.r != x || pix.g != y || pix.b != 42) {
+                    mismatch++;
+                }
+            }
+        }
+        CHECK(mismatch == 0); // pixel match check
     }
 
     SECTION("test image zeroing.")
@@ -417,24 +509,25 @@ TEST_CASE("sig::ImageTest", "[yarp::sig]")
 
         // do the same on img2, but using the
         // pixel function
-        for(r=0; r<img2.height(); r++)
-            for(c=0;c<img2.width(); c++)
-                {
+            for (r = 0; r < img2.height(); r++) {
+                for (c = 0; c < img2.width(); c++) {
                     img2(c,r).r=r;
                     img2(c,r).g=r;
                     img2(c,r).b=r;
                 }
+            }
 
 
         // now make sure the two images are the same
         int acc=0;
-        for(r=0; r<img2.height(); r++)
+        for (r = 0; r < img2.height(); r++) {
             for(c=0;c<img2.width(); c++)
                 {
                     acc+=(img2(c,r).r-img1(c,r).r);
                     acc+=(img2(c,r).g-img1(c,r).g);
                     acc+=(img2(c,r).b-img1(c,r).b);
-                }
+            }
+        }
 
         CHECK(acc == 0); // pointer to row access
     }
@@ -449,12 +542,13 @@ TEST_CASE("sig::ImageTest", "[yarp::sig]")
         size_t r,c;
         int acc1=0;
         int acc2=0;
-        for(r=0; r<img1.height(); r++)
+        for (r = 0; r < img1.height(); r++) {
             for(c=0;c<img1.width(); c++)
                 {
                     img1(c,r)=(unsigned char) r;
                     acc1+=r;
-                }
+            }
+        }
 
         const ImageOf<PixelMono> &constImg=img1;
         for(r=0; r<constImg.height(); r++)
@@ -741,6 +835,42 @@ TEST_CASE("sig::ImageTest", "[yarp::sig]")
         }
 
         CHECK(ok); // Checking data consistency bottom split
+    }
+
+    SECTION("test image crop.")
+    {
+        ImageOf<PixelRgb> inImg, outImg;
+        inImg.resize(10, 10);
+
+        size_t tlx = 4;
+        size_t tly = 5;
+        size_t brx = 8;
+        size_t bry = 7;
+
+        PixelRgb pixelValue {255, 0, 0};
+
+        for (size_t u = tlx; u <= brx; u++) {
+            for (size_t v = tly; v <= bry; v++) {
+                inImg.pixel(u, v) = pixelValue;
+            }
+        }
+
+        CHECK(utils::cropRect(inImg, {tlx, tly}, {brx, bry}, outImg));
+
+        CHECK(outImg.width() == brx - tlx + 1);
+        CHECK(outImg.height() == bry - tly + 1);
+
+        bool ok = true;
+
+        for (size_t u = 0; u < outImg.width(); u++) {
+            for (size_t v = 0; v < outImg.height(); v++) {
+                ok &= outImg.pixel(u, v).r == pixelValue.r;
+                ok &= outImg.pixel(u, v).g == pixelValue.g;
+                ok &= outImg.pixel(u, v).b == pixelValue.b;
+            }
+        }
+
+        CHECK(ok);
     }
 
     NetworkBase::setLocalMode(false);

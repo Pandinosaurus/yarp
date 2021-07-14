@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_PIDENUMS_H
@@ -19,10 +16,10 @@ namespace yarp
     {
         enum YARP_dev_API PidControlTypeEnum
         {
-            VOCAB_PIDTYPE_POSITION = yarp::os::createVocab('p', 'o', 's'),
-            VOCAB_PIDTYPE_VELOCITY = yarp::os::createVocab('v', 'e', 'l'),
-            VOCAB_PIDTYPE_TORQUE   = yarp::os::createVocab('t', 'r', 'q'),
-            VOCAB_PIDTYPE_CURRENT  = yarp::os::createVocab('c', 'u', 'r')
+            VOCAB_PIDTYPE_POSITION = yarp::os::createVocab32('p', 'o', 's'),
+            VOCAB_PIDTYPE_VELOCITY = yarp::os::createVocab32('v', 'e', 'l'),
+            VOCAB_PIDTYPE_TORQUE   = yarp::os::createVocab32('t', 'r', 'q'),
+            VOCAB_PIDTYPE_CURRENT  = yarp::os::createVocab32('c', 'u', 'r')
         };
 
 YARP_WARNING_PUSH

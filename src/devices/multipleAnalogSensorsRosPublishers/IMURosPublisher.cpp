@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include "IMURosPublisher.h"
@@ -22,7 +19,9 @@ bool IMURosPublisher::viewInterfaces()
     ok &= m_poly->view(m_iThreeAxisLinearAccelerometers);
     ok &= m_poly->view(m_iThreeAxisMagnetometers);
     ok &= m_poly->view(m_iOrientationSensors);
-    if (m_iThreeAxisGyroscopes) m_iThreeAxisGyroscopes->getThreeAxisGyroscopeFrameName(m_sens_index, m_framename);
+    if (m_iThreeAxisGyroscopes) {
+        m_iThreeAxisGyroscopes->getThreeAxisGyroscopeFrameName(m_sens_index, m_framename);
+    }
     return ok;
 }
 

@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006 Julio Gomes
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006 Julio Gomes
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include "ServerSoundGrabber.h"
@@ -166,23 +163,24 @@ bool ServerSoundGrabber::read(yarp::os::ConnectionReader& connection)
     yarp::os::Bottle command;
     yarp::os::Bottle reply;
     bool ok = command.read(connection);
-    if (!ok)
+    if (!ok) {
         return false;
+    }
     reply.clear();
 
     if (command.get(0).asString() == "start") {
         mic->startRecording();
-        reply.addVocab(VOCAB_OK);
+        reply.addVocab32(VOCAB_OK);
     } else if (command.get(0).asString() == "stop") {
         mic->stopRecording();
-        reply.addVocab(VOCAB_OK);
+        reply.addVocab32(VOCAB_OK);
     } else if (command.get(0).asString() == "help") {
-        reply.addVocab(yarp::os::Vocab::encode("many"));
+        reply.addVocab32("many");
         reply.addString("start");
         reply.addString("stop");
     } else {
         yCError(SERVERSOUNDGRABBER) << "Invalid command";
-        reply.addVocab(VOCAB_ERR);
+        reply.addVocab32(VOCAB_ERR);
     }
 
     yarp::os::ConnectionWriter* returnToSender = connection.getWriter();

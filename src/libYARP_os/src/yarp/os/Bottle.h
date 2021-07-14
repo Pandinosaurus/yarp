@@ -1,11 +1,8 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * Copyright (C) 2006, 2008 Arjan Gijsberts
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-FileCopyrightText: 2006, 2008 Arjan Gijsberts
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_OS_BOTTLE_H
@@ -15,6 +12,7 @@
 #include <yarp/os/Property.h>
 #include <yarp/os/Searchable.h>
 #include <yarp/os/Value.h>
+#include <yarp/os/Vocab.h>
 
 #include <string>
 
@@ -22,7 +20,7 @@
 #define BOTTLE_TAG_INT16 64        // 0000 0000 0100 0000
 #define BOTTLE_TAG_INT32 1         // 0000 0000 0000 0001
 #define BOTTLE_TAG_INT64 (1 + 16)  // 0000 0000 0001 0001
-#define BOTTLE_TAG_VOCAB (1 + 8)   // 0000 0000 0000 1001
+#define BOTTLE_TAG_VOCAB32 (1 + 8) // 0000 0000 0000 1001
 #define BOTTLE_TAG_FLOAT32 128     // 0000 0000 1000 0000
 #define BOTTLE_TAG_FLOAT64 (2 + 8) // 0000 0000 0000 1010
 #define BOTTLE_TAG_STRING (4)      // 0000 0000 0000 0100
@@ -30,11 +28,14 @@
 #define BOTTLE_TAG_LIST 256        // 0000 0001 0000 0000
 #define BOTTLE_TAG_DICT 512        // 0000 0010 0000 0000
 
-YARP_DEPRECATED_INTERNAL_MSG("Use BOTTLE_TAG_INT32 instead") // Since YARP 3.0.0
+YARP_DEPRECATED_MSG("Use BOTTLE_TAG_INT32 instead") // Since YARP 3.5.0
 constexpr std::int32_t BOTTLE_TAG_DOUBLE = BOTTLE_TAG_FLOAT64;
 
-YARP_DEPRECATED_INTERNAL_MSG("Use BOTTLE_TAG_FLOAT64 instead") // Since YARP 3.0.0
+YARP_DEPRECATED_MSG("Use BOTTLE_TAG_FLOAT64 instead") // Since YARP 3.5.0
 constexpr std::int32_t BOTTLE_TAG_INT = BOTTLE_TAG_INT32;
+
+YARP_DEPRECATED_MSG("Use BOTTLE_TAG_VOCAB32 instead") // Since YARP 3.5.0
+constexpr std::int32_t BOTTLE_TAG_VOCAB = BOTTLE_TAG_VOCAB32;
 
 namespace yarp {
 namespace os {
@@ -139,24 +140,27 @@ public:
     /**
      * Destructor.
      */
-    virtual ~Bottle();
+    ~Bottle() override;
 
     /**
      * Empties the bottle of any objects it contains.
      */
     void clear();
 
+#ifndef YARP_NO_DEPRECATED // Since YARP 3.5.0
     /**
      * Places an integer in the bottle, at the end of the list.
      *
      * @param x the integer to add.
      * @warning Unsafe, sizeof(int) is platform dependent. Use addInt32 instead.
+     * @deprecated Since YARP 3.5.0. Use addInt32 instead.
      */
-    YARP_DEPRECATED_INTERNAL_MSG("Use addInt32 instead") // Since YARP 3.0.0
+    YARP_DEPRECATED_MSG("Use addInt32 instead")
     inline void addInt(int x)
     {
         addInt32(static_cast<std::int32_t>(x));
     }
+#endif // YARP_NO_DEPRECATED
 
     /**
      * Places a 8-bit integer in the bottle, at the end of the list.
@@ -186,25 +190,65 @@ public:
      */
     void addInt64(std::int64_t x);
 
+#ifndef YARP_NO_DEPRECATED // Since YARP 3.5.0
+    /**
+     * Places a vocabulary item in the bottle, at the end of the list.
+     *
+     * @param x the item to add.
+     * @deprecated Since YARP 3.5.0. Use addVocab32 instead.
+     */
+    YARP_DEPRECATED_MSG("Use addVocab32 instead")
+    void addVocab(yarp::conf::vocab32_t x)
+    {
+        return addVocab32(x);
+    }
+#endif // YARP_NO_DEPRECATED
+
     /**
      * Places a vocabulary item in the bottle, at the end of the list.
      *
      * @param x the item to add.
      */
-    void addVocab(int x);
+    void addVocab32(yarp::conf::vocab32_t x);
 
+    /**
+     * Places a vocabulary item in the bottle, at the end of the list.
+     *
+     * @param a first character of the vocab
+     * @param b second character of the vocab
+     * @param c third character of the vocab
+     * @param d fourth character of the vocab
+     */
+    void addVocab32(char a, char b = 0, char c = 0, char d = 0)
+    {
+        addVocab32(yarp::os::createVocab32(a, b, c, d));
+    }
+
+    /**
+     * Places a vocabulary item in the bottle, at the end of the list.
+     * If the string is longer than 4 characters, only the first 4 are used.
+     * @param str The string to encode and add.
+     */
+    void addVocab32(const std::string& str)
+    {
+        addVocab32(yarp::os::Vocab32::encode(str));
+    }
+
+#ifndef YARP_NO_DEPRECATED // Since YARP 3.5.0
     /**
      * Places a floating point number in the bottle, at the end of the
      * list.
      *
      * @param x the number to add.
      * @warning Unsafe, sizeof(double) is platform dependent. Use addFloat64 instead.
+     * @deprecated Since YARP 3.5.0. Use addFloat64 instead.
      */
-    YARP_DEPRECATED_INTERNAL_MSG("Use addFloat64 instead") // Since YARP 3.0.0
+    YARP_DEPRECATED_MSG("Use addFloat64 instead")
     inline void addDouble(double x)
     {
         addFloat64(static_cast<yarp::conf::float64_t>(x));
     }
+#endif // YARP_NO_DEPRECATED
 
     /**
      * Places a 32-bit floating point number in the bottle, at the end of the

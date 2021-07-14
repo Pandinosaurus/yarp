@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/sig/ImageFile.h>
@@ -15,7 +12,7 @@
 #include <cstring>
 #include <cstdlib>
 
-#if YARP_HAS_JPEG_C
+#if defined (YARP_HAS_JPEG)
 #include "jpeglib.h"
 #endif
 
@@ -38,6 +35,10 @@ namespace
 
 namespace
 {
+    bool ImageReadRGB_JPG(ImageOf<PixelRgb>& img, const char* filename);
+    bool ImageReadBGR_JPG(ImageOf<PixelBgr>& img, const char* filename);
+    bool ImageReadMono_JPG(ImageOf<PixelMono>& img, const char* filename);
+
     bool ImageReadRGB_PNG(ImageOf<PixelRgb>& img, const char* filename);
     bool ImageReadBGR_PNG(ImageOf<PixelBgr>& img, const char* filename);
     bool ImageReadMono_PNG(ImageOf<PixelMono>& img, const char* filename);
@@ -72,6 +73,95 @@ namespace
     bool ImageWriteFloat_PlainHeaderless(ImageOf<PixelFloat>& img, const char* filename);
     bool ImageWriteFloat_CompressedHeaderless(ImageOf<PixelFloat>& img, const char* filename);
 };
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// private read methods for JPG Files
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+namespace {
+bool ImageReadRGB_JPG(ImageOf<PixelRgb>& img, const char* filename)
+{
+#if defined (YARP_HAS_JPEG)
+
+    struct jpeg_decompress_struct cinfo;
+    struct jpeg_error_mgr jerr;
+    jpeg_create_decompress(&cinfo);
+    cinfo.err = jpeg_std_error(&jerr);
+
+    FILE* fp = fopen(filename, "rb");
+    if (fp == NULL)
+    {
+        yCError(IMAGEFILE) << "Error: failed to open" << filename;
+        return false;
+    }
+
+    jpeg_stdio_src(&cinfo, fp);
+    jpeg_read_header(&cinfo, TRUE);
+    jpeg_start_decompress(&cinfo);
+
+    uint32_t j_width = cinfo.image_width;
+    uint32_t j_height = cinfo.image_height;
+    uint32_t j_ch = cinfo.num_components;
+
+    uint8_t* j_data = NULL;
+    j_data = (uint8_t*)malloc(sizeof(uint8_t) * j_width * j_height * j_ch);
+
+    //read line by line
+    uint8_t* j_row = j_data;
+    const uint32_t j_stride = j_width * j_ch;
+    for (size_t y = 0; y < j_height; y++)
+    {
+        jpeg_read_scanlines(&cinfo, &j_row, 1);
+        j_row += j_stride;
+    }
+
+    jpeg_finish_decompress(&cinfo);
+    jpeg_destroy_decompress(&cinfo);
+    fclose(fp);
+
+    img.resize(j_width, j_height);
+    for (size_t y = 0; y < j_height; y++)
+    {
+        for (size_t x = 0; x < j_width; x++)
+        {
+            unsigned char* address = img.getPixelAddress(x, y);
+            address[0] = j_data[y * j_width * j_ch + x * j_ch + 0];
+            address[1] = j_data[y * j_width * j_ch + x * j_ch + 1];
+            address[2] = j_data[y * j_width * j_ch + x * j_ch + 2];
+        }
+    }
+
+    free(j_data);
+    j_data = nullptr;
+
+    return true;
+#else
+    yCError(IMAGEFILE) << "JPG library not available/not found";
+    return false;
+#endif
+}
+
+bool ImageReadBGR_JPG(ImageOf<PixelBgr>& img, const char* filename)
+{
+#if defined (YARP_HAS_JPEG)
+    yCError(IMAGEFILE) << "Not yet implemented";
+    return false;
+#else
+    yCError(IMAGEFILE) << "JPG library not available/not found";
+    return false;
+#endif
+}
+
+bool ImageReadMono_JPG(ImageOf<PixelMono>& img, const char* filename)
+{
+#if defined (YARP_HAS_JPEG)
+    yCError(IMAGEFILE) << "Not yet implemented";
+    return false;
+#else
+    yCError(IMAGEFILE) << "JPG library not available/not found";
+    return false;
+#endif
+}
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // private read methods for PNG Files
@@ -114,28 +204,31 @@ bool ImageReadRGB_PNG(ImageOf<PixelRgb>& img, const char* filename)
     // Read any color_type into 8bit depth, RGBA format.
     // See http://www.libpng.org/pub/png/libpng-manual.txt
 
-    if (bit_depth == 16)
+    if (bit_depth == 16) {
         png_set_strip_16(png);
+    }
 
-    if (color_type == PNG_COLOR_TYPE_PALETTE)
+    if (color_type == PNG_COLOR_TYPE_PALETTE) {
         png_set_palette_to_rgb(png);
+    }
 
     // PNG_COLOR_TYPE_GRAY_ALPHA is always 8 or 16bit depth.
-    if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)
+    if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8) {
         png_set_expand_gray_1_2_4_to_8(png);
+    }
 
-    if (png_get_valid(png, info, PNG_INFO_tRNS))
+    if (png_get_valid(png, info, PNG_INFO_tRNS)) {
         png_set_tRNS_to_alpha(png);
+    }
 
     // These color_type don't have an alpha channel then fill it with 0xff.
-    if (color_type == PNG_COLOR_TYPE_RGB ||
-        color_type == PNG_COLOR_TYPE_GRAY ||
-        color_type == PNG_COLOR_TYPE_PALETTE)
+    if (color_type == PNG_COLOR_TYPE_RGB || color_type == PNG_COLOR_TYPE_GRAY || color_type == PNG_COLOR_TYPE_PALETTE) {
         png_set_filler(png, 0xFF, PNG_FILLER_AFTER);
+    }
 
-    if (color_type == PNG_COLOR_TYPE_GRAY ||
-        color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
+    if (color_type == PNG_COLOR_TYPE_GRAY || color_type == PNG_COLOR_TYPE_GRAY_ALPHA) {
         png_set_gray_to_rgb(png);
+    }
 
     png_read_update_info(png, info);
 
@@ -215,7 +308,9 @@ bool ReadHeader_PxM(FILE *fp, int *height, int *width, int *color)
         return false;
     }
 
-    if (ch=='6') *color = 1;
+    if (ch == '6') {
+        *color = 1;
+    }
 
     // skip comments
     ch = fgetc(fp);
@@ -232,8 +327,9 @@ bool ReadHeader_PxM(FILE *fp, int *height, int *width, int *color)
 
     /// LATER: not portable?
     int n=fscanf(fp, "%d%d%d", width, height, &maxval);
-    if (n!=3)
+    if (n != 3) {
         return false;
+    }
 
     fgetc(fp);
     if (maxval != 255)
@@ -608,7 +704,7 @@ bool SavePNG(char *src, const char *filename, size_t h, size_t w, size_t rowSize
 
 bool SaveJPG(char *src, const char *filename, size_t h, size_t w, size_t rowSize)
 {
-#if YARP_HAS_JPEG_C
+#if defined (YARP_HAS_JPEG)
     int quality = 100;
     struct jpeg_compress_struct cinfo;
     struct jpeg_error_mgr jerr;
@@ -827,6 +923,12 @@ bool ImageWriteFloat_CompressedHeaderless(ImageOf<PixelFloat>& img, const char* 
 bool file::read(ImageOf<PixelRgb> & dest, const std::string& src, image_fileformat format)
 {
     const char* file_ext = strrchr(src.c_str(), '.');
+    if (file_ext==nullptr)
+    {
+        yCError(IMAGEFILE) << "cannot find file extension in file name";
+        return false;
+    }
+
     if (strcmp(file_ext, ".pgm")==0 ||
         strcmp(file_ext, ".ppm")==0 ||
         format == FORMAT_PGM ||
@@ -843,8 +945,7 @@ bool file::read(ImageOf<PixelRgb> & dest, const std::string& src, image_fileform
             strcmp(file_ext, ".jpeg") == 0 ||
             format == FORMAT_JPG)
     {
-        yCError(IMAGEFILE) << "jpeg not yet implemented";
-        return false;
+        return ImageReadRGB_JPG(dest, src.c_str());
     }
     yCError(IMAGEFILE) << "unsupported file format";
     return false;
@@ -854,6 +955,12 @@ bool file::read(ImageOf<PixelRgb> & dest, const std::string& src, image_fileform
 bool file::read(ImageOf<PixelBgr> & dest, const std::string& src, image_fileformat format)
 {
     const char* file_ext = strrchr(src.c_str(), '.');
+    if (file_ext == nullptr)
+    {
+        yCError(IMAGEFILE) << "cannot find file extension in file name";
+        return false;
+    }
+
     if (strcmp(file_ext, ".pgm") == 0 ||
         strcmp(file_ext, ".ppm") == 0 ||
         format == FORMAT_PGM ||
@@ -870,8 +977,7 @@ bool file::read(ImageOf<PixelBgr> & dest, const std::string& src, image_fileform
         strcmp(file_ext, ".jpeg") == 0 ||
         format == FORMAT_JPG)
     {
-        yCError(IMAGEFILE) << "jpeg not yet implemented";
-        return false;
+        return ImageReadBGR_JPG(dest, src.c_str());
     }
     yCError(IMAGEFILE) << "unsupported file format";
     return false;
@@ -881,6 +987,12 @@ bool file::read(ImageOf<PixelBgr> & dest, const std::string& src, image_fileform
 bool file::read(ImageOf<PixelRgba> & dest, const std::string& src, image_fileformat format)
 {
     const char* file_ext = strrchr(src.c_str(), '.');
+    if (file_ext == nullptr)
+    {
+        yCError(IMAGEFILE) << "cannot find file extension in file name";
+        return false;
+    }
+
     if (strcmp(file_ext, ".pgm") == 0 ||
         strcmp(file_ext, ".ppm") == 0 ||
         format == FORMAT_PGM ||
@@ -909,8 +1021,13 @@ bool file::read(ImageOf<PixelRgba> & dest, const std::string& src, image_filefor
         strcmp(file_ext, ".jpeg") == 0 ||
         format == FORMAT_JPG)
     {
-        yCError(IMAGEFILE) << "jpeg not yet implemented";
-        return false;
+        ImageOf<PixelRgb> img2;
+        bool ok = ImageReadRGB_JPG(img2, src.c_str());
+        if (ok)
+        {
+            dest.copy(img2);
+        }
+        return ok;
     }
     yCError(IMAGEFILE) << "unsupported file format";
     return false;
@@ -919,6 +1036,12 @@ bool file::read(ImageOf<PixelRgba> & dest, const std::string& src, image_filefor
 bool file::read(ImageOf<PixelMono> & dest, const std::string& src, image_fileformat format)
 {
     const char* file_ext = strrchr(src.c_str(), '.');
+    if (file_ext == nullptr)
+    {
+        yCError(IMAGEFILE) << "cannot find file extension in file name";
+        return false;
+    }
+
     if (strcmp(file_ext, ".pgm") == 0 ||
         strcmp(file_ext, ".ppm") == 0 ||
         format == FORMAT_PGM ||
@@ -935,8 +1058,7 @@ bool file::read(ImageOf<PixelMono> & dest, const std::string& src, image_filefor
         strcmp(file_ext, ".jpeg") == 0 ||
         format == FORMAT_JPG)
     {
-        yCError(IMAGEFILE) << "jpeg not yet implemented";
-        return false;
+        return ImageReadMono_JPG(dest, src.c_str());
     }
     yCError(IMAGEFILE) << "unsupported file format";
     return false;
@@ -945,6 +1067,12 @@ bool file::read(ImageOf<PixelMono> & dest, const std::string& src, image_filefor
 bool file::read(ImageOf<PixelFloat>& dest, const std::string& src, image_fileformat format)
 {
     const char* file_ext = strrchr(src.c_str(), '.');
+    if (file_ext == nullptr)
+    {
+        yCError(IMAGEFILE) << "cannot find file extension in file name";
+        return false;
+    }
+
     if (strcmp(file_ext, ".float") == 0 ||
         format == FORMAT_NUMERIC)
     {

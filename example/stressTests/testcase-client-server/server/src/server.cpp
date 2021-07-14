@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/Bottle.h>
@@ -73,7 +70,7 @@ void CollatzServer::run()
         {
      //       fprintf(stdout,"Request received\n");
 #if 0
-            if (in.get(0).asVocab()==COLLATZ_VOCAB_REQ_ITEM)
+            if (in.get(0).asVocab32()==COLLATZ_VOCAB_REQ_ITEM)
             {
                 unsigned int num=in.get(1).asInt32();
 
@@ -91,7 +88,7 @@ void CollatzServer::run()
             //generateItem(num,thres);
 
             out.clear();
-            out.addVocab(COLLATZ_VOCAB_ITEM);
+            out.addVocab32(COLLATZ_VOCAB_ITEM);
             out.addInt32((int)num);
             out.addInt32((int)thres);
 

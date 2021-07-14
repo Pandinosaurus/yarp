@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_DATASOURCE_H
@@ -12,7 +9,7 @@
 
 #include <yarp/conf/system.h>
 
-#if !defined(YARP_INCLUDING_DEPRECATED_HEADER_ON_PURPOSE)
+#if !defined(YARP_INCLUDING_DEPRECATED_HEADER_YARP_DEV_DATASOURCE_H_ON_PURPOSE)
 YARP_COMPILER_WARNING("<yarp/dev/DataSource.h> file is deprecated")
 #endif
 
@@ -22,12 +19,17 @@ YARP_WARNING_PUSH
 YARP_DISABLE_DEPRECATED_WARNING
 
 #include <yarp/os/Port.h>
-#include <yarp/os/Runnable.h>
 #include <yarp/os/PortWriterBuffer.h>
 #include <yarp/os/Stamp.h>
-
 #include <yarp/os/Time.h>
 #include <yarp/os/Log.h>
+
+// #define YARP_INCLUDING_DEPRECATED_HEADER_YARP_OS_RUNNABLE_H_ON_PURPOSE
+#define YARP_INCLUDING_DEPRECATED_HEADER_ON_PURPOSE
+#include <yarp/os/Runnable.h>
+#undef YARP_INCLUDING_DEPRECATED_HEADER_ON_PURPOSE
+// #undef YARP_INCLUDING_DEPRECATED_HEADER_YARP_OS_RUNNABLE_H_ON_PURPOSE
+
 
 #include <yarp/dev/IPreciselyTimed.h>
 
@@ -105,10 +107,12 @@ public:
         {
             deltaT=now-timePrevious;
             cumulativeT+=deltaT;
-            if (deltaT>maxT)
-               maxT=deltaT;
-            if (deltaT<minT)
-               minT=deltaT;
+            if (deltaT > maxT) {
+                maxT = deltaT;
+            }
+            if (deltaT < minT) {
+                minT = deltaT;
+            }
             timePrevious=now;
         }
 

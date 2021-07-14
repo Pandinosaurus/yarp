@@ -1,25 +1,27 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/dev/MapGrid2D.h>
 #include <yarp/dev/IMap2D.h>
 #include <yarp/dev/Map2DLocation.h>
 #include <yarp/dev/Map2DArea.h>
+#include <yarp/os/Os.h>
 #include <yarp/os/Network.h>
+#include <yarp/os/ResourceFinder.h>
 #include <yarp/dev/PolyDriver.h>
+#include <yarp/conf/filesystem.h>
 
 #include <catch.hpp>
 #include <harness.h>
+#include <YarpBuildLocation.h>
 
 using namespace yarp::dev;
 using namespace yarp::dev::Nav2D;
 using namespace yarp::sig;
 using namespace yarp::os;
+
 
 static void ReadMapfromString(Nav2D::MapGrid2D& m, std::string s)
 {
@@ -45,6 +47,16 @@ TEST_CASE("dev::MapGrid2DTest", "[yarp::dev]")
     YARP_REQUIRE_PLUGIN("map2DClient", "device");
 
     Network::setLocalMode(true);
+
+    // Prepare folder for saving files
+    const std::string sep {yarp::conf::filesystem::preferred_separator};
+    const std::string saveDir = std::string{CMAKE_BINARY_DIR} + sep +
+        "tests" + sep +
+        "conf" + sep +
+        "contexts" + sep +
+        "mapGrid2DTest";
+
+    yarp::os::mkdir_p(saveDir.c_str());
 
     SECTION("Test data type MapGrid2D")
     {
@@ -104,6 +116,87 @@ TEST_CASE("dev::MapGrid2DTest", "[yarp::dev]")
         CHECK_FALSE(test_cnvutils_map3.isInsideMap(cell5_err));
         CHECK_FALSE(test_cnvutils_map3.isInsideMap(world5_err));
         // IMap2D isInsideMap() test successful
+    }
+
+    SECTION("Test copyPortable MapGrid2D")
+    {
+        {
+            Nav2D::MapGrid2D input_map;
+            yarp::os::Bottle output_bot;
+            bool b1 = Property::copyPortable(input_map, output_bot);
+            CHECK(b1);
+            yarp::os::Bottle input_bot= output_bot;
+            Nav2D::MapGrid2D output_map;
+            bool b2 = Property::copyPortable(input_bot, output_map);
+            CHECK(b2);
+        }
+        {
+            Nav2D::MapGrid2D input_map;
+            input_map.enable_map_compression_over_network(false);
+            yarp::os::Bottle output_bot;
+            bool b1 = Property::copyPortable(input_map, output_bot);
+            CHECK(b1);
+            yarp::os::Bottle input_bot = output_bot;
+            Nav2D::MapGrid2D output_map;
+            bool b2 = Property::copyPortable(input_bot, output_map);
+            CHECK(b2);
+        }
+        {
+            Nav2D::MapGrid2D input_map;
+            input_map.setSize_in_cells(100, 100);
+            yarp::os::Bottle output_bot;
+            bool b1 = Property::copyPortable(input_map, output_bot);
+            CHECK(b1);
+            yarp::os::Bottle input_bot = output_bot;
+            Nav2D::MapGrid2D output_map;
+            bool b2 = Property::copyPortable(input_bot, output_map);
+            CHECK(b2);
+        }
+        {
+            Nav2D::MapGrid2D input_map;
+            input_map.setSize_in_cells(100, 100);
+            input_map.enable_map_compression_over_network(false);
+            yarp::os::Bottle output_bot;
+            bool b1 = Property::copyPortable(input_map, output_bot);
+            CHECK(b1);
+            yarp::os::Bottle input_bot = output_bot;
+            Nav2D::MapGrid2D output_map;
+            bool b2 = Property::copyPortable(input_bot, output_map);
+            CHECK(b2);
+        }
+    }
+
+    SECTION("Test load/save MapGrid2D")
+    {
+        Nav2D::MapGrid2D yarp_map;
+        Nav2D::MapGrid2D ros_map;
+        Nav2D::MapGrid2D yarpros_map;
+        yarp::os::ResourceFinder rf;
+        rf.setDefaultContext("mapGrid2DTest");
+        {
+            std::string si = rf.findFileByName("map_yarpOnly.map");
+            bool b1 = yarp_map.loadFromFile(si);
+            yarp_map.m_map_name="testmap_yarpOnly_savedOutput";
+            bool b1b = yarp_map.saveToFile(saveDir + sep + "map_yarpOnlySaved.map");
+            CHECK(b1);
+            CHECK(b1b);
+        }
+        {
+            std::string si = rf.findFileByName("map_rosOnly.map");
+            bool b2 = ros_map.loadFromFile(si);
+            ros_map.m_map_name = "testmap_rosOnly_savedOutput";
+            bool b2b = ros_map.saveToFile(saveDir + sep + "map_rosOnlySaved.map");
+            CHECK(b2);
+            CHECK(b2b);
+        }
+        {
+            std::string si = rf.findFileByName("map_yarpAndRos.map");
+            bool b3 = yarpros_map.loadFromFile(si);
+            yarpros_map.m_map_name = "testmap_yarpAndRos_savedOutput";
+            bool b3b = yarpros_map.saveToFile(saveDir + sep + "map_yarpAndRosSaved.map");
+            CHECK(b3);
+            CHECK(b3b);
+        }
     }
 
     SECTION("Test data type Map2DArea, Map2DLocation")

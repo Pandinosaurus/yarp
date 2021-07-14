@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEVICE_FAKE_MOTIONCONTROL
@@ -18,6 +15,8 @@
 #include <yarp/dev/ControlBoardInterfacesImpl.h>
 #include <yarp/dev/IVirtualAnalogSensor.h>
 #include <yarp/dev/ImplementVirtualAnalogSensor.h>
+#include <yarp/dev/ImplementPositionControl.h>
+#include <yarp/dev/ImplementVelocityControl.h>
 
 #include <mutex>
 
@@ -377,7 +376,7 @@ public:
     bool getJointTypeRaw(int axis, yarp::dev::JointTypeEnum& type) override;
     ///////////////////////// END IAxisInfo Interface
 
-    //Internal use, not exposed by Yarp (yet)
+    //Internal use, not exposed by YARP (yet)
     bool getGearboxRatioRaw(int m, double *gearbox) override;
     virtual bool getRotorEncoderResolutionRaw(int m, double &rotres);
     virtual bool getJointEncoderResolutionRaw(int m, double &jntres);
@@ -432,7 +431,7 @@ public:
     bool setMotorTorqueParamsRaw(int j, const yarp::dev::MotorTorqueParameters params) override;
 //     int32_t getRefSpeedInTbl(uint8_t boardNum, int j, eOmeas_position_t pos) override;
 
-    // IVelocityControl2
+    // IVelocityControl interface
     bool velocityMoveRaw(const int n_joint, const int *joints, const double *spds) override;
     bool getRefVelocityRaw(const int joint, double *ref) override;
     bool getRefVelocitiesRaw(double *refs) override;

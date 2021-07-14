@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/dev/ImplementAmplifierControl.h>
@@ -33,8 +30,9 @@ ImplementAmplifierControl::~ImplementAmplifierControl()
 
 bool ImplementAmplifierControl:: initialize (int size, const int *amap, const double *enc, const double *zos, const double *ampereFactor, const double *voltFactor)
 {
-    if (helper!=nullptr)
+    if (helper != nullptr) {
         return false;
+    }
 
     helper=(void *)(new ControlBoardHelper(size, amap, enc, zos,nullptr, ampereFactor, voltFactor));
     yAssert (helper != nullptr);
@@ -52,8 +50,9 @@ bool ImplementAmplifierControl:: initialize (int size, const int *amap, const do
 */
 bool ImplementAmplifierControl::uninitialize ()
 {
-    if (helper!=nullptr)
+    if (helper != nullptr) {
         delete castToMapper(helper);
+    }
 
     delete [] dTemp;
     delete [] iTemp;

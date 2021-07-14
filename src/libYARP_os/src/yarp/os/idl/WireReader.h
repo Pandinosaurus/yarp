@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_OS_IDL_WIREREADER_H
@@ -68,21 +65,17 @@ public:
 
     bool readFloat64(yarp::conf::float64_t& x);
 
-    bool readVocab(std::int32_t& x);
+    bool readUI8(std::uint8_t& x);
 
-#ifndef YARP_NO_DEPRECATED // Since YARP 3.0.0
-    YARP_DEPRECATED_MSG("Use readI8 instead")
-    bool readByte(std::int8_t& x)
-    {
-        return readI8(x);
-    }
+    bool readUI16(std::uint16_t& x);
 
-    YARP_DEPRECATED_MSG("Use readFloat64 instead")
-    bool readDouble(double& x)
-    {
-        return readFloat64(x);
-    }
-#endif // YARP_NO_DEPRECATED
+    bool readUI32(std::uint32_t& x);
+
+    bool readUI64(std::uint64_t& x);
+
+    bool readVocab32(yarp::conf::vocab32_t& x);
+
+    bool readSizeT(std::size_t& x);
 
     std::int8_t expectInt8()
     {
@@ -123,20 +116,6 @@ public:
         readFloat64(x);
         return x;
     }
-
-#ifndef YARP_NO_DEPRECATED // Since YARP 3.0.0
-    YARP_DEPRECATED_MSG("Use expectInt32 instead")
-    int expectInt()
-    {
-        return static_cast<int>(expectInt32());
-    }
-
-    YARP_DEPRECATED_MSG("Use expectFloat64 instead")
-    double expectDouble()
-    {
-        return static_cast<double>(expectFloat64());
-    }
-#endif // YARP_NO_DEPRECATED
 
     bool readString(std::string& str, bool* is_vocab = nullptr);
 
@@ -179,9 +158,50 @@ public:
 
     bool getMode() const;
 
-    bool getIsVocab() const;
+    bool getIsVocab32() const;
+#ifndef YARP_NO_DEPRECATED // Since YARP 3.0.0
+    YARP_DEPRECATED_MSG("Use getIsVocab instead")
+    bool getIsVocab() const {
+        return getIsVocab32();
+    }
+#endif // YARP_NO_DEPRECATED
 
     const std::string& getString() const;
+
+#ifndef YARP_NO_DEPRECATED // Since YARP 3.0.0
+    YARP_DEPRECATED_MSG("Use readI8 instead")
+    bool readByte(std::int8_t& x)
+    {
+        return readI8(x);
+    }
+
+    YARP_DEPRECATED_MSG("Use readFloat64 instead")
+    bool readDouble(double& x)
+    {
+        return readFloat64(x);
+    }
+#endif // YARP_NO_DEPRECATED
+
+#ifndef YARP_NO_DEPRECATED // Since YARP 3.5.0
+    YARP_DEPRECATED_MSG("Use readVocab32 instead")
+    bool readVocab(std::int32_t& x) {
+        return readVocab32(x);
+    }
+#endif // YARP_NO_DEPRECATED
+
+#ifndef YARP_NO_DEPRECATED // Since YARP 3.0.0
+    YARP_DEPRECATED_MSG("Use expectInt32 instead")
+    int expectInt()
+    {
+        return static_cast<int>(expectInt32());
+    }
+
+    YARP_DEPRECATED_MSG("Use expectFloat64 instead")
+    double expectDouble()
+    {
+        return static_cast<double>(expectFloat64());
+    }
+#endif // YARP_NO_DEPRECATED
 
 private:
     NullConnectionWriter null_writer;

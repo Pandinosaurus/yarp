@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <cstdio>
@@ -40,10 +37,10 @@ void DeviceResponder::addUsage(const Bottle& bot, const char *explain) {
 
 
 bool DeviceResponder::respond(const Bottle& command, Bottle& reply) {
-    switch (command.get(0).asVocab()) {
-    case yarp::os::createVocab('h','e','l','p'):
+    switch (command.get(0).asVocab32()) {
+    case yarp::os::createVocab32('h','e','l','p'):
         if (examples.size()>=1) {
-            reply.add(Value::makeVocab("many"));
+            reply.add(Value::makeVocab32("many"));
             if (command.get(1).toString()=="more") {
                 reply.append(details);
             } else {
@@ -95,7 +92,7 @@ bool DeviceResponder::read(ConnectionReader& connection)
         ConnectionWriter* writer = connection.getWriter();
         if (writer != nullptr) {
             response.clear();
-            response.addVocab(Vocab::encode("nak"));
+            response.addVocab32("nak");
             response.write(*writer);
         }
     }

@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/impl/PortCore.h>
@@ -109,7 +106,9 @@ public:
         expectation = bot.toString();
         sender.send(bot);
         for (int i=0; i<1000; i++) {
-            if (receives==1) break;
+            if (receives == 1) {
+                break;
+            }
             Time::delay(0.3);
         }
         CHECK(receives == 1); // "something received");
@@ -155,7 +154,9 @@ public:
         expectation = bot.toString();
         sender.send(bot);
         for (int i=0; i<1000; i++) {
-            if (receives==1) break;
+            if (receives == 1) {
+                break;
+            }
             Time::delay(0.3);
         }
         CHECK(receives == 1);  // "something received");

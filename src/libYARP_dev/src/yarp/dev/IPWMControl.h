@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_IPWMCONTROL_H
@@ -141,11 +138,11 @@ public:
 };
 
 // Interface name
-constexpr yarp::conf::vocab32_t VOCAB_PWMCONTROL_INTERFACE   = yarp::os::createVocab('i','p','w','m');
+constexpr yarp::conf::vocab32_t VOCAB_PWMCONTROL_INTERFACE   = yarp::os::createVocab32('i','p','w','m');
 // methods names
-constexpr yarp::conf::vocab32_t VOCAB_PWMCONTROL_REF_PWM     = yarp::os::createVocab('r','e','f');
-constexpr yarp::conf::vocab32_t VOCAB_PWMCONTROL_REF_PWMS    = yarp::os::createVocab('r','e','f','s');
-constexpr yarp::conf::vocab32_t VOCAB_PWMCONTROL_PWM_OUTPUT  = yarp::os::createVocab('p','w','m');
-constexpr yarp::conf::vocab32_t VOCAB_PWMCONTROL_PWM_OUTPUTS = yarp::os::createVocab('p','w','m','s');
+constexpr yarp::conf::vocab32_t VOCAB_PWMCONTROL_REF_PWM     = yarp::os::createVocab32('r','e','f');
+constexpr yarp::conf::vocab32_t VOCAB_PWMCONTROL_REF_PWMS    = yarp::os::createVocab32('r','e','f','s');
+constexpr yarp::conf::vocab32_t VOCAB_PWMCONTROL_PWM_OUTPUT  = yarp::os::createVocab32('p','w','m');
+constexpr yarp::conf::vocab32_t VOCAB_PWMCONTROL_PWM_OUTPUTS = yarp::os::createVocab32('p','w','m','s');
 
 #endif // YARP_DEV_IPWMCONTROL_H

@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include "XmlRpcCarrier.h"
@@ -36,7 +33,7 @@ void toXmlRpcValue(Value& vin, XmlRpcValue& vout)
         vout = vin.asFloat64();
     } else if (vin.isString()) {
         vout = std::string(vin.asString());
-    } else if (vin.isVocab()) {
+    } else if (vin.isVocab32()) {
         vout = std::string("[") + std::string(vin.toString()) + "]";
     } else if (vin.isList()) {
         Bottle *bot = vin.asList();

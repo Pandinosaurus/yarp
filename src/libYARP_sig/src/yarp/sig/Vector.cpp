@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/sig/Vector.h>
@@ -46,7 +43,7 @@ YARP_END_PACK
 const std::map<int, std::string> tag2FormatStr = {
     {BOTTLE_TAG_INT32, PRId32},
     {BOTTLE_TAG_INT64, PRId64},
-    {BOTTLE_TAG_VOCAB, "c"},
+    {BOTTLE_TAG_VOCAB32, "c"},
     {BOTTLE_TAG_STRING, "s"},
     {BOTTLE_TAG_FLOAT64, "lf"},
 };
@@ -56,17 +53,22 @@ bool VectorBase::read(yarp::os::ConnectionReader& connection) {
     connection.convertTextMode();
     VectorPortContentHeader header;
     bool ok = connection.expectBlock((char*)&header, sizeof(header));
-    if (!ok) return false;
+    if (!ok) {
+        return false;
+    }
     if (header.listLen > 0 &&
       header.listTag == (BOTTLE_TAG_LIST | getBottleTag()))
     {
-        if ((size_t)getListSize() != (size_t)(header.listLen))
+        if ((size_t)getListSize() != (size_t)(header.listLen)) {
             resize(header.listLen);
+        }
         char* ptr = getMemoryBlock();
         yCAssert(VECTOR, ptr != nullptr);
         int elemSize=getElementSize();
         ok = connection.expectBlock(ptr, elemSize*header.listLen);
-        if (!ok) return false;
+        if (!ok) {
+            return false;
+        }
     } else {
         return false;
     }

@@ -1,9 +1,6 @@
-# Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
-# Copyright (C) 2006-2010 RobotCub Consortium
-# All rights reserved.
-#
-# This software may be modified and distributed under the terms of the
-# BSD-3-Clause license. See the accompanying LICENSE file for details.
+# SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+# SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+# SPDX-License-Identifier: BSD-3-Clause
 
 
 #########################################################################
@@ -11,18 +8,20 @@
 
 # In all the following files, change offset here in case the initial comment
 # changes.
-set(_offset_unix 341)
-set(_offset_win 352)
+set(_offset_unix 221)
+set(_offset_win 229)
 # The first end of line is at the 3rd character of the file
 set(_first_eol_offset 2)
 
 # Test if the end of lines are windows or unix.
-file(READ
-    "${CMAKE_CURRENT_SOURCE_DIR}/yarp/conf/compiler.dox.in"
-    _test_eol
-    OFFSET ${_first_eol_offset}
-    LIMIT 2
-    HEX)
+file(
+  READ
+  "${CMAKE_CURRENT_SOURCE_DIR}/yarp/conf/compiler.dox.in"
+  _test_eol
+  OFFSET ${_first_eol_offset}
+  LIMIT 2
+  HEX
+)
 if("${_test_eol}" STREQUAL "0d0a")
   set(_offset ${_offset_win})
 else()
@@ -30,35 +29,45 @@ else()
 endif()
 
 # Read the file containing all the documentation for compiler.h
-file(READ
-     "${CMAKE_CURRENT_SOURCE_DIR}/yarp/conf/compiler.dox.in"
-     _compiler_dox
-     OFFSET ${_offset})
+file(
+  READ
+  "${CMAKE_CURRENT_SOURCE_DIR}/yarp/conf/compiler.dox.in"
+  _compiler_dox
+  OFFSET ${_offset}
+)
 
 # Read the prolog file containing defines to skip parsing with custom
 # pre-processors
-file(READ
-     "${CMAKE_CURRENT_SOURCE_DIR}/yarp/conf/compiler.prolog.in"
-     _compiler_prolog
-     OFFSET ${_offset})
+file(
+  READ
+  "${CMAKE_CURRENT_SOURCE_DIR}/yarp/conf/compiler.prolog.in"
+  _compiler_prolog
+  OFFSET ${_offset}
+)
 
 # Read the epilog file for swig
-file(READ
-     "${CMAKE_CURRENT_SOURCE_DIR}/yarp/conf/compiler.epilog.swig.in"
-     _compiler_epilog_swig
-     OFFSET ${_offset})
+file(
+  READ
+  "${CMAKE_CURRENT_SOURCE_DIR}/yarp/conf/compiler.epilog.swig.in"
+  _compiler_epilog_swig
+  OFFSET ${_offset}
+)
 
 # Read the epilog file for doxygen
-file(READ
-     "${CMAKE_CURRENT_SOURCE_DIR}/yarp/conf/compiler.epilog.doxygen.in"
-     _compiler_epilog_doxygen
-     OFFSET ${_offset})
+file(
+  READ
+  "${CMAKE_CURRENT_SOURCE_DIR}/yarp/conf/compiler.epilog.doxygen.in"
+  _compiler_epilog_doxygen
+  OFFSET ${_offset}
+)
 
 # Read the epilog file common for all custom pre-processors
-file(READ
-     "${CMAKE_CURRENT_SOURCE_DIR}/yarp/conf/compiler.epilog.in"
-     _compiler_epilog
-     OFFSET ${_offset})
+file(
+  READ
+  "${CMAKE_CURRENT_SOURCE_DIR}/yarp/conf/compiler.epilog.in"
+  _compiler_epilog
+  OFFSET ${_offset}
+)
 
 
 include(WriteCompilerDetectionHeader)
@@ -82,17 +91,21 @@ write_compiler_detection_header(
 #########################################################################
 # Generate the other headers
 
-set(_headers version
-             system
-             api
-             numeric)
+set(_headers
+  version
+  system
+  api
+  numeric
+)
 if(NOT YARP_NO_DEPRECATED) # Since YARP 3.2
   list(APPEND _headers options)
 endif()
 foreach(_header ${_headers})
   set(_out "${CMAKE_CURRENT_BINARY_DIR}/yarp/conf/${_header}.h")
-  configure_file("${CMAKE_CURRENT_SOURCE_DIR}/yarp/conf/${_header}.h.in"
-                 "${_out}")
+  configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/yarp/conf/${_header}.h.in"
+    "${_out}"
+  )
 endforeach()
 
 
@@ -102,25 +115,34 @@ endforeach()
 add_library(YARP_conf INTERFACE)
 add_library(YARP::YARP_conf ALIAS YARP_conf)
 
-target_include_directories(YARP_conf INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
-                                               $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
-                                               $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+target_include_directories(YARP_conf
+  INTERFACE
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
 target_compile_features(YARP_conf INTERFACE cxx_std_14)
 
 
 #########################################################################
 # Install all the headers
 
-install(TARGETS YARP_conf
-        EXPORT YARP_conf)
+install(
+  TARGETS YARP_conf
+  EXPORT YARP_conf
+)
 
 # INTERFACE libraries do not support the PUBLIC_HEADER property
 # https://gitlab.kitware.com/cmake/cmake/issues/20056
-install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/yarp/conf"
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/yarp
-        COMPONENT YARP_conf-dev
-        FILES_MATCHING PATTERN "*.h")
-install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/yarp/conf"
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/yarp
-        COMPONENT YARP_conf-dev
-        FILES_MATCHING PATTERN "*.h")
+install(
+  DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/yarp/conf"
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/yarp
+  COMPONENT YARP_conf-dev
+  FILES_MATCHING PATTERN "*.h"
+)
+install(
+  DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/yarp/conf"
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/yarp
+  COMPONENT YARP_conf-dev
+  FILES_MATCHING PATTERN "*.h"
+)

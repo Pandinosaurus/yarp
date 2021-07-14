@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_IVIRTUALANALOGSENSOR_H
@@ -13,7 +10,7 @@
 #include <yarp/dev/api.h>
 #include <yarp/sig/Vector.h>
 
-constexpr yarp::conf::vocab32_t VOCAB_IVIRTUAL_ANALOG   = yarp::os::createVocab('i','v','a','n');
+constexpr yarp::conf::vocab32_t VOCAB_IVIRTUAL_ANALOG   = yarp::os::createVocab32('i','v','a','n');
 
 /*! \file IVirtualAnalogSensor.h virtual analog sensor interface */
 namespace yarp {

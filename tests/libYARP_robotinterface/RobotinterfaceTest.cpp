@@ -1,29 +1,28 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <yarp/robotinterface/experimental/Param.h>
-#include <yarp/robotinterface/experimental/XMLReader.h>
+#include <yarp/robotinterface/Param.h>
+#include <yarp/robotinterface/XMLReader.h>
 
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/dev/PolyDriverList.h>
 #include <yarp/dev/IMultipleWrapper.h>
 
+#include <yarp/os/LogStream.h>
+
 #include <catch.hpp>
 #include <harness.h>
 
-TEST_CASE("robotinterface::experimental::ParamTest", "[yarp::robotinterface]")
+TEST_CASE("robotinterface::ParamTest", "[yarp::robotinterface]")
 {
-    SECTION("Check yarp::robotinterface::experimental::Param")
+    SECTION("Check yarp::robotinterface::Param")
     {
         std::string name = "name";
         std::string value = "value";
         bool isGroup = false;
-        yarp::robotinterface::experimental::Param param(name, value, isGroup);
+        yarp::robotinterface::Param param(name, value, isGroup);
 
         CHECK(param.name() == name);
         CHECK(param.value() == value);
@@ -47,6 +46,7 @@ struct GlobalState
     bool mockDetachWasCalled;
     bool mockWrapperWasClosed;
     bool mockDriverWasClosed;
+    std::string mockDriverParamValue;
 
     void reset()
     {
@@ -56,6 +56,7 @@ struct GlobalState
         mockDetachWasCalled = false;
         mockWrapperWasClosed = false;
         mockDriverWasClosed = false;
+        mockDriverParamValue.clear();
     }
 };
 
@@ -79,6 +80,7 @@ yarp::dev::RobotInterfaceTestMockDriver::~RobotInterfaceTestMockDriver()
 bool yarp::dev::RobotInterfaceTestMockDriver::open(yarp::os::Searchable& config)
 {
     globalState.mockDriverWasOpened = true;
+    globalState.mockDriverParamValue = config.check("theparam", yarp::os::Value("theparam_unset"), "The param").asString();
     return true;
 }
 
@@ -134,14 +136,14 @@ bool yarp::dev::RobotInterfaceTestMockWrapper::detachAll()
 
 
 
-TEST_CASE("robotinterface::experimental::XMLReaderTest", "[yarp::robotinterface]")
+TEST_CASE("robotinterface::XMLReaderTest", "[yarp::robotinterface]")
 {
     SECTION("Check empty string")
     {
         // Load empty XML configuration file
         std::string XMLString = "";
-        yarp::robotinterface::experimental::XMLReader reader;
-        yarp::robotinterface::experimental::XMLReaderResult result = reader.getRobotFromString(XMLString);
+        yarp::robotinterface::XMLReader reader;
+        yarp::robotinterface::XMLReaderResult result = reader.getRobotFromString(XMLString);
 
         // Check parsing fails on empty string
         CHECK(!result.parsingIsSuccessful);
@@ -157,14 +159,177 @@ TEST_CASE("robotinterface::experimental::XMLReaderTest", "[yarp::robotinterface]
                                 "  </devices>\n"
                                 "</robot>\n";
 
-        yarp::robotinterface::experimental::XMLReader reader;
-        yarp::robotinterface::experimental::XMLReaderResult result = reader.getRobotFromString(XMLString);
+        yarp::robotinterface::XMLReader reader;
+        yarp::robotinterface::XMLReaderResult result = reader.getRobotFromString(XMLString);
 
         // Check parsing fails on empty string
         CHECK(result.parsingIsSuccessful);
 
         // Verify that no device has been loaded
         CHECK(result.robot.devices().size() == 0);
+    }
+
+    SECTION("Check valid robot file with unset param")
+    {
+        // Reset test flags
+        globalState.reset();
+
+        // Add dummy devices to YARP drivers factory
+        yarp::dev::Drivers::factory().add(new yarp::dev::DriverCreatorOf<yarp::dev::RobotInterfaceTestMockDriver>("robotinterface_test_mock_device", "", "RobotInterfaceTestMockDriver"));
+
+        // Load empty XML configuration file
+        std::string XMLString = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
+                                "<!DOCTYPE robot PUBLIC \"-//YARP//DTD yarprobotinterface 3.1//EN\" \"http://www.yarp.it/DTD/yarprobotinterfaceV3.1.dtd\">\n"
+                                "<robot name=\"RobotWithOneDevice\" prefix=\"RobotWithOneDevice\">\n"
+                                "  <devices>\n"
+                                "    <device name=\"dummy_device\" type=\"robotinterface_test_mock_device\">\n"
+                                "    </device>\n"
+                                 "  </devices>\n"
+                                "</robot>\n";
+
+        yarp::robotinterface::XMLReader reader;
+        yarp::robotinterface::XMLReaderResult result = reader.getRobotFromString(XMLString);
+
+        // Check parsing fails on empty string
+        CHECK(result.parsingIsSuccessful);
+
+        // Verify that only one device has been loaded
+        CHECK(result.robot.devices().size() == 1);
+
+        // Verify that the devices were not opened and the attach was not called
+        CHECK(!globalState.mockDriverWasOpened);
+        CHECK(!globalState.mockDriverWasClosed);
+        CHECK(globalState.mockDriverParamValue.empty());
+
+        // Start the robot (open the device and call "attach" actions)
+        bool ok = result.robot.enterPhase(yarp::robotinterface::ActionPhaseStartup);
+        CHECK(ok);
+
+        // Check that the device was opened and attach called
+        CHECK(globalState.mockDriverWasOpened);
+        CHECK(!globalState.mockDriverWasClosed);
+        CHECK(globalState.mockDriverParamValue == "theparam_unset");
+
+        // Stop the robot
+        ok = result.robot.enterPhase(yarp::robotinterface::ActionPhaseInterrupt1);
+        CHECK(ok);
+        ok = result.robot.enterPhase(yarp::robotinterface::ActionPhaseShutdown);
+        CHECK(ok);
+
+        // Check that the device was closed and detach called
+        CHECK(globalState.mockDriverWasOpened);
+        CHECK(globalState.mockDriverWasClosed);
+        CHECK(globalState.mockDriverParamValue == "theparam_unset");
+    }
+
+    SECTION("Check valid robot file with fixed param")
+    {
+        // Reset test flags
+        globalState.reset();
+
+        // Add dummy devices to YARP drivers factory
+        yarp::dev::Drivers::factory().add(new yarp::dev::DriverCreatorOf<yarp::dev::RobotInterfaceTestMockDriver>("robotinterface_test_mock_device", "", "RobotInterfaceTestMockDriver"));
+
+        // Load empty XML configuration file
+        std::string XMLString = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
+                                "<!DOCTYPE robot PUBLIC \"-//YARP//DTD yarprobotinterface 3.1//EN\" \"http://www.yarp.it/DTD/yarprobotinterfaceV3.1.dtd\">\n"
+                                "<robot name=\"RobotWithOneDevice\" prefix=\"RobotWithOneDevice\">\n"
+                                "  <devices>\n"
+                                "    <device name=\"dummy_device\" type=\"robotinterface_test_mock_device\">\n"
+                                "      <param name=\"theparam\"> theparam_fixed </param>\n"
+                                "    </device>\n"
+                                 "  </devices>\n"
+                                "</robot>\n";
+
+        yarp::robotinterface::XMLReader reader;
+        yarp::robotinterface::XMLReaderResult result = reader.getRobotFromString(XMLString);
+
+        // Check parsing fails on empty string
+        CHECK(result.parsingIsSuccessful);
+
+        // Verify that only one device has been loaded
+        CHECK(result.robot.devices().size() == 1);
+
+        // Verify that the devices were not opened and the attach was not called
+        CHECK(!globalState.mockDriverWasOpened);
+        CHECK(!globalState.mockDriverWasClosed);
+        CHECK(globalState.mockDriverParamValue.empty());
+
+        // Start the robot (open the device and call "attach" actions)
+        bool ok = result.robot.enterPhase(yarp::robotinterface::ActionPhaseStartup);
+        CHECK(ok);
+
+        // Check that the device was opened and attach called
+        CHECK(globalState.mockDriverWasOpened);
+        CHECK(!globalState.mockDriverWasClosed);
+        CHECK(globalState.mockDriverParamValue == "theparam_fixed");
+
+        // Stop the robot
+        ok = result.robot.enterPhase(yarp::robotinterface::ActionPhaseInterrupt1);
+        CHECK(ok);
+        ok = result.robot.enterPhase(yarp::robotinterface::ActionPhaseShutdown);
+        CHECK(ok);
+
+        // Check that the device was closed and detach called
+        CHECK(globalState.mockDriverWasOpened);
+        CHECK(globalState.mockDriverWasClosed);
+        CHECK(globalState.mockDriverParamValue == "theparam_fixed");
+    }
+
+    SECTION("Check valid robot file with extern param")
+    {
+        // Reset test flags
+        globalState.reset();
+
+        // Add dummy devices to YARP drivers factory
+        yarp::dev::Drivers::factory().add(new yarp::dev::DriverCreatorOf<yarp::dev::RobotInterfaceTestMockDriver>("robotinterface_test_mock_device", "", "RobotInterfaceTestMockDriver"));
+
+        // Load empty XML configuration file
+        std::string XMLString = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
+                                "<!DOCTYPE robot PUBLIC \"-//YARP//DTD yarprobotinterface 3.1//EN\" \"http://www.yarp.it/DTD/yarprobotinterfaceV3.1.dtd\">\n"
+                                "<robot name=\"RobotWithOneDevice\" prefix=\"RobotWithOneDevice\">\n"
+                                "  <devices>\n"
+                                "    <device name=\"dummy_device\" type=\"robotinterface_test_mock_device\">\n"
+                                "      <param name=\"theparam\" extern-name=\"theparam\"> theparam_fixed </param>\n"
+                                "    </device>\n"
+                                 "  </devices>\n"
+                                "</robot>\n";
+
+        yarp::robotinterface::XMLReader reader;
+        yarp::os::Property config;
+        config.put("theparam", "theparam_alt");
+        yarp::robotinterface::XMLReaderResult result = reader.getRobotFromString(XMLString, config);
+
+        // Check parsing fails on empty string
+        CHECK(result.parsingIsSuccessful);
+
+        // Verify that only one device has been loaded
+        CHECK(result.robot.devices().size() == 1);
+
+        // Verify that the devices were not opened and the attach was not called
+        CHECK(!globalState.mockDriverWasOpened);
+        CHECK(!globalState.mockDriverWasClosed);
+        CHECK(globalState.mockDriverParamValue.empty());
+
+        // Start the robot (open the device and call "attach" actions)
+        bool ok = result.robot.enterPhase(yarp::robotinterface::ActionPhaseStartup);
+        CHECK(ok);
+
+        // Check that the device was opened and attach called
+        CHECK(globalState.mockDriverWasOpened);
+        CHECK(!globalState.mockDriverWasClosed);
+        CHECK(globalState.mockDriverParamValue == "theparam_alt");
+
+        // Stop the robot
+        ok = result.robot.enterPhase(yarp::robotinterface::ActionPhaseInterrupt1);
+        CHECK(ok);
+        ok = result.robot.enterPhase(yarp::robotinterface::ActionPhaseShutdown);
+        CHECK(ok);
+
+        // Check that the device was closed and detach called
+        CHECK(globalState.mockDriverWasOpened);
+        CHECK(globalState.mockDriverWasClosed);
+        CHECK(globalState.mockDriverParamValue == "theparam_alt");
     }
 
     SECTION("Check valid robot file with two devices")
@@ -194,8 +359,8 @@ TEST_CASE("robotinterface::experimental::XMLReaderTest", "[yarp::robotinterface]
                                 "  </devices>\n"
                                 "</robot>\n";
 
-        yarp::robotinterface::experimental::XMLReader reader;
-        yarp::robotinterface::experimental::XMLReaderResult result = reader.getRobotFromString(XMLString);
+        yarp::robotinterface::XMLReader reader;
+        yarp::robotinterface::XMLReaderResult result = reader.getRobotFromString(XMLString);
 
         // Check parsing fails on empty string
         CHECK(result.parsingIsSuccessful);
@@ -212,7 +377,7 @@ TEST_CASE("robotinterface::experimental::XMLReaderTest", "[yarp::robotinterface]
         CHECK(!globalState.mockDriverWasClosed);
 
         // Start the robot (open the device and call "attach" actions)
-        bool ok = result.robot.enterPhase(yarp::robotinterface::experimental::ActionPhaseStartup);
+        bool ok = result.robot.enterPhase(yarp::robotinterface::ActionPhaseStartup);
         CHECK(ok);
 
         // Check that the device was opened and attach called
@@ -224,9 +389,9 @@ TEST_CASE("robotinterface::experimental::XMLReaderTest", "[yarp::robotinterface]
         CHECK(!globalState.mockDriverWasClosed);
 
         // Stop the robot
-        ok = result.robot.enterPhase(yarp::robotinterface::experimental::ActionPhaseInterrupt1);
+        ok = result.robot.enterPhase(yarp::robotinterface::ActionPhaseInterrupt1);
         CHECK(ok);
-        ok = result.robot.enterPhase(yarp::robotinterface::experimental::ActionPhaseShutdown);
+        ok = result.robot.enterPhase(yarp::robotinterface::ActionPhaseShutdown);
         CHECK(ok);
 
         // Check that the device was closed and detach called
@@ -274,8 +439,8 @@ TEST_CASE("robotinterface::experimental::XMLReaderTest", "[yarp::robotinterface]
                                 "  </devices>\n"
                                 "</robot>\n";
 
-        yarp::robotinterface::experimental::XMLReader reader;
-        yarp::robotinterface::experimental::XMLReaderResult result = reader.getRobotFromString(XMLString);
+        yarp::robotinterface::XMLReader reader;
+        yarp::robotinterface::XMLReaderResult result = reader.getRobotFromString(XMLString);
 
         // Check parsing fails on empty string
         CHECK(result.parsingIsSuccessful);
@@ -294,7 +459,7 @@ TEST_CASE("robotinterface::experimental::XMLReaderTest", "[yarp::robotinterface]
         // Start the robot (open the device and call "attach" actions)
         bool ok = result.robot.setExternalDevices(externalDriverList);
         CHECK(ok);
-        ok = result.robot.enterPhase(yarp::robotinterface::experimental::ActionPhaseStartup);
+        ok = result.robot.enterPhase(yarp::robotinterface::ActionPhaseStartup);
         CHECK(ok);
 
         // Check that the also the wrapper was opened and attach called
@@ -306,9 +471,9 @@ TEST_CASE("robotinterface::experimental::XMLReaderTest", "[yarp::robotinterface]
         CHECK(!globalState.mockDriverWasClosed);
 
         // Stop the robot
-        ok = result.robot.enterPhase(yarp::robotinterface::experimental::ActionPhaseInterrupt1);
+        ok = result.robot.enterPhase(yarp::robotinterface::ActionPhaseInterrupt1);
         CHECK(ok);
-        ok = result.robot.enterPhase(yarp::robotinterface::experimental::ActionPhaseShutdown);
+        ok = result.robot.enterPhase(yarp::robotinterface::ActionPhaseShutdown);
         CHECK(ok);
 
         // Check that the wrapper device was closed and detach called, while the external device was not closed
@@ -355,8 +520,8 @@ TEST_CASE("robotinterface::experimental::XMLReaderTest", "[yarp::robotinterface]
                                 "  </devices>\n"
                                 "</robot>\n";
 
-        yarp::robotinterface::experimental::XMLReader reader;
-        yarp::robotinterface::experimental::XMLReaderResult result = reader.getRobotFromString(XMLString);
+        yarp::robotinterface::XMLReader reader;
+        yarp::robotinterface::XMLReaderResult result = reader.getRobotFromString(XMLString);
 
         CHECK(result.parsingIsSuccessful);
 

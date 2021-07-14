@@ -1,19 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include "BatteryWrapper.h"
@@ -103,22 +90,24 @@ bool BatteryWrapper::read(yarp::os::ConnectionReader& connection)
     yarp::os::Bottle in;
     yarp::os::Bottle out;
     bool ok = in.read(connection);
-    if (!ok) return false;
+    if (!ok) {
+        return false;
+    }
 
     // parse in, prepare out
-    int code = in.get(0).asVocab();
+    int code = in.get(0).asVocab32();
     bool ret = false;
     if (code == VOCAB_IBATTERY)
     {
-        int cmd = in.get(1).asVocab();
+        int cmd = in.get(1).asVocab32();
         if (cmd == VOCAB_BATTERY_INFO)
         {
             if (m_ibattery_p)
             {
                 std::string info;
                 m_ibattery_p->getBatteryInfo(info);
-                out.addVocab(VOCAB_IS);
-                out.addVocab(cmd);
+                out.addVocab32(VOCAB_IS);
+                out.addVocab32(cmd);
                 out.addString(info);
                 ret = true;
             }
@@ -136,7 +125,7 @@ bool BatteryWrapper::read(yarp::os::ConnectionReader& connection)
     if (!ret)
     {
         out.clear();
-        out.addVocab(VOCAB_FAILED);
+        out.addVocab32(VOCAB_FAILED);
     }
 
     yarp::os::ConnectionWriter *returnToSender = connection.getWriter();
@@ -254,34 +243,62 @@ void BatteryWrapper::run()
     if (m_ibattery_p!=nullptr)
     {
         m_log_buffer[0] = 0;
-        double battery_charge  = 0;
-        double battery_voltage = 0;
-        double battery_current = 0;
-        double battery_temperature = 0;
-        IBattery::Battery_status status;
 
-        bool ret = true;
-        ret &= m_ibattery_p->getBatteryCharge(battery_charge);
-        ret &= m_ibattery_p->getBatteryVoltage(battery_voltage);
-        ret &= m_ibattery_p->getBatteryCurrent(battery_current);
-        ret &= m_ibattery_p->getBatteryTemperature(battery_temperature);
-        ret &= m_ibattery_p->getBatteryStatus(status);
+        //acquire data from the wrapped device
+        bool ret_sts, ret_chg, ret_vlt, ret_cur, ret_tmp;
+        {
+            double tmp;
+            ret_chg = m_ibattery_p->getBatteryCharge(tmp);
+            if (ret_chg) {
+                m_battery_charge = tmp;
+            }
+        }
+        {
+            double tmp;
+            ret_vlt = m_ibattery_p->getBatteryVoltage(tmp);
+            if (ret_vlt) {
+                m_battery_voltage = tmp;
+            }
+        }
+        {
+            double tmp;
+            ret_cur = m_ibattery_p->getBatteryCurrent(tmp);
+            if (ret_cur) {
+                m_battery_current = tmp;
+            }
+        }
+        {
+            double tmp;
+            ret_tmp = m_ibattery_p->getBatteryTemperature(tmp);
+            if (ret_tmp) {
+                m_battery_temperature = tmp;
+            }
+        }
+        {
+            IBattery::Battery_status tmp;
+            ret_sts = m_ibattery_p->getBatteryStatus(tmp);
+            if (ret_sts) {
+                m_battery_status = tmp;
+            }
+        }
 
-        if (ret)
+        if (ret_sts)
         {
             m_lastStateStamp.update();
             yarp::os::Bottle& b = m_streamingPort.prepare();
             b.clear();
-            b.addFloat64(battery_voltage); //0
-            b.addFloat64(battery_current); //1
-            b.addFloat64(battery_charge);  //2
-            b.addFloat64(battery_temperature); //3
-            b.addInt32(status); //4
+            b.addFloat64(m_battery_voltage); //0
+            b.addFloat64(m_battery_current); //1
+            b.addFloat64(m_battery_charge);  //2
+            b.addFloat64(m_battery_temperature); //3
+            b.addInt32(m_battery_status); //4
             m_streamingPort.setEnvelope(m_lastStateStamp);
             m_streamingPort.write();
 
             // if the battery is not charging, checks its status of charge
-            if (battery_current>0.4) check_battery_status(battery_charge);
+            if (m_battery_status > 0.4) {
+                check_battery_status(m_battery_charge);
+            }
 
             // save data to file
             if (m_enable_log)
@@ -291,7 +308,7 @@ void BatteryWrapper::run()
                 time(&rawtime);
                 timeinfo = localtime(&rawtime);
                 char* battery_timestamp = asctime(timeinfo);
-                std::snprintf(m_log_buffer, 1024, "battery status: %+6.1fA   % 6.1fV   charge:% 6.1f%%    time: %s", battery_current, battery_voltage, battery_charge, battery_timestamp);
+                std::snprintf(m_log_buffer, 1024, "battery status: %+6.1fA   % 6.1fV   charge:% 6.1f%%    time: %s", m_battery_current, m_battery_voltage, m_battery_charge, battery_timestamp);
                 fprintf(m_logFile, "%s", m_log_buffer);
             }
         }

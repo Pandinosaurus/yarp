@@ -1,15 +1,13 @@
-# Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
-# All rights reserved.
-#
-# This software may be modified and distributed under the terms of the
-# BSD-3-Clause license. See the accompanying LICENSE file for details.
+# SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+# SPDX-License-Identifier: BSD-3-Clause
 
 yarp_prepare_plugin(
   controlboardwrapper2
   CATEGORY device
   TYPE ControlBoardWrapper
   INCLUDE ControlBoardWrapper.h
-  EXTRA_CONFIG WRAPPER=controlboardwrapper2
+  EXTRA_CONFIG
+    WRAPPER=controlboardwrapper2
   DEFAULT ON
 )
 
@@ -112,7 +110,8 @@ yarp_prepare_plugin(
   CATEGORY device
   TYPE ControlBoard_nws_yarp
   INCLUDE ControlBoard_nws_yarp.h
-  EXTRA_CONFIG WRAPPER=controlBoard_nws_yarp
+  EXTRA_CONFIG
+    WRAPPER=controlBoard_nws_yarp
   DEFAULT ON
 )
 
@@ -159,7 +158,7 @@ if(NOT SKIP_controlBoard_nws_yarp)
 
   set(YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS ${YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS} PARENT_SCOPE)
 
-  set_property(TARGET yarp_controlBoard_nws_yarp PROPERTY FOLDER "Plugins/Device")
+  set_property(TARGET yarp_controlBoard_nws_yarp PROPERTY FOLDER "Plugins/Device/NWS")
 endif()
 
 
@@ -168,7 +167,8 @@ yarp_prepare_plugin(
   CATEGORY device
   TYPE ControlBoard_nws_ros
   INCLUDE ControlBoard_nws_ros.h
-  EXTRA_CONFIG WRAPPER=controlBoard_nws_ros
+  EXTRA_CONFIG
+    WRAPPER=controlBoard_nws_ros
   DEFAULT ON
 )
 
@@ -213,5 +213,5 @@ if(NOT SKIP_controlBoard_nws_ros)
 
   set(YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS ${YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS} PARENT_SCOPE)
 
-  set_property(TARGET yarp_controlBoard_nws_ros PROPERTY FOLDER "Plugins/Device")
+  set_property(TARGET yarp_controlBoard_nws_ros PROPERTY FOLDER "Plugins/Device/NWS")
 endif()

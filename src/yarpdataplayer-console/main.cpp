@@ -1,19 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include <yarp/os/Network.h>
@@ -229,8 +216,9 @@ class dataplayer_module : public yarp::os::RFModule, public yarpdataplayer_conso
                 {
                     yInfo() << "done stopping!";
                 }
-                for (int i=0; i < subDirCnt; i++)
+                for (int i = 0; i < subDirCnt; i++) {
                     utilities->partDetails[i].currFrame = 1;
+                }
 
                 if (verbose)
                 {
@@ -246,8 +234,9 @@ class dataplayer_module : public yarp::os::RFModule, public yarpdataplayer_conso
                     yInfo() << "asking the thread to resume";
                 }
 
-                for (int i=0; i < subDirCnt; i++)
+                for (int i = 0; i < subDirCnt; i++) {
                     utilities->partDetails[i].worker->resetTime();
+                }
 
                 utilities->dataplayerEngine->resume();
             }
@@ -259,8 +248,9 @@ class dataplayer_module : public yarp::os::RFModule, public yarpdataplayer_conso
                     yInfo() <<"initializing the workers...";
                 }
 
-                for (int i=0; i < subDirCnt; i++)
+                for (int i = 0; i < subDirCnt; i++) {
                     utilities->partDetails[i].worker->init();
+                }
 
                 if (verbose)
                 {
@@ -344,8 +334,9 @@ class dataplayer_module : public yarp::os::RFModule, public yarpdataplayer_conso
             {
                 yInfo() << "done stopping!";
             }
-            for (int i=0; i < subDirCnt; i++)
+            for (int i = 0; i < subDirCnt; i++) {
                 utilities->partDetails[i].currFrame = 1;
+            }
 
             if (verbose)
             {
@@ -624,8 +615,9 @@ class dataplayer_module : public yarp::os::RFModule, public yarpdataplayer_conso
             {
                 yInfo() << "done stopping!";
             }
-            for (int i=0; i < subDirCnt; i++)
+            for (int i = 0; i < subDirCnt; i++) {
                 utilities->partDetails[i].currFrame = 1;
+            }
 
             if (verbose)
             {
@@ -673,7 +665,7 @@ int main(int argc, char *argv[])
     yarp::os::Network yarp(yarp::os::YARP_CLOCK_SYSTEM);
     if (!yarp.checkNetwork())
     {
-        fprintf(stderr,"ERROR: check Yarp network.\n");
+        fprintf(stderr,"ERROR: check YARP network.\n");
         return -1;
     }
 

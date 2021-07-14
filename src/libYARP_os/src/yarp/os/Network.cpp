@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/Network.h>
@@ -163,8 +160,8 @@ static int enactConnection(const Contact& src,
 
     Bottle cmd;
     Bottle reply;
-    cmd.addVocab(Vocab::encode("list"));
-    cmd.addVocab(Vocab::encode(reversed ? "in" : "out"));
+    cmd.addVocab32("list");
+    cmd.addVocab32(reversed ? "in" : "out");
     cmd.addString(dest.getName().c_str());
     yCDebug(NETWORK, "asking %s: %s", src.toString().c_str(), cmd.toString().c_str());
     bool ok = NetworkBase::write(src, cmd, reply, rpc);
@@ -205,14 +202,14 @@ static int enactConnection(const Contact& src,
         return 1;
     }
 
-    int act = (mode == YARP_ENACT_DISCONNECT) ? yarp::os::createVocab('d', 'e', 'l') : yarp::os::createVocab('a', 'd', 'd');
+    yarp::conf::vocab32_t act = (mode == YARP_ENACT_DISCONNECT) ? yarp::os::createVocab32('d', 'e', 'l') : yarp::os::createVocab32('a', 'd', 'd');
 
     // Let's ask the destination to connect/disconnect to the source.
     // We assume the YARP carrier will reverse the connection if
     // appropriate when connecting.
     cmd.clear();
     reply.clear();
-    cmd.addVocab(act);
+    cmd.addVocab32(act);
     Contact c = dest;
     if (!style.carrier.empty()) {
         c.setCarrier(style.carrier);
@@ -962,7 +959,7 @@ void yarp::os::NetworkBase::yarpClockInit(yarp::os::yarpClockType clockType, Clo
 {
     std::string clock;
     if (clockType == YARP_CLOCK_DEFAULT) {
-        clock = yarp::conf::environment::getEnvironment("YARP_CLOCK");
+        clock = yarp::conf::environment::get_string("YARP_CLOCK");
         if (!clock.empty()) {
             clockType = YARP_CLOCK_NETWORK;
         } else {
@@ -978,7 +975,7 @@ void yarp::os::NetworkBase::yarpClockInit(yarp::os::yarpClockType clockType, Clo
 
     case YARP_CLOCK_NETWORK:
         yCDebug(NETWORK, "Using NETWORK clock");
-        clock = yarp::conf::environment::getEnvironment("YARP_CLOCK");
+        clock = yarp::conf::environment::get_string("YARP_CLOCK");
         // check of valid parameter is done inside the call, throws YARP_FAIL in case of error
         yarp::os::Time::useNetworkClock(clock);
         break;
@@ -1422,17 +1419,17 @@ NameStore* NetworkBase::getQueryBypass()
 std::string NetworkBase::getEnvironment(const char* key,
                                         bool* found)
 {
-    return yarp::conf::environment::getEnvironment(key, found);
+    return yarp::conf::environment::get_string(key, found);
 }
 
 void NetworkBase::setEnvironment(const std::string& key, const std::string& val)
 {
-    return yarp::conf::environment::setEnvironment(key, val);
+    yarp::conf::environment::set_string(key, val);
 }
 
 void NetworkBase::unsetEnvironment(const std::string& key)
 {
-    return yarp::conf::environment::unsetEnvironment(key);
+    yarp::conf::environment::unset(key);
 }
 
 #endif
@@ -1446,7 +1443,7 @@ std::string NetworkBase::getDirectorySeparator()
 
 std::string NetworkBase::getPathSeparator()
 {
-    return std::string{yarp::conf::filesystem::path_separator};
+    return std::string{yarp::conf::environment::path_separator};
 }
 
 #endif // YARP_NO_DEPRECATED
@@ -2004,9 +2001,9 @@ std::string NetworkBase::getConfigFile(const char* fname)
 
 int NetworkBase::getDefaultPortRange()
 {
-    std::string range = yarp::conf::environment::getEnvironment("YARP_PORT_RANGE");
+    std::string range = yarp::conf::environment::get_string("YARP_PORT_RANGE");
     if (!range.empty()) {
-        int irange = NetType::toInt(range);
+        int irange = yarp::conf::numeric::from_string<int>(range);
         if (irange != 0) {
             return irange;
         }

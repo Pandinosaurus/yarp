@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_ANALOGSENSORCLIENT_ANALOGSENSORCLIENT_H
@@ -67,9 +64,9 @@ public:
  */
 
 /**
- * @ingroup dev_impl_network_clients
+ * @ingroup dev_impl_network_clients dev_impl_deprecated
  *
- * \brief `analogsensorclient`: Device that reads an AnalogSensor (using the IAnalogSensor interface) from the YARP network.
+ * \brief `analogsensorclient` *deprecated*: Device that reads an AnalogSensor (using the IAnalogSensor interface) from the YARP network.
  *
  * \section analogsensorclient_device_parameters Description of input parameters
  *

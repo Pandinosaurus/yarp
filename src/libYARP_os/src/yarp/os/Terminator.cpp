@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/Network.h>
@@ -131,9 +128,9 @@ void Terminee::run()
         }
         if (cmd.get(0).asString() == "quit") {
             quit = true;
-            reply.addVocab(yarp::os::createVocab('o', 'k'));
+            reply.addVocab32('o', 'k');
         } else {
-            reply.addVocab(yarp::os::createVocab('h', 'u', 'h', '?'));
+            reply.addVocab32('h', 'u', 'h', '?');
         }
         helper.reply(reply);
     }

@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/NetworkClock.h>
@@ -103,6 +100,7 @@ bool NetworkClock::Private::read(ConnectionReader& reader)
     }
 
     timeMutex.lock();
+    double oldTime = _time;
     sec = bot.get(0).asInt32();
     nsec = bot.get(1).asInt32();
     _time = sec + (nsec * 1e-9);
@@ -111,7 +109,14 @@ bool NetworkClock::Private::read(ConnectionReader& reader)
 
     listMutex.lock();
     auto waiter_it = waiters->begin();
-    while (waiter_it != waiters->end()) {
+    if (oldTime > _time) {
+        // Update the wake-up time. In case of a time reset it closes the gap
+        // between the waiter and _time.
+        waiter_it->first = _time + (waiter_it->first - oldTime);
+    }
+
+    while (waiter_it != waiters->end())
+    {
         if (waiter_it->first - _time < 1E-12) {
             Semaphore* waiterSemaphore = waiter_it->second;
             waiter_it = waiters->erase(waiter_it);

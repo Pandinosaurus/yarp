@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/robottestingframework/JointsPosMotion.h>
@@ -12,6 +9,7 @@
 #include <yarp/sig/Vector.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
 #include <yarp/dev/PolyDriver.h>
+#include <yarp/dev/IControlMode.h>
 
 #include <robottestingframework/TestAssert.h>
 
@@ -218,11 +216,13 @@ bool yarp::robottestingframework::jointsPosMotion::goTo(yarp::sig::Vector positi
         size_t in_position = 0;
         for (size_t i = 0; i < mPriv->n_joints; i++) {
             mPriv->ienc->getEncoder((int)mPriv->jointsList[i], &tmp[i]);
-            if (fabs(tmp[i]-positions[i])<mPriv->tolerance)
+            if (fabs(tmp[i] - positions[i]) < mPriv->tolerance) {
                 in_position++;
+            }
         }
-        if (in_position == mPriv->n_joints)
+        if (in_position == mPriv->n_joints) {
             break;
+        }
 
         if (yarp::os::Time::now()-time_started > mPriv->timeout) {
             ret = false;

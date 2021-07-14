@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/YarpPlugin.h>
@@ -192,10 +189,11 @@ void YarpPluginSettings::reportFailure() const
 
 bool YarpPluginSettings::readFromSelector(const std::string& name)
 {
-    if (!selector)
+    if (!selector) {
         return false;
+    }
     Bottle plugins = selector->getSelectedPlugins();
-    Bottle group = plugins.findGroup(name.c_str()).tail();
+    Bottle group = plugins.findGroup(name).tail();
     if (group.isNull()) {
         yCError(YARPPLUGINSETTINGS,
                 "Cannot find \"%s\" plugin (not built in, and no .ini file found for it)"
@@ -229,6 +227,9 @@ void YarpPluginSelector::scan()
 
     // Search plugins directories
     ResourceFinder& rf = ResourceFinder::getResourceFinderSingleton();
+    static std::mutex rf_mutex;
+    std::lock_guard<std::mutex> rf_guard(rf_mutex);
+
     if (!rf.isConfigured()) {
         rf.configure(0, nullptr);
     }

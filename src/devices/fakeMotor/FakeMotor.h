@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_FAKEMOTOR_FAKEMOTOR_H
@@ -24,9 +21,9 @@
 YARP_DECLARE_LOG_COMPONENT(FAKEMOTOR)
 
 /**
- * @ingroup dev_impl_fake dev_impl_motor
+ * @ingroup dev_impl_fake dev_impl_motor dev_impl_deprecated
  *
- * \brief `fakeMotor`: A fake motor control board for testing.
+ * \brief `fakeMotor` *deprecated*: A fake motor control board for testing.
  *
  * Implements the IPositionControl, IEncoders and IVelocityControl interfaces.
  */
@@ -405,7 +402,10 @@ public:
 
 };
 
-
+/**
+ * @ingroup dev_impl_fake dev_impl_deprecated
+ * \brief `testMotor` *deprecated*
+ */
 class TestMotor : public FakeMotor
 {
 public:

@@ -1,19 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #define _USE_MATH_DEFINES
@@ -122,9 +109,12 @@ bool Rangefinder2DWrapper::checkROSParams(yarp::os::Searchable &config)
         useROS = ROS_config_error;
         return false;
     }
-    rosNodeName = rosGroup.find("ROS_nodeName").asString();  // TODO: check name is correct
+    rosNodeName = rosGroup.find("ROS_nodeName").asString();
     yCInfo(RANGEFINDER2DWRAPPER) << partName << "rosNodeName is " << rosNodeName;
-
+    if(rosNodeName[0] != '/'){
+        yCError(RANGEFINDER2DWRAPPER) << "node name must begin with an initial /";
+        return false;
+    }
     // check for ROS_topicName parameter
     if (!rosGroup.check("ROS_topicName"))
     {
@@ -271,18 +261,20 @@ bool Rangefinder2DWrapper::read(yarp::os::ConnectionReader& connection)
     yarp::os::Bottle in;
     yarp::os::Bottle out;
     bool ok = in.read(connection);
-    if (!ok) return false;
+    if (!ok) {
+        return false;
+    }
 
     // parse in, prepare out
-    int action = in.get(0).asVocab();
-    int inter  = in.get(1).asVocab();
+    int action = in.get(0).asVocab32();
+    int inter  = in.get(1).asVocab32();
     bool ret = false;
 
     if (inter == VOCAB_ILASER2D)
     {
         if (action == VOCAB_GET)
         {
-            int cmd = in.get(2).asVocab();
+            int cmd = in.get(2).asVocab32();
             if (cmd == VOCAB_DEVICE_INFO)
             {
                 if (sens_p)
@@ -290,8 +282,8 @@ bool Rangefinder2DWrapper::read(yarp::os::ConnectionReader& connection)
                     std::string info;
                     if (sens_p->getDeviceInfo(info))
                     {
-                        out.addVocab(VOCAB_IS);
-                        out.addVocab(cmd);
+                        out.addVocab32(VOCAB_IS);
+                        out.addVocab32(cmd);
                         out.addString(info);
                         ret = true;
                     }
@@ -309,8 +301,8 @@ bool Rangefinder2DWrapper::read(yarp::os::ConnectionReader& connection)
                     double min = 0;
                     if (sens_p->getDistanceRange(min, max))
                     {
-                        out.addVocab(VOCAB_IS);
-                        out.addVocab(cmd);
+                        out.addVocab32(VOCAB_IS);
+                        out.addVocab32(cmd);
                         out.addFloat64(min);
                         out.addFloat64(max);
                         ret = true;
@@ -329,8 +321,8 @@ bool Rangefinder2DWrapper::read(yarp::os::ConnectionReader& connection)
                     double min = 0;
                     if (sens_p->getScanLimits(min, max))
                     {
-                        out.addVocab(VOCAB_IS);
-                        out.addVocab(cmd);
+                        out.addVocab32(VOCAB_IS);
+                        out.addVocab32(cmd);
                         out.addFloat64(min);
                         out.addFloat64(max);
                         ret = true;
@@ -348,8 +340,8 @@ bool Rangefinder2DWrapper::read(yarp::os::ConnectionReader& connection)
                     double step = 0;
                     if (sens_p->getHorizontalResolution(step))
                     {
-                        out.addVocab(VOCAB_IS);
-                        out.addVocab(cmd);
+                        out.addVocab32(VOCAB_IS);
+                        out.addVocab32(cmd);
                         out.addFloat64(step);
                         ret = true;
                     }
@@ -366,8 +358,8 @@ bool Rangefinder2DWrapper::read(yarp::os::ConnectionReader& connection)
                     double rate = 0;
                     if (sens_p->getScanRate(rate))
                     {
-                        out.addVocab(VOCAB_IS);
-                        out.addVocab(cmd);
+                        out.addVocab32(VOCAB_IS);
+                        out.addVocab32(cmd);
                         out.addFloat64(rate);
                         ret = true;
                     }
@@ -384,7 +376,7 @@ bool Rangefinder2DWrapper::read(yarp::os::ConnectionReader& connection)
         }
         else if (action == VOCAB_SET)
         {
-            int cmd = in.get(2).asVocab();
+            int cmd = in.get(2).asVocab32();
             if (cmd == VOCAB_LASER_DISTANCE_RANGE)
             {
                 if (sens_p)
@@ -441,7 +433,7 @@ bool Rangefinder2DWrapper::read(yarp::os::ConnectionReader& connection)
     if (!ret)
     {
         out.clear();
-        out.addVocab(VOCAB_FAILED);
+        out.addVocab32(VOCAB_FAILED);
     }
 
     yarp::os::ConnectionWriter *returnToSender = connection.getWriter();
@@ -469,6 +461,10 @@ std::string Rangefinder2DWrapper::getId()
 
 bool Rangefinder2DWrapper::open(yarp::os::Searchable &config)
 {
+    yCWarning(RANGEFINDER2DWRAPPER) << "The 'Rangefinder2DWrapper' device is deprecated in favour of 'rangefinder2D_nws_yarp'.";
+    yCWarning(RANGEFINDER2DWRAPPER) << "The old device is no longer supported, and it will be deprecated in YARP 3.6 and removed in YARP 4.";
+    yCWarning(RANGEFINDER2DWRAPPER) << "Please update your scripts.";
+
     Property params;
     params.fromString(config.toString());
 
@@ -476,9 +472,9 @@ bool Rangefinder2DWrapper::open(yarp::os::Searchable &config)
     {
         yCError(RANGEFINDER2DWRAPPER) << "Rangefinder2DWrapper: missing 'period' parameter. Check you configuration file\n";
         return false;
-    }
-    else
+    } else {
         _period = config.find("period").asInt32() / 1000.0;
+    }
 
     if (!config.check("name"))
     {
@@ -571,10 +567,11 @@ void Rangefinder2DWrapper::run()
 
         if (ret)
         {
-            if(iTimed)
+            if (iTimed) {
                 lastStateStamp = iTimed->getLastInputStamp();
-            else
+            } else {
                 lastStateStamp.update(yarp::os::Time::now());
+            }
 
             int ranges_size = ranges.size();
 

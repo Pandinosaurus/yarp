@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include "ServerInertial.h"
@@ -80,7 +77,9 @@ ServerInertial::ServerInertial() :
 
 ServerInertial::~ServerInertial()
 {
-    if (IMU != nullptr) close();
+    if (IMU != nullptr) {
+        close();
+    }
 }
 
 
@@ -237,9 +236,9 @@ bool ServerInertial::openAndAttachSubDevice(yarp::os::Property& prop)
         p.fromString(prop.toString());
         p.put("device",subdevice.toString());
         IMU_polydriver->open(p);
-    }
-    else
+    } else {
         IMU_polydriver->open(subdevice);
+    }
 
     if (!IMU_polydriver->isValid())
     {
@@ -273,6 +272,10 @@ bool ServerInertial::openAndAttachSubDevice(yarp::os::Property& prop)
  */
 bool ServerInertial::open(yarp::os::Searchable& config)
 {
+    yCWarning(SERVERINERTIAL) << "The 'inertial' device is deprecated in favour of 'multipleanalogsensorsremapper' + 'multipleanalogsensorsserver' + 'IMURosPublisher'.";
+    yCWarning(SERVERINERTIAL) << "The old device is no longer supported, and it will be deprecated in YARP 3.6 and removed in YARP 4.";
+    yCWarning(SERVERINERTIAL) << "Please update your scripts.";
+
     Property prop;
     prop.fromString(config.toString());
 
@@ -296,8 +299,9 @@ bool ServerInertial::open(yarp::os::Searchable& config)
     else
     {
         ownDevices=false;
-        if(!openDeferredAttach(prop))
+        if (!openDeferredAttach(prop)) {
             return false;
+        }
     }
 
 
@@ -309,10 +313,9 @@ bool ServerInertial::open(yarp::os::Searchable& config)
     std::string portName;
     if(useROS != ROS_only)
     {
-        if (config.check("name"))
+        if (config.check("name")) {
             portName = config.find("name").asString();
-        else
-        {
+        } else {
             yCInfo(SERVERINERTIAL) << "Using default values for port name, you can change it by using '--name /myPortName' parameter";
             portName = "/inertial";
         }
@@ -379,8 +382,9 @@ bool ServerInertial::getInertial(yarp::os::Bottle &bot)
             bot.clear();
 
             // Euler+accel+gyro+magn orientation values
-            for (int i = 0; i < nchannels; i++)
-                bot.addFloat64 (indata[i]);
+            for (int i = 0; i < nchannels; i++) {
+                bot.addFloat64(indata[i]);
+            }
         }
         else
         {
@@ -411,10 +415,11 @@ void ServerInertial::run()
                 if (res)
                 {
                     static yarp::os::Stamp ts;
-                    if (iTimed)
+                    if (iTimed) {
                         ts=iTimed->getLastInputStamp();
-                    else
+                    } else {
                         ts.update();
+                    }
 
 
                     curr_timestamp_counter = ts.getCount();
@@ -530,8 +535,9 @@ bool ServerInertial::attach(PolyDriver* poly)
 
     if(IMU != nullptr)
     {
-        if(!Thread::isRunning())
+        if (!Thread::isRunning()) {
             start();
+        }
     }
     else
     {

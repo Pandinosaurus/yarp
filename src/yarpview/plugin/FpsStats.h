@@ -1,20 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #ifndef FPSSTATS
@@ -61,10 +48,12 @@ public:
         if (iterations>0){
             double dt=now-prev;
 
-            if (dt>max)
-                max=dt;
-            if (dt<min)
-                min=dt;
+            if (dt > max) {
+                max = dt;
+            }
+            if (dt < min) {
+                min = dt;
+            }
         }
 
         prev=now;
@@ -93,10 +82,11 @@ public:
         \param av the average value
     */
     void getStats(double &av){
-        if (iterations>0)
+        if (iterations > 0) {
             av=(yarp::os::Time::now()-t0)/iterations;
-        else
-            av=0;
+        } else {
+            av = 0;
+        }
     }
 };
 

@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <cstdio>
@@ -33,7 +30,7 @@ YARP_DEFINE(int) yarpReaderExpectInt32(yarpReaderPtr reader, int *data) {
      */
 YARP_DEFINE(int) yarpReaderExpectDouble(yarpReaderPtr reader, double *data) {
     YARP_OK(reader);
-    double x = YARP_READER(reader).expectDouble();
+    double x = YARP_READER(reader).expectFloat64();
     if (data!=NULL) {
         *data = x;
     }
@@ -60,7 +57,7 @@ YARP_DEFINE(int) yarpReaderExpectText(yarpReaderPtr reader,
      *
      */
 YARP_DEFINE(int) yarpReaderExpectBlock(yarpReaderPtr reader,
-                                       const char *data,
+                                       char *data,
                                        int len) {
     YARP_OK(reader);
     return !YARP_READER(reader).expectBlock(data,len);

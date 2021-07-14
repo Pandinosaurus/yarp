@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/manager/logicresource.h>
@@ -35,12 +32,14 @@ Node* Platform::clone()
 
 bool Platform::satisfy(GenericResource* resource)
 {
-    if(!getAvailability() || getDisable())
+    if (!getAvailability() || getDisable()) {
         return false;
+    }
 
     auto* os = dynamic_cast<Platform*>(resource);
-    if(os)
+    if (os) {
         return satisfy_platform(os);
+    }
 
     return false;
 }
@@ -80,12 +79,14 @@ Node* ResYarpPort::clone()
 
 bool ResYarpPort::satisfy(GenericResource* resource)
 {
-    if(!getAvailability() || getDisable())
+    if (!getAvailability() || getDisable()) {
         return false;
+    }
 
     auto* resport = dynamic_cast<ResYarpPort*>(resource);
-    if(!resport)
+    if (!resport) {
         return false;
+    }
     return (strPort == string(resport->getPort()) ||
             strPort == string(resport->getName()) );
 }

@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/sig/Sound.h>
@@ -104,12 +101,15 @@ void Sound::synchronize()
 
 Sound Sound::subSound(size_t first_sample, size_t last_sample)
 {
-    if (last_sample  > this->m_samples)
+    if (last_sample > this->m_samples) {
         last_sample = m_samples;
-    if (first_sample > this->m_samples)
+    }
+    if (first_sample > this->m_samples) {
         first_sample = m_samples;
-    if (last_sample < first_sample)
+    }
+    if (last_sample < first_sample) {
         last_sample = first_sample;
+    }
 
     Sound s;
 
@@ -131,8 +131,9 @@ Sound Sound::subSound(size_t first_sample, size_t last_sample)
     size_t j=0;
     for (size_t i=first_sample; i<last_sample; i++)
     {
-        for (size_t c=0; c< this->m_channels; c++)
-            s.set(this->get(i,c),j,c);
+        for (size_t c = 0; c < this->m_channels; c++) {
+            s.set(this->get(i, c), j, c);
+        }
         j++;
     }
 
@@ -195,7 +196,9 @@ void Sound::clear()
 
 bool Sound::clearChannel(size_t chan)
 {
-    if (chan > this->m_channels) return false;
+    if (chan > this->m_channels) {
+        return false;
+    }
     for (size_t i = 0; i < this->m_samples; i++)
     {
         set(0, i, chan);
@@ -295,10 +298,18 @@ Sound Sound::extractChannelAsSound(size_t channel_id) const
 
 bool Sound::operator==(const Sound& alt) const
 {
-    if (this->m_channels != alt.getChannels()) return false;
-    if (this->m_bytesPerSample != alt.getBytesPerSample()) return false;
-    if (this->m_frequency != alt.getFrequency()) return false;
-    if (this->m_samples != alt.getSamples()) return false;
+    if (this->m_channels != alt.getChannels()) {
+        return false;
+    }
+    if (this->m_bytesPerSample != alt.getBytesPerSample()) {
+        return false;
+    }
+    if (this->m_frequency != alt.getFrequency()) {
+        return false;
+    }
+    if (this->m_samples != alt.getSamples()) {
+        return false;
+    }
 
     for (size_t ch = 0; ch < this->m_channels; ch++)
     {
@@ -316,8 +327,12 @@ bool Sound::operator==(const Sound& alt) const
 
 bool Sound::replaceChannel(size_t id, Sound schannel)
 {
-    if (schannel.getChannels() != 1) return false;
-    if (this->m_samples != schannel.getSamples()) return false;
+    if (schannel.getChannels() != 1) {
+        return false;
+    }
+    if (this->m_samples != schannel.getSamples()) {
+        return false;
+    }
     for (size_t s = 0; s < this->m_samples; s++)
     {
         this->setSafe(schannel.getSafe(s, 0), s, id);
@@ -414,4 +429,78 @@ size_t Sound::getChannels() const
 double Sound::getDuration() const
 {
     return (double)(this->m_samples)*(double)(1 / this->m_frequency);
+}
+
+void Sound::normalizeChannel(size_t channel)
+{
+    size_t maxsampleid = 0;
+    audio_sample maxsamplevalue = 0;
+    findPeakInChannel(channel, maxsampleid, maxsamplevalue);
+    double gain = 1 / (maxsamplevalue / 32767.0);
+    amplifyChannel(channel,gain);
+}
+
+void Sound::normalize()
+{
+    size_t maxsampleid = 0;
+    size_t maxchannelid = 0;
+    audio_sample maxsamplevalue = 0;
+    findPeak(maxchannelid, maxsampleid, maxsamplevalue);
+    double gain = 1 / (maxsamplevalue/32767.0);
+    amplify(gain);
+}
+
+void Sound::amplifyChannel(size_t channel, double gain)
+{
+    unsigned char* pc = this->getRawData();
+    audio_sample* p = reinterpret_cast<audio_sample*>(pc);
+    p+= this->m_samples * channel;
+
+    for (size_t t = 0; t < this->m_samples; t++, p++)
+    {
+        double amplified_value = (*p) * gain;
+        *p = (int)(amplified_value); //should i limit this range
+    }
+}
+
+void Sound::amplify(double gain)
+{
+    for (size_t c = 0; c < this->m_channels; c++)
+    {
+        amplifyChannel(c,gain);
+    }
+}
+
+void Sound::findPeakInChannel(size_t channelId, size_t& sampleId, audio_sample& sampleValue) const
+{
+    sampleId = 0;
+    sampleValue = 0;
+    unsigned char* pc = this->getRawData();
+    audio_sample* p = reinterpret_cast<audio_sample*>(pc);
+    p += this->m_samples * channelId;
+
+    for (size_t t = 0; t < this->m_samples; t++, p++)
+    {
+        if (*p > sampleValue)
+        {
+            sampleValue = (*p);
+            sampleId= t;
+        }
+    }
+}
+
+void Sound::findPeak(size_t& channelId, size_t& sampleId, audio_sample& sampleValue) const
+{
+    for (size_t c = 0; c < this->m_channels; c++)
+    {
+        size_t maxsampleid_inchannel=0;
+        audio_sample maxsamplevalue_inchannel=0;
+        findPeakInChannel(c, maxsampleid_inchannel, maxsamplevalue_inchannel);
+        if (maxsamplevalue_inchannel > sampleValue)
+        {
+            sampleValue = maxsamplevalue_inchannel;
+            sampleId = maxsampleid_inchannel;
+            channelId = c;
+        }
+    }
 }

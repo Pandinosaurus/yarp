@@ -1,11 +1,8 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * Copyright (C) 2006, 2008 Arjan Gijsberts
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-FileCopyrightText: 2006, 2008 Arjan Gijsberts
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/Bottle.h>
@@ -164,10 +161,10 @@ void Bottle::addFloat64(yarp::conf::float64_t x)
     implementation->addFloat64(x);
 }
 
-void Bottle::addVocab(int x)
+void Bottle::addVocab32(yarp::conf::vocab32_t x)
 {
     implementation->edit();
-    implementation->addVocab(x);
+    implementation->addVocab32(x);
 }
 
 void Bottle::addString(const char* str)
@@ -400,7 +397,7 @@ Bottle Bottle::tail() const
 
 std::string Bottle::toString(int x)
 {
-    return NetType::toString(x);
+    return yarp::conf::numeric::to_string(x);
 }
 
 std::string Bottle::describeBottleCode(int code)
@@ -414,7 +411,7 @@ std::string Bottle::describeBottleCode(int code)
     case BOTTLE_TAG_INT32:
         unitName = "int";
         break;
-    case BOTTLE_TAG_VOCAB:
+    case BOTTLE_TAG_VOCAB32:
         unitName = "vocab";
         break;
     case BOTTLE_TAG_FLOAT64:

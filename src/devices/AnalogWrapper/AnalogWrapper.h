@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_ANALOGWRAPPER_ANALOGWRAPPER_H
@@ -48,9 +45,9 @@ class AnalogServerHandler;
 class AnalogPortEntry;
 
 /**
- *  @ingroup dev_impl_wrapper
+ *  @ingroup dev_impl_wrapper dev_impl_deprecated
  *
- * \brief `analogServer`: Device that expose an AnalogSensor (using the IAnalogSensor interface) on the YARP or ROS network.
+ * \brief `analogServer` *deprecated*: Device that expose an AnalogSensor (using the IAnalogSensor interface) on the YARP or ROS network.
  *
  * \section analogServer_device_parameters Description of input parameters
  *

@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include "ControlBoard_nws_yarp.h"
@@ -426,35 +423,6 @@ bool ControlBoard_nws_yarp::detach()
     closeDevice();
 
     return true;
-}
-
-bool ControlBoard_nws_yarp::attachAll(const PolyDriverList& p)
-{
-    if (p.size() < 1) {
-        yCError(CONTROLBOARD, "No devices found");
-        return false;
-    }
-
-    if (p.size() > 1) {
-        yCError(CONTROLBOARD, "Cannot attach more than one device");
-        return false;
-    }
-
-    const auto& key = p[0]->key;
-    auto* poly = p[0]->poly;
-
-    if (!poly->isValid())
-    {
-        yCError(CONTROLBOARD, "Device %s is not valid", key.c_str());
-        return false;
-    }
-
-    return attach(poly);
-}
-
-bool ControlBoard_nws_yarp::detachAll()
-{
-    return detach();
 }
 
 void ControlBoard_nws_yarp::run()

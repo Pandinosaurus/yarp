@@ -1,18 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
 #include "qosconfigdialog.h"
@@ -44,8 +32,9 @@ void QosConfigDialog::createGui() {
     srcPacketProCombo = new QComboBox(this);
     srcPacketProCombo->addItems(QStringList() << "LOW" << "NORMAL" << "HIGH" << "CRITIC");
     yarp::os::QosStyle::PacketPriorityLevel level = yarp::os::QosStyle::PacketPriorityNormal;
-    if(edge)
+    if (edge) {
         level = (yarp::os::QosStyle::PacketPriorityLevel)edge->property.find("FromPacketPriority").asInt32();
+    }
     switch(level) {
     case yarp::os::QosStyle::PacketPriorityNormal :
         srcPacketProCombo->setCurrentIndex(1);
@@ -67,28 +56,31 @@ void QosConfigDialog::createGui() {
     // source thread priority and policy
     srcThreadPro = new QLineEdit;
     srcThreadPro->setValidator( new QIntValidator(-100, 100, this) );
-    if(edge)
+    if (edge) {
         srcThreadPro->setText(QString::number(edge->property.find("FromThreadPriority").asInt32()));
-    else
+    } else {
         srcThreadPro->setText(QString::number(0));
+    }
     ui->treeWidgetProperty->setItemWidget(*it++, 1, srcThreadPro);
 
     srcThreadPolicy = new QLineEdit;
     srcThreadPolicy->setValidator( new QIntValidator(-100, 100, this) );
-    if(edge)
+    if (edge) {
         srcThreadPolicy->setText(QString::number(edge->property.find("FromThreadPolicy").asInt32()));
-    else
+    } else {
         srcThreadPolicy->setText(QString::number(0));
+    }
     ui->treeWidgetProperty->setItemWidget(*it++, 1, srcThreadPolicy);
 
 
     // destination packet priority
     dstPacketProCombo = new QComboBox(this);
     dstPacketProCombo->addItems(QStringList() << "LOW" << "NORMAL" << "HIGH" << "CRITIC");
-    if(edge)
+    if (edge) {
         level = (yarp::os::QosStyle::PacketPriorityLevel)edge->property.find("ToPacketPriority").asInt32();
-    else
+    } else {
         level = yarp::os::QosStyle::PacketPriorityNormal;
+    }
 
     switch(level) {
     case yarp::os::QosStyle::PacketPriorityNormal :
@@ -111,18 +103,20 @@ void QosConfigDialog::createGui() {
     // destination thread priority and policy
     dstThreadPro = new QLineEdit;
     dstThreadPro->setValidator( new QIntValidator(-100, 100, this) );
-    if(edge)
+    if (edge) {
         dstThreadPro->setText(QString::number(edge->property.find("ToThreadPriority").asInt32()));
-    else
+    } else {
         dstThreadPro->setText(QString::number(0));
+    }
     ui->treeWidgetProperty->setItemWidget(*it++, 1, dstThreadPro);
 
     dstThreadPolicy = new QLineEdit;
     dstThreadPolicy->setValidator( new QIntValidator(-100, 100, this) );
-    if(edge)
+    if (edge) {
         dstThreadPolicy->setText(QString::number(edge->property.find("ToThreadPolicy").asInt32()));
-    else
+    } else {
         dstThreadPolicy->setText(QString::number(0));
+    }
     ui->treeWidgetProperty->setItemWidget(*it++, 1, dstThreadPolicy);
 }
 

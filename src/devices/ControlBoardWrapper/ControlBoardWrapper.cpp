@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include "ControlBoardWrapper.h"
@@ -181,7 +178,11 @@ bool ControlBoardWrapper::checkROSParams(Searchable& config)
         useROS = ROS_config_error;
         return false;
     }
-    rosNodeName = rosGroup.find("ROS_nodeName").asString(); // TODO: check name is correct
+    rosNodeName = rosGroup.find("ROS_nodeName").asString();
+    if(rosNodeName[0] != '/'){
+        yCError(CONTROLBOARD) << "ros node name must begin with an initial /";
+        return false;
+    }
     yCInfo(CONTROLBOARD) << partName << "rosNodeName is " << rosNodeName;
 
     // check for ROS_topicName parameter
@@ -336,6 +337,10 @@ bool ControlBoardWrapper::initialize_YARP(yarp::os::Searchable& prop)
 
 bool ControlBoardWrapper::open(Searchable& config)
 {
+    yCWarning(CONTROLBOARD) << "The 'controlboardwrapper2' device is deprecated in favour of 'controlboardremapper' + 'controlBoard_nws_yarp'.";
+    yCWarning(CONTROLBOARD) << "The old device is no longer supported, and it will be deprecated in YARP 3.6 and removed in YARP 4.";
+    yCWarning(CONTROLBOARD) << "Please update your scripts.";
+
     Property prop;
     prop.fromString(config.toString());
 
@@ -643,7 +648,7 @@ bool ControlBoardWrapper::updateAxisName()
     // FOR THE FUTURE: this double version will be dropped because it'll create confusion. Only the names
     // from the motionControl device will be considered good
 
-    // no need to update this variable if we are not using ROS. Yarp RPC will always call the sudevice.
+    // no need to update this variable if we are not using ROS. YARP RPC will always call the sudevice.
     if (useROS == ROS_disabled) {
         return true;
     }

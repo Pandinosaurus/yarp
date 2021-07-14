@@ -1,16 +1,13 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/dev/DeviceDriver.h>
 
 #include <yarp/dev/ControlBoardInterfaces.h>
-#include <yarp/dev/FrameGrabberInterfaces.h>
+#include <yarp/dev/IFrameGrabberImage.h>
 #include <yarp/sig/Vector.h>
 #include <yarp/sig/Image.h>
 #include <yarp/os/Time.h>
@@ -19,12 +16,12 @@
 YARP_DECLARE_LOG_COMPONENT(FAKEBOT)
 
 /**
- * @ingroup dev_impl_fake
+ * @ingroup dev_impl_fake dev_impl_deprecated
  *
- * \brief `fakebot`: Documentation to be added
+ * \brief `fakebot` *deprecated*: Documentation to be added
  */
 class FakeBot :
-        public yarp::dev::DeviceDriver,
+        public yarp::dev::DeprecatedDeviceDriver,
         public yarp::dev::IPositionControl,
         public yarp::dev::IVelocityControl,
         public yarp::dev::IAmplifierControl,

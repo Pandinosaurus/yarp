@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef RGBD_FROM_ROS_TOPIC_H
@@ -15,7 +12,6 @@
 #include <mutex>
 
 #include <yarp/dev/DeviceDriver.h>
-#include <yarp/dev/FrameGrabberControl2.h>
 #include <yarp/os/PeriodicThread.h>
 #include <yarp/sig/all.h>
 #include <yarp/sig/Matrix.h>
@@ -171,21 +167,20 @@ typedef yarp::sig::ImageOf<yarp::sig::PixelFloat> depthImage;
  * | `RGBDSensorFromRosTopic` |
  *
  *   Parameters used by this device are:
- * | Parameter name               | SubParameter        | Type                | Units          | Default Value                | Required                         | Description                                                                            | Notes                                                                 |
- * |:----------------------------:|:-------------------:|:-------------------:|:--------------:|:----------------------------:|:--------------------------------:|:--------------------------------------------------------------------------------------:|:---------------------------------------------------------------------:|
- * |  verbose                     |      -              | bool                | -              |   false                      |  No                              | Flag for enabling debug prints                                                         |         |
- * |  rgb_data_topic              |      -              | string              | -              | /camera/color/image_raw      |  No                              | The device connects to this ROS topic to get RGB data                                  |         |
- * |  depth_data_topic            |      -              | string              | -              | /camera/depth/image_rect_raw |  No                              | The device connects to this ROS topic to get Depth dat                                 |         |
- * |  rgb_info_topic              |      -              | string              | -              | /camera/color/camera_info    |  No                              | The device connects to this ROS topic to get RGB info/parameters                       |         |
- * |  depth_info_topic            |      -              | string              | -              | /camera/depth/camera_info    |  No                              | The device connects to this ROS topic to get Depth info/parameters                     |         |
+ * | Parameter name               | SubParameter        | Type                | Units          | Default Value | Required  | Description                                                                                          | Notes   |
+ * |:----------------------------:|:-------------------:|:-------------------:|:--------------:|:-------------:|:---------:|:----------------------------------------------------------------------------------------------------:|:-------:|
+ * |  color_topic_name       |      -              | string              | -              | -             |  Yes       | The device connects to this ROS topic to get RGB data (there must be also camera_info with the last subtopic)|         |
+ * |  depth_topic_name       |      -              | string              | -              | -             |  Yes       | The device connects to this ROS topic to get Depth data (there must be also camera_info with the last subtopic)    |         | * |  node_name                   |      -              | string              | -              | -             |  Yes       | the name of the ros node                                                                             |         |
+ * |  node_name              |      -              | string              | -              | -             |  Yes       | the name of the ros node    |         | * |  node_name                   |      -              | string              | -              | -             |  Yes       | the name of the ros node                                                                             |         |
  *
  * Example of configuration file (using .ini format) when the device is wrapped by RGBDSensorWrapper.
  *
  * \code{.unparsed}
  * device       RGBDSensorWrapper
  * subdevice    RGBDSensorFromRosTopic
- * period 30
- * name /ROSsensor
+ * color_topic_name    /camera/color/image_raw
+ * depth_topic_name    /camera/depth/image_raw
+ * node_name    RGBDSensorFromRosTopic
  * \endcode
  */
 
@@ -199,7 +194,6 @@ private:
     typedef yarp::sig::FlexImage                      FlexImage;
 
 public:
-    RGBDSensorFromRosTopic();
     ~RGBDSensorFromRosTopic() override = default;
 
     // DeviceDriver
@@ -234,10 +228,10 @@ public:
     bool   getExtrinsicParam(yarp::sig::Matrix &extrinsic) override;
     bool   getRgbImage(FlexImage& rgbImage, Stamp* timeStamp = nullptr) override;
     bool   getDepthImage(depthImage& depthImage, Stamp* timeStamp = nullptr) override;
-    bool   getImages(FlexImage& colorFrame, depthImage& depthFrame, Stamp* colorStamp=NULL, Stamp* depthStamp=NULL) override;
+    bool   getImages(FlexImage& colorFrame, depthImage& depthFrame, Stamp* colorStamp = nullptr, Stamp* depthStamp = nullptr) override;
 
     RGBDSensor_status     getSensorStatus() override;
-    std::string getLastErrorMsg(Stamp* timeStamp = NULL) override;
+    std::string getLastErrorMsg(Stamp* timeStamp = nullptr) override;
 
     /*
     //IFrameGrabberControls
@@ -263,15 +257,7 @@ public:
     yarp::os::Node* m_ros_node = nullptr;
     yarp::dev::RGBDRosConversionUtils::commonImageProcessor*   m_rgb_input_processor = nullptr;
     yarp::dev::RGBDRosConversionUtils::commonImageProcessor*   m_depth_input_processor = nullptr;
-    std::string m_rgb_data_topic_name;
-    std::string m_depth_data_topic_name;
-    std::string m_rgb_info_topic_name;
-    std::string m_depth_info_topic_name;
 
-    yarp::os::Stamp m_rgb_stamp;
-    yarp::os::Stamp m_depth_stamp;
     std::string m_lastError;
-    bool m_verbose;
-    bool m_initialized;
 };
 #endif

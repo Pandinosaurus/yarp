@@ -1,20 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 // ImagePort.cpp: implementation of the ImagePort class.
@@ -48,21 +35,10 @@ void InputCallback::onRead(yarp::sig::ImageOf<yarp::sig::PixelRgba> &img)
 
     uchar *tmpBuf;
     QSize s = (QSize(img.width(),img.height()));
-#if QT_VERSION >= 0x050302
     int imgSize = img.getRawImageSize();
-#else
-    int imgSize = s.width() * s.height() * img.getPixelSize();
-#endif
 
     // Allocate a QVideoFrame
-    QVideoFrame frame(imgSize,
-              s,
-#if QT_VERSION >= 0x050302
-              img.getRowSize(),
-#else
-              s.width() * img.getPixelSize(),
-#endif
-              QVideoFrame::Format_RGB32);
+    QVideoFrame frame(imgSize, s, img.getRowSize(), QVideoFrame::Format_RGB32);
 
     // Maps the buffer
     frame.map(QAbstractVideoBuffer::WriteOnly);
@@ -81,15 +57,15 @@ void InputCallback::onRead(yarp::sig::ImageOf<yarp::sig::PixelRgba> &img)
         j+=4;
     }*/
 
-#if QT_VERSION >= 0x050302
-    memcpy(tmpBuf,rawImg,imgSize);
-#else
-    for(int x =0; x < s.height(); x++) {
-        memcpy(tmpBuf + x * (img.width() * img.getPixelSize()),
-               rawImg + x * (img.getRowSize()),
-               img.width() * img.getPixelSize());
+    if (img.topIsLowIndex()) {
+        memcpy(tmpBuf, rawImg, imgSize);
+    } else {
+        for(int x = 0; x < s.height(); x++) {
+            memcpy(tmpBuf + x * img.getRowSize(),
+                   rawImg + (s.height() - x - 1) * img.getRowSize(),
+                   img.getRowSize());
+        }
     }
-#endif
 
     //unmap the buffer
     frame.unmap();

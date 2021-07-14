@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2010 Daniel Krieg <krieg@fias.uni-frankfurt.de>
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2010 Daniel Krieg <krieg@fias.uni-frankfurt.de>
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_MPIBCASTCARRIER_H
@@ -67,8 +64,9 @@ public:
     bool expectReplyToHeader(yarp::os::ConnectionState&  proto) override {
         bool ok = MpiCarrier::expectReplyToHeader(proto);
         MpiBcastStream *mpiStream = dynamic_cast<MpiBcastStream*> (stream);
-        if(mpiStream)
+        if (mpiStream) {
             mpiStream->post();
+        }
         return ok;
     }
 

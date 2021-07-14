@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/dev/DeviceDriver.h>
@@ -21,13 +18,17 @@
 *
 * \brief `audioFromFileDevice` : This device driver, wrapped by default by AudioRecorderWrapper,
 * is used to read data from a file and stream it to the network.
+* This device driver derives from \ref AudioRecorderDeviceBase base class, please check its documentation for additional details.
 *
 * Parameters required by this device are:
-* | Parameter name | SubParameter   | Type    | Units          | Default Value            | Required                    | Description                                                       | Notes |
-* |:--------------:|:--------------:|:-------:|:--------------:|:------------------------:|:--------------------------: |:-----------------------------------------------------------------:|:-----:|
-* | file_name      |      -         | string  | -              |  audio.wav               | No                          | The name of the file opened by the module                         | Only .wav files supported   |
-* | period         |      -         | double  | s              |  0.010                   | No                          | the period of thread which processes the file                     | On each iteration xxx samples are processed |
-* | samples        |      -         | int     | samples        |  512                     | No                          | the number of samples to process on each iteration of the thread  | - |
+* | Parameter name    | SubParameter   | Type    | Units          | Default Value            | Required                    | Description                                                       | Notes |
+* |:-----------------:|:--------------:|:-------:|:--------------:|:------------------------:|:--------------------------: |:-----------------------------------------------------------------:|:-----:|
+* | AUDIO_BASE        |     ***        |         | -              |  -                       | No                          | For the documentation of AUDIO_BASE group, please refer to the documentation of the base class AudioRecorderDeviceBase |       |
+* | file_name         |      -         | string  | -              |  audio.wav               | No                          | The name of the file opened by the module                         | Only .wav files supported   |
+* | period            |      -         | double  | s              |  0.010                   | No                          | the period of thread which processes the file                     | On each iteration xxx samples are processed |
+* | driver_frame_size |      -         | int     | samples        |  512                     | No                          | the number of samples to process on each iteration of the thread  | - |
+*
+* See \ref AudioDoc for additional documentation on YARP audio.
 */
 
 class audioFromFileDevice :
@@ -52,9 +53,14 @@ private:
     bool threadInit() override;
     void run() override;
 
+public:
+    bool setHWGain(double gain) override;
+
 private:
     yarp::sig::Sound m_audioFile;
     std::string m_audio_filename = "audio.wav";
     size_t m_bpnt = 0;
     size_t m_samples_to_be_copied = 512;
+    size_t m_fsize_in_samples = 0;
+    std::vector<std::reference_wrapper<yarp::sig::Sound::audio_sample>> m_datap;
 };

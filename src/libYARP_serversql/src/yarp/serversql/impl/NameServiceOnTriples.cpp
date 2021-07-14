@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <cstdlib>
@@ -330,7 +327,7 @@ bool NameServiceOnTriples::cmdRegister(NameTripleState& act)
 
     if (carrier!="mcast") {
         Bottle& event = act.event.addList();
-        event.addVocab(Vocab::encode("add"));
+        event.addVocab32("add");
         event.addString(port);
     }
     unlock();
@@ -381,7 +378,7 @@ bool NameServiceOnTriples::cmdUnregister(NameTripleState& act)
 
         if (contact.getCarrier()!="mcast") {
             Bottle& event = act.event.addList();
-            event.addVocab(Vocab::encode("del"));
+            event.addVocab32("del");
             event.addString(port);
         }
     }

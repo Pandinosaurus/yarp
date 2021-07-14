@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/companion/impl/Companion.h>
@@ -72,21 +69,23 @@ char* command_generator (const char* text, int state)
         yarp::os::Bottle helpCommand, helpBottle;
         helpCommand.addString("help");
         bool helpOk=false;
-        if (rpcHelpPort)
+        if (rpcHelpPort) {
             helpOk = rpcHelpPort->write(helpCommand, helpBottle);
+        }
         if (helpOk)
         {
             yarp::os::Bottle* cmdList = nullptr;
-            if (helpBottle.get(0).isVocab() && helpBottle.get(0).asVocab()==yarp::os::createVocab('m', 'a', 'n', 'y') )
+            if (helpBottle.get(0).isVocab32() && helpBottle.get(0).asVocab32()==yarp::os::createVocab32('m', 'a', 'n', 'y') )
             {
                 cmdList=helpBottle.get(1).asList();
+            } else {
+                cmdList = helpBottle.get(0).asList();
             }
-            else
-                cmdList=helpBottle.get(0).asList();
             if (cmdList && cmdList->get(0).asString() == "*** Available commands:")
             {
-                for (size_t i=1; i<cmdList->size(); ++i)
+                for (size_t i = 1; i < cmdList->size(); ++i) {
                     commands.push_back(cmdList->get(i).asString());
+                }
             }
         }
         commands.emplace_back(" ");
@@ -95,8 +94,9 @@ char* command_generator (const char* text, int state)
     while ((list_index<commands.size()) && (name = (char*)commands[list_index].c_str()))
         {
         list_index++;
-        if (strncmp (name, text, len) == 0)
+        if (strncmp(name, text, len) == 0) {
             return (dupstr(name));
+        }
         }
 
     /* if no names matched, then return null. */
@@ -116,12 +116,13 @@ char ** my_completion (const char* text, int start, int end)
     /* If this word is at the start of the line, then it is a command
        to complete. If we are completing after "help ", it is a command again.
        Otherwise, stop completing. */
-    if (start == 0)
+    if (start == 0) {
         matches = rl_completion_matches(text, &command_generator);
-    else if (start == 5 && strncmp (text, "help ", 5) != 0)
+    } else if (start == 5 && strncmp(text, "help ", 5) != 0) {
         matches = rl_completion_matches(text, &command_generator);
-    else
-        rl_attempted_completion_over=1;
+    } else {
+        rl_attempted_completion_over = 1;
+    }
 
     return (matches);
 }
@@ -199,7 +200,7 @@ int Companion::rpc(const char *connectionName, const char *targetName)
                     resendCount++;
                     break;
                 }
-                if (reply.get(0).isVocab() && reply.get(0).asVocab()==yarp::os::createVocab('m', 'a', 'n', 'y')) {
+                if (reply.get(0).isVocab32() && reply.get(0).asVocab32()==yarp::os::createVocab32('m', 'a', 'n', 'y')) {
                     yCInfo(COMPANION, "Responses:");
                     Bottle *lst = &reply;
                     int start = 1;

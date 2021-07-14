@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_RUN_IMPL_RUNPROCMANAGER_H
@@ -242,8 +239,12 @@ public:
         {
             mPidCmd=0;
 
-            if (!mKillingStdin && mPidStdin) yarp::os::impl::kill(mPidStdin, SIGTERM);
-            if (!mKillingStdout && mPidStdout) yarp::os::impl::kill(mPidStdout, SIGTERM);
+            if (!mKillingStdin && mPidStdin) {
+                yarp::os::impl::kill(mPidStdin, SIGTERM);
+            }
+            if (!mKillingStdout && mPidStdout) {
+                yarp::os::impl::kill(mPidStdout, SIGTERM);
+            }
 
             mKillingStdin=mKillingStdout=true;
         }
@@ -251,8 +252,12 @@ public:
         {
             mPidStdin=0;
 
-            if (!mKillingCmd && mPidCmd) yarp::os::impl::kill(mPidCmd, SIGTERM);
-            if (!mKillingStdout && mPidStdout) yarp::os::impl::kill(mPidStdout, SIGTERM);
+            if (!mKillingCmd && mPidCmd) {
+                yarp::os::impl::kill(mPidCmd, SIGTERM);
+            }
+            if (!mKillingStdout && mPidStdout) {
+                yarp::os::impl::kill(mPidStdout, SIGTERM);
+            }
 
             mKillingCmd=mKillingStdout=true;
         }
@@ -260,21 +265,34 @@ public:
         {
             mPidStdout=0;
 
-            if (!mKillingCmd && mPidCmd) yarp::os::impl::kill(mPidCmd, SIGTERM);
-            if (!mKillingStdin && mPidStdin) yarp::os::impl::kill(mPidStdin, SIGTERM);
+            if (!mKillingCmd && mPidCmd) {
+                yarp::os::impl::kill(mPidCmd, SIGTERM);
+            }
+            if (!mKillingStdin && mPidStdin) {
+                yarp::os::impl::kill(mPidStdin, SIGTERM);
+            }
 
             mKillingCmd=mKillingStdin=true;
+        } else {
+            return false;
         }
-        else return false;
 
         if (!mKillingStdio)
         {
             mKillingStdio=true;
 
-            if (mWriteToPipeStdinToCmd)   CLOSE(mWriteToPipeStdinToCmd);
-            if (mReadFromPipeStdinToCmd)  CLOSE(mReadFromPipeStdinToCmd);
-            if (mWriteToPipeCmdToStdout)  CLOSE(mWriteToPipeCmdToStdout);
-            if (mReadFromPipeCmdToStdout) CLOSE(mReadFromPipeCmdToStdout);
+            if (mWriteToPipeStdinToCmd) {
+                CLOSE(mWriteToPipeStdinToCmd);
+            }
+            if (mReadFromPipeStdinToCmd) {
+                CLOSE(mReadFromPipeStdinToCmd);
+            }
+            if (mWriteToPipeCmdToStdout) {
+                CLOSE(mWriteToPipeCmdToStdout);
+            }
+            if (mReadFromPipeCmdToStdout) {
+                CLOSE(mReadFromPipeCmdToStdout);
+            }
 
             mWriteToPipeStdinToCmd=0;
             mReadFromPipeStdinToCmd=0;
@@ -282,7 +300,9 @@ public:
             mReadFromPipeCmdToStdout=0;
         }
 
-        if (!mPidCmd && !mPidStdin && !mPidStdout) pRef=this;
+        if (!mPidCmd && !mPidStdin && !mPidStdout) {
+            pRef = this;
+        }
 
         return true;
     }

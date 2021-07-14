@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include "StreamingMessagesParser.h"
@@ -65,7 +62,7 @@ void StreamingMessagesParser::onRead(CommandMessage& v)
 
     // some consistency checks
     if (static_cast<int>(cmdVector.size()) > stream_nJoints) {
-        std::string str = yarp::os::Vocab::decode(b.get(0).asVocab());
+        std::string str = yarp::os::Vocab32::decode(b.get(0).asVocab32());
         yCError(CONTROLBOARD, "Received command vector with number of elements bigger than axis controlled by this wrapper (cmd: %s requested jnts: %d received jnts: %d)\n", str.c_str(), stream_nJoints, (int)cmdVector.size());
         return;
     }
@@ -74,10 +71,10 @@ void StreamingMessagesParser::onRead(CommandMessage& v)
         return;
     }
 
-    switch (b.get(0).asVocab()) {
+    switch (b.get(0).asVocab32()) {
     // manage commands with interface name as first
     case VOCAB_PWMCONTROL_INTERFACE: {
-        switch (b.get(1).asVocab()) {
+        switch (b.get(1).asVocab32()) {
         case VOCAB_PWMCONTROL_REF_PWM: {
             if (stream_IPWM) {
                 bool ok = stream_IPWM->setRefDutyCycle(b.get(2).asInt32(), cmdVector[0]);
@@ -102,7 +99,7 @@ void StreamingMessagesParser::onRead(CommandMessage& v)
     } break;
 
     case VOCAB_CURRENTCONTROL_INTERFACE: {
-        switch (b.get(1).asVocab()) {
+        switch (b.get(1).asVocab32()) {
         case VOCAB_CURRENT_REF: {
             if (stream_ICurrent) {
                 bool ok = stream_ICurrent->setRefCurrent(b.get(2).asInt32(), cmdVector[0]);
@@ -143,7 +140,7 @@ void StreamingMessagesParser::onRead(CommandMessage& v)
         } break;
         default:
         {
-            std::string str = yarp::os::Vocab::decode(b.get(0).asVocab());
+            std::string str = yarp::os::Vocab32::decode(b.get(0).asVocab32());
             yCError(CONTROLBOARD, "Unrecognized message while receiving on command port (%s)\n", str.c_str());
         } break;
         }
@@ -289,7 +286,7 @@ void StreamingMessagesParser::onRead(CommandMessage& v)
 
     default:
     {
-        std::string str = yarp::os::Vocab::decode(b.get(0).asVocab());
+        std::string str = yarp::os::Vocab32::decode(b.get(0).asVocab32());
         yCError(CONTROLBOARD, "Unrecognized message while receiving on command port (%s)\n", str.c_str());
     } break;
     }

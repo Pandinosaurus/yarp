@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_CONTROLBOARDINTERFACES_H
@@ -22,12 +19,9 @@
 #include <yarp/dev/IEncoders.h>
 #include <yarp/dev/IEncodersTimed.h>
 #include <yarp/dev/ITorqueControl.h>
-#include <yarp/dev/IControlMode2.h>
 #include <yarp/dev/IImpedanceControl.h>
 #include <yarp/dev/IVelocityControl.h>
-#include <yarp/dev/IVelocityControl2.h>
 #include <yarp/dev/IPositionControl.h>
-#include <yarp/dev/IPositionControl2.h>
 #include <yarp/dev/ICurrentControl.h>
 #include <yarp/dev/IPWMControl.h>
 #include <yarp/dev/IPidControl.h>
@@ -41,7 +35,20 @@
 #include <yarp/dev/IAmplifierControl.h>
 #include <yarp/dev/IAxisInfo.h>
 #include <yarp/dev/IControlLimits.h>
+#include <yarp/dev/IControlMode.h>
 
 #include <yarp/dev/ControlBoardVocabs.h>
+
+#define YARP_INCLUDING_DEPRECATED_HEADER_YARP_DEV_ICONTROLMODE2_H_ON_PURPOSE
+#include <yarp/dev/IControlMode2.h>
+#undef YARP_INCLUDING_DEPRECATED_HEADER_YARP_DEV_ICONTROLMODE2_H_ON_PURPOSE
+
+#define YARP_INCLUDING_DEPRECATED_HEADER_YARP_DEV_IPOSITIONCONTROL2_H_ON_PURPOSE
+#include <yarp/dev/IPositionControl2.h>
+#undef YARP_INCLUDING_DEPRECATED_HEADER_YARP_DEV_IPOSITIONCONTROL2_H_ON_PURPOSE
+
+#define YARP_INCLUDING_DEPRECATED_HEADER_YARP_DEV_IVELOCITYCONTROL2_H_ON_PURPOSE
+#include <yarp/dev/IVelocityControl2.h>
+#undef YARP_INCLUDING_DEPRECATED_HEADER_YARP_DEV_IVELOCITYCONTROL2_H_ON_PURPOSE
 
 #endif // YARP_DEV_CONTROLBOARDINTERFACES_H

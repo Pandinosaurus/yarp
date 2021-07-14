@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include "ControlBoardRemapper.h"
@@ -467,8 +464,9 @@ bool ControlBoardRemapper::detachAll()
 {
     //check if we already instantiated a subdevice previously
     int devices=remappedControlBoards.getNrOfSubControlBoards();
-    for(int k=0;k<devices;k++)
+    for (int k = 0; k < devices; k++) {
         remappedControlBoards.getSubControlBoard(k)->detach();
+    }
 
     IRemoteCalibrator::releaseCalibratorDevice();
     return true;
@@ -2354,15 +2352,16 @@ bool ControlBoardRemapper::getMotorEncoders(double *encs)
         size_t subIndex=remappedControlBoards.lut[l].subControlBoardIndex;
 
         RemappedSubControlBoard *p=remappedControlBoards.getSubControlBoard(subIndex);
-        if (!p)
+        if (!p) {
             return false;
+        }
 
         if (p->iMotEnc)
         {
             ret=ret&&p->iMotEnc->getMotorEncoder(off, encs+l);
+        } else {
+            ret = false;
         }
-        else
-            ret=false;
     }
     return ret;
 }
@@ -3553,8 +3552,9 @@ bool ControlBoardRemapper::getControlMode(int j, int *mode)
     size_t subIndex=remappedControlBoards.lut[j].subControlBoardIndex;
 
     RemappedSubControlBoard *p=remappedControlBoards.getSubControlBoard(subIndex);
-    if (!p)
+    if (!p) {
         return false;
+    }
 
     return p->iMode->getControlMode(off, mode);
 
@@ -3590,7 +3590,7 @@ bool ControlBoardRemapper::getControlModes(int *modes)
     return ret;
 }
 
-// iControlMode2
+// IControlMode interface
 bool ControlBoardRemapper::getControlModes(const int n_joints, const int *joints, int *modes)
 {
     bool ret=true;
@@ -3867,9 +3867,8 @@ bool ControlBoardRemapper::getRefPositions(const int n_joints, const int *joints
 }
 
 
-//
-// IVelocityControl2 Interface
-//
+
+// IVelocityControl interface
 bool ControlBoardRemapper::velocityMove(const int n_joints, const int *joints, const double *spds)
 {
     bool ret=true;

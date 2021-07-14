@@ -1,5 +1,5 @@
 /**
-\defgroup dev_all yarp::dev Yarp Devices
+\defgroup dev_all yarp::dev YARP Devices
 
 Dealing with devices. What do you need to know to use devices in
 YARP?  First, we try to write our devices so that they implement a
@@ -118,6 +118,12 @@ For more information see the documentation of server, client and remapper device
 
 /**
 \ingroup dev_iface
+\defgroup dev_iface_transform Frame Transform Interfaces
+The interfaces in this group are to be implemented by devices who are meant to manage and/or store frame transformations
+*/
+
+/**
+\ingroup dev_iface
 
 \defgroup dev_iface_other Other Device Interfaces
 
@@ -139,10 +145,50 @@ Concrete device drivers that implement sets of interfaces.
 /**
 \ingroup dev_impl
 
-\defgroup dev_impl_wrapper Network Servers (Wrappers)
+\defgroup dev_impl_wrapper Network Servers (Wrappers - pre NWC/NWS architecture)
 
 These devices take implementations of existing interfaces and wrap them
 up to work across the network.
+
+*/
+
+/**
+\ingroup dev_impl
+
+\defgroup dev_impl_nws_yarp YARP Network Wrapper Servers (NWS)
+
+These devices take implementations of existing interfaces and wrap them
+up to work across the YARP network (see \ref nws_and_nwc_architecture).
+
+*/
+
+/**
+\ingroup dev_impl
+
+\defgroup dev_impl_nws_ros ROS Network Wrapper Servers (NWS)
+
+These devices take implementations of existing interfaces and wrap them
+up to work across the ROS network (see \ref nws_and_nwc_architecture).
+
+*/
+
+/**
+\ingroup dev_impl
+
+\defgroup dev_impl_nwc_yarp YARP Network Wrapper Clients (NWC)
+
+These devices connects to their NWS counterpart through YARP network and expose a yarp::dev interface
+(see \ref nws_and_nwc_architecture).
+
+*/
+
+/**
+\ingroup dev_impl
+
+\defgroup dev_impl_nwc_ros ROS Network Wrapper Clients (NWC)
+
+These devices connects to ROS network and expose a yarp::dev interface
+(see \ref nws_and_nwc_architecture).
 
 */
 
@@ -150,7 +196,7 @@ up to work across the network.
 /**
 \ingroup dev_impl
 
-\defgroup dev_impl_network_clients Network Clients
+\defgroup dev_impl_network_clients Network Clients (pre NWC/NWS architecture)
 
 These devices are meant to communicate to YARP ports opened by \ref dev_impl_wrapper
 to provide device interfaces in a transparent way over a YARP network.
@@ -238,6 +284,13 @@ Devices using for testing purposes.
 Miscellaneous device implementations.
 */
 
+/**
+\ingroup dev_impl
+
+\defgroup dev_impl_deprecated Obsolete or deprecated devices
+
+Devices marked for deprecation in the upcoming Yarp releases
+*/
 
 /**
 \ingroup dev_all

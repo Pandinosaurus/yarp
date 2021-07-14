@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_OS_PERIODICTHREAD_H
@@ -15,6 +12,12 @@
 
 namespace yarp {
 namespace os {
+
+enum class PeriodicThreadClock
+{
+    Relative,
+    Absolute
+};
 
 /**
  * \ingroup key_class
@@ -27,16 +30,34 @@ public:
     /**
      * Constructor.  Thread begins in a dormant state.  Call PeriodicThread::start
      * to get things going.
-     * @param period The period in seconds [sec] between
-     * successive calls to the PeriodicThread::run method
-     * (remember you need to call PeriodicThread::start first
-     * before anything happens)
-     * @param useSystemClock whether the thread should always
-     * use the system clock, or depend on the current
-     * configuration of the network.
+     * @param period The period in seconds [sec] between successive calls to the
+     * PeriodicThread::run method (remember you need to call PeriodicThread::start
+     * first before anything happens)
+     * @param useSystemClock whether the thread should always use the system clock,
+     * or depend on the current configuration of the network
+     * @param clockAccuracy whether the thread should ensure all steps wake up
+     * at precise intervals using an absolute reference, otherwise compute them
+     * in a relative fashion assuming error accumulation over time due to drifts.
+     * @warning PeriodicThreadClock::Absolute may cause starvation if two or more
+     * busy threads lock on a common resource
      */
     explicit PeriodicThread(double period,
-                            ShouldUseSystemClock useSystemClock = ShouldUseSystemClock::No);
+                            ShouldUseSystemClock useSystemClock = ShouldUseSystemClock::No,
+                            PeriodicThreadClock clockAccuracy = PeriodicThreadClock::Relative);
+
+    /**
+     * Constructor.  Thread begins in a dormant state.  Call PeriodicThread::start
+     * to get things going.
+     * @param period The period in seconds [sec] between successive calls to the
+     * PeriodicThread::run method (remember you need to call PeriodicThread::start
+     * first before anything happens)
+     * @param clockAccuracy whether the thread should ensure all steps wake up
+     * at precise intervals using an absolute reference, otherwise compute them
+     * in a relative fashion assuming error accumulation over time due to drifts
+     * @warning PeriodicThreadClock::Absolute may cause starvation if two or more
+     * busy threads lock on a common resource
+     */
+    explicit PeriodicThread(double period, PeriodicThreadClock clockAccuracy);
 
     virtual ~PeriodicThread();
 

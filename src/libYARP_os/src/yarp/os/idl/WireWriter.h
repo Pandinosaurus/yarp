@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_OS_IDL_WIREWRITER_H
@@ -62,21 +59,28 @@ public:
 
     bool writeFloat64(yarp::conf::float64_t x) const;
 
-#ifndef YARP_NO_DEPRECATED // Since YARP 3.0.0
-    YARP_DEPRECATED_MSG("Use writeI8 instead")
-    bool writeByte(std::int8_t x) const
+    bool writeUI8(std::uint8_t x) const;
+
+    bool writeUI16(std::uint16_t x) const;
+
+    bool writeUI32(std::uint32_t x) const;
+
+    bool writeUI64(std::uint64_t x) const;
+
+    bool writeVocab32(yarp::conf::vocab32_t x) const;
+
+    bool writeVocab32(char a, char b = 0, char c = 0, char d = 0) const
     {
-        return writeI8(x);
+        return writeVocab32(yarp::os::createVocab32(a, b, c, d));
     }
 
-    YARP_DEPRECATED_MSG("Use writeFloat64 instead")
-    bool writeDouble(double x) const
+    // If the string is longer than 4 characters, only the first 4 are used.
+    bool writeVocab32(const std::string& str) const
     {
-        return writeFloat64(static_cast<yarp::conf::float64_t>(x));
+        return writeVocab32(yarp::os::Vocab32::encode(str));
     }
-#endif // YARP_NO_DEPRECATED
 
-    bool writeVocab(std::int32_t x) const;
+    bool writeSizeT(std::size_t x) const;
 
     bool isValid() const;
 
@@ -104,10 +108,32 @@ public:
 
     bool writeOnewayResponse() const;
 
+#ifndef YARP_NO_DEPRECATED // Since YARP 3.0.0
+    YARP_DEPRECATED_MSG("Use writeI8 instead")
+    bool writeByte(std::int8_t x) const
+    {
+        return writeI8(x);
+    }
+
+    YARP_DEPRECATED_MSG("Use writeFloat64 instead")
+    bool writeDouble(double x) const
+    {
+        return writeFloat64(static_cast<yarp::conf::float64_t>(x));
+    }
+#endif // YARP_NO_DEPRECATED
+
+#ifndef YARP_NO_DEPRECATED // Since YARP 3.5.0
+    YARP_DEPRECATED_MSG("Use writeVocab32 instead")
+    bool writeVocab(std::int32_t x) const
+    {
+        return writeVocab32(x);
+    }
+#endif // YARP_NO_DEPRECATED
+
 private:
     bool get_mode;
     YARP_SUPPRESS_DLL_INTERFACE_WARNING_ARG(std::string) get_string;
-    bool get_is_vocab;
+    bool get_is_vocab32;
     mutable bool need_ok;
     ConnectionWriter& writer;
 };

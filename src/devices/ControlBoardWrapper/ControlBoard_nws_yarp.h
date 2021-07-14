@@ -1,17 +1,13 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_CONTROLBOARD_NWS_YARP_H
 #define YARP_DEV_CONTROLBOARD_NWS_YARP_H
 
 #include <yarp/dev/DeviceDriver.h>
-#include <yarp/dev/IMultipleWrapper.h>
-#include <yarp/dev/IWrapper.h>
+#include <yarp/dev/WrapperSingle.h>
 #include <yarp/os/PeriodicThread.h>
 
 #include <yarp/dev/IPidControl.h>
@@ -49,7 +45,7 @@
 
 
 /**
- * @ingroup dev_impl_wrapper
+ * @ingroup dev_impl_nws_yarp
  *
  * \brief `controlBoard_nws_yarp`: A controlBoard network wrapper server for YARP.
  *
@@ -66,8 +62,7 @@
 class ControlBoard_nws_yarp :
         public yarp::dev::DeviceDriver,
         public yarp::os::PeriodicThread,
-        public yarp::dev::IMultipleWrapper,
-        public yarp::dev::IWrapper
+        public yarp::dev::WrapperSingle
 {
 private:
     std::string rootName;
@@ -135,13 +130,9 @@ public:
     bool close() override;
     bool open(yarp::os::Searchable& prop) override;
 
-    // yarp::dev::IWrapper
+    // yarp::dev::WrapperSingle
     bool attach(yarp::dev::PolyDriver* poly) override;
     bool detach() override;
-
-    // yarp::dev::IMultipleWrapper
-    bool attachAll(const yarp::dev::PolyDriverList &l) override;
-    bool detachAll() override;
 
     // yarp::os::PeriodicThread
     void run() override;

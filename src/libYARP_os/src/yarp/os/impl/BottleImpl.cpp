@@ -1,11 +1,8 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * Copyright (C) 2006, 2008 Arjan Gijsberts
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-FileCopyrightText: 2006, 2008 Arjan Gijsberts
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/impl/BottleImpl.h>
@@ -150,7 +147,7 @@ void BottleImpl::smartAdd(const std::string& str)
         } else if (ch == '(') {
             s = new StoreList();
         } else if (ch == '[') {
-            s = new StoreVocab();
+            s = new StoreVocab32();
         } else if (ch == '{') {
             s = new StoreBlob();
         } else {
@@ -177,10 +174,10 @@ void BottleImpl::smartAdd(const std::string& str)
                     std::string val = ss->asString();
                     if (val == "true") {
                         delete s;
-                        s = new StoreVocab(static_cast<int>('1'));
+                        s = new StoreVocab32(static_cast<int>('1'));
                     } else if (val == "false") {
                         delete s;
-                        s = new StoreVocab(0);
+                        s = new StoreVocab32(0);
                     }
                 }
             }
@@ -239,7 +236,7 @@ void BottleImpl::fromString(const std::string& line)
                         (nestedAlt == 0) && (nested == 0)) {
                         if (!arg.empty()) {
                             if (arg == "null") {
-                                add(new StoreVocab(yarp::os::createVocab('n', 'u', 'l', 'l')));
+                                add(new StoreVocab32(yarp::os::createVocab32('n', 'u', 'l', 'l')));
                             } else {
                                 smartAdd(arg);
                             }

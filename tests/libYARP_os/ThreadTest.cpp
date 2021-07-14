@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/Thread.h>
@@ -220,8 +217,9 @@ public:
     void afterStart(bool s) override
     {
         mutex.lock();
-        if(!s)
+        if (!s) {
             state++;
+        }
         mutex.unlock();
     }
 
@@ -385,14 +383,20 @@ TEST_CASE("os::ThreadTest", "[yarp::os]")
     SECTION("testing IDs...")
     {
         ThreadIdentity t[3];
-        for (int i=0; i<3; i++) t[i].start();
-        for (int i=0; i<3; i++) t[i].stop();
+        for (int i = 0; i < 3; i++) {
+            t[i].start();
+        }
+        for (int i = 0; i < 3; i++) {
+            t[i].stop();
+        }
         for (int i=0; i<3; i++) {
             CHECK(t[i].staticId == t[i].dynamicId); // IDs match appropriately
         }
         for (int i=0; i<3; i++) {
             for (int j=0; j<3; j++) {
-                if (i==j) continue;
+                if (i == j) {
+                    continue;
+                }
                 CHECK_FALSE(t[i].staticId==t[j].staticId); // IDs differ appropriately
             }
         }

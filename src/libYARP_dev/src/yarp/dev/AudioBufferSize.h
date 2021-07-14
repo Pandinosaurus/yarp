@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_AUDIOBUFFERSIZE_H
@@ -31,7 +28,7 @@ public:
     size_t getSamples() { return m_samples; }
     size_t getChannels() { return m_channels; }
     size_t getBufferElements() { return size; }
-    size_t getBytes() { return m_samples * m_channels * m_depth; }
+    size_t getBytes() { return size_t(m_samples * m_channels * m_depth); }
 
     bool read(yarp::os::idl::WireReader& reader) override { return audioBufferSizeData::read(reader); }
     bool write(const yarp::os::idl::WireWriter& writer) const override { return audioBufferSizeData::write(writer); }

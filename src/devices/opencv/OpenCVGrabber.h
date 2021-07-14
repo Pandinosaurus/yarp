@@ -1,21 +1,8 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * Copyright (C) 2006 Eric Mislivec
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-FileCopyrightText: 2006 Eric Mislivec
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #ifndef YARP_OPENCV_GRABBER_DEVICE_OPENCVGRABBER_H
@@ -28,7 +15,7 @@
 
 
 #include <yarp/os/Property.h>
-#include <yarp/dev/FrameGrabberInterfaces.h>
+#include <yarp/dev/IFrameGrabberImage.h>
 #include <yarp/dev/DeviceDriver.h>
 #include <yarp/os/Stamp.h>
 #include <yarp/dev/IPreciselyTimed.h>
@@ -53,7 +40,7 @@ public:
      * reasonable default values, the real initialization is done in
      * open().
      */
-    OpenCVGrabber() : IFrameGrabberImage(), DeviceDriver(),
+    OpenCVGrabber() :
         m_w(0),
         m_h(0),
         m_loop(false),

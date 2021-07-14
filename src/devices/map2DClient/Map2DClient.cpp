@@ -1,19 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 /*! \file Map2DClient.cpp */
@@ -84,8 +71,8 @@ bool Map2DClient::store_map(const MapGrid2D& map)
     yarp::os::Bottle b;
     yarp::os::Bottle resp;
 
-    b.addVocab(VOCAB_IMAP);
-    b.addVocab(VOCAB_IMAP_SET_MAP);
+    b.addVocab32(VOCAB_IMAP);
+    b.addVocab32(VOCAB_IMAP_SET_MAP);
     yarp::os::Bottle& mapbot = b.addList();
     MapGrid2D maptemp = map;
     if (Property::copyPortable(maptemp, mapbot) == false)
@@ -97,7 +84,7 @@ bool Map2DClient::store_map(const MapGrid2D& map)
     bool ret = m_rpcPort_to_Map2DServer.write(b, resp);
     if (ret)
     {
-        if (resp.get(0).asVocab() != VOCAB_IMAP_OK)
+        if (resp.get(0).asVocab32() != VOCAB_IMAP_OK)
         {
             yCError(MAP2DCLIENT) << "store_map() received error from server";
             return false;
@@ -116,14 +103,14 @@ bool Map2DClient::get_map(std::string map_name, MapGrid2D& map)
     yarp::os::Bottle b;
     yarp::os::Bottle resp;
 
-    b.addVocab(VOCAB_IMAP);
-    b.addVocab(VOCAB_IMAP_GET_MAP);
+    b.addVocab32(VOCAB_IMAP);
+    b.addVocab32(VOCAB_IMAP_GET_MAP);
     b.addString(map_name);
 
     bool ret = m_rpcPort_to_Map2DServer.write(b, resp);
     if (ret)
     {
-        if (resp.get(0).asVocab() != VOCAB_IMAP_OK)
+        if (resp.get(0).asVocab32() != VOCAB_IMAP_OK)
         {
             yCError(MAP2DCLIENT) << "get_map() received error from server";
             return false;
@@ -155,13 +142,13 @@ bool Map2DClient::clearAllMaps()
     yarp::os::Bottle b;
     yarp::os::Bottle resp;
 
-    b.addVocab(VOCAB_IMAP);
-    b.addVocab(VOCAB_IMAP_CLEAR);
+    b.addVocab32(VOCAB_IMAP);
+    b.addVocab32(VOCAB_IMAP_CLEAR_ALL_MAPS);
 
     bool ret = m_rpcPort_to_Map2DServer.write(b, resp);
     if (ret)
     {
-        if (resp.get(0).asVocab() != VOCAB_IMAP_OK)
+        if (resp.get(0).asVocab32() != VOCAB_IMAP_OK)
         {
             yCError(MAP2DCLIENT) << "clear() received error from server";
             return false;
@@ -181,12 +168,12 @@ bool Map2DClient::get_map_names(std::vector<std::string>& map_names)
     yarp::os::Bottle b;
     yarp::os::Bottle resp;
 
-    b.addVocab(VOCAB_IMAP);
-    b.addVocab(VOCAB_IMAP_GET_NAMES);
+    b.addVocab32(VOCAB_IMAP);
+    b.addVocab32(VOCAB_IMAP_GET_NAMES);
     bool ret = m_rpcPort_to_Map2DServer.write(b, resp);
     if (ret)
     {
-        if (resp.get(0).asVocab() != VOCAB_IMAP_OK)
+        if (resp.get(0).asVocab32() != VOCAB_IMAP_OK)
         {
             yCError(MAP2DCLIENT) << "get_map_names() received error from server";
             return false;
@@ -213,14 +200,14 @@ bool Map2DClient::remove_map(std::string map_name)
     yarp::os::Bottle b;
     yarp::os::Bottle resp;
 
-    b.addVocab(VOCAB_IMAP);
-    b.addVocab(VOCAB_IMAP_REMOVE);
+    b.addVocab32(VOCAB_IMAP);
+    b.addVocab32(VOCAB_IMAP_REMOVE);
     b.addString(map_name);
 
     bool ret = m_rpcPort_to_Map2DServer.write(b, resp);
     if (ret)
     {
-        if (resp.get(0).asVocab() != VOCAB_IMAP_OK)
+        if (resp.get(0).asVocab32() != VOCAB_IMAP_OK)
         {
             yCError(MAP2DCLIENT) << "remove_map() received error from server";
             return false;
@@ -239,9 +226,9 @@ bool Map2DClient::storeLocation(std::string location_name, Map2DLocation loc)
     yarp::os::Bottle b;
     yarp::os::Bottle resp;
 
-    b.addVocab(VOCAB_INAVIGATION);
-    b.addVocab(VOCAB_NAV_STORE_X);
-    b.addVocab(VOCAB_NAV_LOCATION);
+    b.addVocab32(VOCAB_INAVIGATION);
+    b.addVocab32(VOCAB_NAV_STORE_X);
+    b.addVocab32(VOCAB_NAV_LOCATION);
     b.addString(location_name);
     b.addString(loc.map_id);
     b.addFloat64(loc.x);
@@ -251,7 +238,7 @@ bool Map2DClient::storeLocation(std::string location_name, Map2DLocation loc)
     bool ret = m_rpcPort_to_Map2DServer.write(b, resp);
     if (ret)
     {
-        if (resp.get(0).asVocab() != VOCAB_OK)
+        if (resp.get(0).asVocab32() != VOCAB_OK)
         {
             yCError(MAP2DCLIENT) << "storeLocation() received error from locations server";
             return false;
@@ -270,9 +257,9 @@ bool Map2DClient::storeArea(std::string area_name, Map2DArea area)
     yarp::os::Bottle b;
     yarp::os::Bottle resp;
 
-    b.addVocab(VOCAB_INAVIGATION);
-    b.addVocab(VOCAB_NAV_STORE_X);
-    b.addVocab(VOCAB_NAV_AREA);
+    b.addVocab32(VOCAB_INAVIGATION);
+    b.addVocab32(VOCAB_NAV_STORE_X);
+    b.addVocab32(VOCAB_NAV_AREA);
     b.addString(area_name);
     yarp::os::Bottle& areabot = b.addList();
     Map2DArea areatemp = area;
@@ -285,7 +272,7 @@ bool Map2DClient::storeArea(std::string area_name, Map2DArea area)
     bool ret = m_rpcPort_to_Map2DServer.write(b, resp);
     if (ret)
     {
-        if (resp.get(0).asVocab() != VOCAB_OK)
+        if (resp.get(0).asVocab32() != VOCAB_OK)
         {
             yCError(MAP2DCLIENT) << "storeArea() received error from locations server";
             return false;
@@ -304,9 +291,9 @@ bool Map2DClient::storePath(std::string path_name, Map2DPath path)
     yarp::os::Bottle b;
     yarp::os::Bottle resp;
 
-    b.addVocab(VOCAB_INAVIGATION);
-    b.addVocab(VOCAB_NAV_STORE_X);
-    b.addVocab(VOCAB_NAV_PATH);
+    b.addVocab32(VOCAB_INAVIGATION);
+    b.addVocab32(VOCAB_NAV_STORE_X);
+    b.addVocab32(VOCAB_NAV_PATH);
     b.addString(path_name);
     yarp::os::Bottle& areabot = b.addList();
     Map2DPath pathtemp = path;
@@ -319,7 +306,7 @@ bool Map2DClient::storePath(std::string path_name, Map2DPath path)
     bool ret = m_rpcPort_to_Map2DServer.write(b, resp);
     if (ret)
     {
-        if (resp.get(0).asVocab() != VOCAB_OK)
+        if (resp.get(0).asVocab32() != VOCAB_OK)
         {
             yCError(MAP2DCLIENT) << "storePath() received error from locations server";
             return false;
@@ -338,14 +325,14 @@ bool   Map2DClient::getLocationsList(std::vector<std::string>& locations)
     yarp::os::Bottle b;
     yarp::os::Bottle resp;
 
-    b.addVocab(VOCAB_INAVIGATION);
-    b.addVocab(VOCAB_NAV_GET_LIST_X);
-    b.addVocab(VOCAB_NAV_LOCATION);
+    b.addVocab32(VOCAB_INAVIGATION);
+    b.addVocab32(VOCAB_NAV_GET_LIST_X);
+    b.addVocab32(VOCAB_NAV_LOCATION);
 
     bool ret = m_rpcPort_to_Map2DServer.write(b, resp);
     if (ret)
     {
-        if (resp.get(0).asVocab() != VOCAB_OK)
+        if (resp.get(0).asVocab32() != VOCAB_OK)
         {
             yCError(MAP2DCLIENT) << "getLocationsList() received error from locations server";
             return false;
@@ -382,14 +369,14 @@ bool   Map2DClient::getAreasList(std::vector<std::string>& areas)
     yarp::os::Bottle b;
     yarp::os::Bottle resp;
 
-    b.addVocab(VOCAB_INAVIGATION);
-    b.addVocab(VOCAB_NAV_GET_LIST_X);
-    b.addVocab(VOCAB_NAV_AREA);
+    b.addVocab32(VOCAB_INAVIGATION);
+    b.addVocab32(VOCAB_NAV_GET_LIST_X);
+    b.addVocab32(VOCAB_NAV_AREA);
 
     bool ret = m_rpcPort_to_Map2DServer.write(b, resp);
     if (ret)
     {
-        if (resp.get(0).asVocab() != VOCAB_OK)
+        if (resp.get(0).asVocab32() != VOCAB_OK)
         {
             yCError(MAP2DCLIENT) << "getAreasList() received error from locations server";
             return false;
@@ -426,14 +413,14 @@ bool   Map2DClient::getPathsList(std::vector<std::string>& paths)
     yarp::os::Bottle b;
     yarp::os::Bottle resp;
 
-    b.addVocab(VOCAB_INAVIGATION);
-    b.addVocab(VOCAB_NAV_GET_LIST_X);
-    b.addVocab(VOCAB_NAV_PATH);
+    b.addVocab32(VOCAB_INAVIGATION);
+    b.addVocab32(VOCAB_NAV_GET_LIST_X);
+    b.addVocab32(VOCAB_NAV_PATH);
 
     bool ret = m_rpcPort_to_Map2DServer.write(b, resp);
     if (ret)
     {
-        if (resp.get(0).asVocab() != VOCAB_OK)
+        if (resp.get(0).asVocab32() != VOCAB_OK)
         {
             yCError(MAP2DCLIENT) << "getPathsList() received error from locations server";
             return false;
@@ -470,15 +457,15 @@ bool   Map2DClient::getLocation(std::string location_name, Map2DLocation& loc)
     yarp::os::Bottle b;
     yarp::os::Bottle resp;
 
-    b.addVocab(VOCAB_INAVIGATION);
-    b.addVocab(VOCAB_NAV_GET_X);
-    b.addVocab(VOCAB_NAV_LOCATION);
+    b.addVocab32(VOCAB_INAVIGATION);
+    b.addVocab32(VOCAB_NAV_GET_X);
+    b.addVocab32(VOCAB_NAV_LOCATION);
     b.addString(location_name);
 
     bool ret = m_rpcPort_to_Map2DServer.write(b, resp);
     if (ret)
     {
-        if (resp.get(0).asVocab() != VOCAB_OK)
+        if (resp.get(0).asVocab32() != VOCAB_OK)
         {
             yCError(MAP2DCLIENT) << "getLocation() received error from locations server";
             return false;
@@ -504,15 +491,15 @@ bool   Map2DClient::getArea(std::string location_name, Map2DArea& area)
     yarp::os::Bottle b;
     yarp::os::Bottle resp;
 
-    b.addVocab(VOCAB_INAVIGATION);
-    b.addVocab(VOCAB_NAV_GET_X);
-    b.addVocab(VOCAB_NAV_AREA);
+    b.addVocab32(VOCAB_INAVIGATION);
+    b.addVocab32(VOCAB_NAV_GET_X);
+    b.addVocab32(VOCAB_NAV_AREA);
     b.addString(location_name);
 
     bool ret = m_rpcPort_to_Map2DServer.write(b, resp);
     if (ret)
     {
-        if (resp.get(0).asVocab() != VOCAB_OK)
+        if (resp.get(0).asVocab32() != VOCAB_OK)
         {
             yCError(MAP2DCLIENT) << "getArea() received error from locations server";
             return false;
@@ -544,15 +531,15 @@ bool   Map2DClient::getPath(std::string path_name, Map2DPath& path)
     yarp::os::Bottle b;
     yarp::os::Bottle resp;
 
-    b.addVocab(VOCAB_INAVIGATION);
-    b.addVocab(VOCAB_NAV_GET_X);
-    b.addVocab(VOCAB_NAV_PATH);
+    b.addVocab32(VOCAB_INAVIGATION);
+    b.addVocab32(VOCAB_NAV_GET_X);
+    b.addVocab32(VOCAB_NAV_PATH);
     b.addString(path_name);
 
     bool ret = m_rpcPort_to_Map2DServer.write(b, resp);
     if (ret)
     {
-        if (resp.get(0).asVocab() != VOCAB_OK)
+        if (resp.get(0).asVocab32() != VOCAB_OK)
         {
             yCError(MAP2DCLIENT) << "getPath() received error from locations server";
             return false;
@@ -584,15 +571,15 @@ bool   Map2DClient::deleteLocation(std::string location_name)
     yarp::os::Bottle b;
     yarp::os::Bottle resp;
 
-    b.addVocab(VOCAB_INAVIGATION);
-    b.addVocab(VOCAB_NAV_DELETE_X);
-    b.addVocab(VOCAB_NAV_LOCATION);
+    b.addVocab32(VOCAB_INAVIGATION);
+    b.addVocab32(VOCAB_NAV_DELETE_X);
+    b.addVocab32(VOCAB_NAV_LOCATION);
     b.addString(location_name);
 
     bool ret = m_rpcPort_to_Map2DServer.write(b, resp);
     if (ret)
     {
-        if (resp.get(0).asVocab() != VOCAB_OK)
+        if (resp.get(0).asVocab32() != VOCAB_OK)
         {
             yCError(MAP2DCLIENT) << "deleteLocation() received error from locations server";
             return false;
@@ -611,16 +598,16 @@ bool   Map2DClient::renameLocation(std::string original_name, std::string new_na
     yarp::os::Bottle b;
     yarp::os::Bottle resp;
 
-    b.addVocab(VOCAB_INAVIGATION);
-    b.addVocab(VOCAB_NAV_RENAME_X);
-    b.addVocab(VOCAB_NAV_LOCATION);
+    b.addVocab32(VOCAB_INAVIGATION);
+    b.addVocab32(VOCAB_NAV_RENAME_X);
+    b.addVocab32(VOCAB_NAV_LOCATION);
     b.addString(original_name);
     b.addString(new_name);
 
     bool ret = m_rpcPort_to_Map2DServer.write(b, resp);
     if (ret)
     {
-        if (resp.get(0).asVocab() != VOCAB_OK)
+        if (resp.get(0).asVocab32() != VOCAB_OK)
         {
             yCError(MAP2DCLIENT) << "renameLocation() received error from locations server";
             return false;
@@ -639,15 +626,15 @@ bool   Map2DClient::deleteArea(std::string location_name)
     yarp::os::Bottle b;
     yarp::os::Bottle resp;
 
-    b.addVocab(VOCAB_INAVIGATION);
-    b.addVocab(VOCAB_NAV_DELETE_X);
-    b.addVocab(VOCAB_NAV_AREA);
+    b.addVocab32(VOCAB_INAVIGATION);
+    b.addVocab32(VOCAB_NAV_DELETE_X);
+    b.addVocab32(VOCAB_NAV_AREA);
     b.addString(location_name);
 
     bool ret = m_rpcPort_to_Map2DServer.write(b, resp);
     if (ret)
     {
-        if (resp.get(0).asVocab() != VOCAB_OK)
+        if (resp.get(0).asVocab32() != VOCAB_OK)
         {
             yCError(MAP2DCLIENT) << "deleteArea() received error from locations server";
             return false;
@@ -666,15 +653,15 @@ bool   Map2DClient::deletePath(std::string path_name)
     yarp::os::Bottle b;
     yarp::os::Bottle resp;
 
-    b.addVocab(VOCAB_INAVIGATION);
-    b.addVocab(VOCAB_NAV_DELETE_X);
-    b.addVocab(VOCAB_NAV_PATH);
+    b.addVocab32(VOCAB_INAVIGATION);
+    b.addVocab32(VOCAB_NAV_DELETE_X);
+    b.addVocab32(VOCAB_NAV_PATH);
     b.addString(path_name);
 
     bool ret = m_rpcPort_to_Map2DServer.write(b, resp);
     if (ret)
     {
-        if (resp.get(0).asVocab() != VOCAB_OK)
+        if (resp.get(0).asVocab32() != VOCAB_OK)
         {
             yCError(MAP2DCLIENT) << "deletePath() received error from locations server";
             return false;
@@ -693,16 +680,16 @@ bool   Map2DClient::renameArea(std::string original_name, std::string new_name)
     yarp::os::Bottle b;
     yarp::os::Bottle resp;
 
-    b.addVocab(VOCAB_INAVIGATION);
-    b.addVocab(VOCAB_NAV_RENAME_X);
-    b.addVocab(VOCAB_NAV_AREA);
+    b.addVocab32(VOCAB_INAVIGATION);
+    b.addVocab32(VOCAB_NAV_RENAME_X);
+    b.addVocab32(VOCAB_NAV_AREA);
     b.addString(original_name);
     b.addString(new_name);
 
     bool ret = m_rpcPort_to_Map2DServer.write(b, resp);
     if (ret)
     {
-        if (resp.get(0).asVocab() != VOCAB_OK)
+        if (resp.get(0).asVocab32() != VOCAB_OK)
         {
             yCError(MAP2DCLIENT) << "renameArea() received error from locations server";
             return false;
@@ -721,16 +708,16 @@ bool   Map2DClient::renamePath(std::string original_name, std::string new_name)
     yarp::os::Bottle b;
     yarp::os::Bottle resp;
 
-    b.addVocab(VOCAB_INAVIGATION);
-    b.addVocab(VOCAB_NAV_RENAME_X);
-    b.addVocab(VOCAB_NAV_PATH);
+    b.addVocab32(VOCAB_INAVIGATION);
+    b.addVocab32(VOCAB_NAV_RENAME_X);
+    b.addVocab32(VOCAB_NAV_PATH);
     b.addString(original_name);
     b.addString(new_name);
 
     bool ret = m_rpcPort_to_Map2DServer.write(b, resp);
     if (ret)
     {
-        if (resp.get(0).asVocab() != VOCAB_OK)
+        if (resp.get(0).asVocab32() != VOCAB_OK)
         {
             yCError(MAP2DCLIENT) << "renamePath() received error from locations server";
             return false;
@@ -749,14 +736,14 @@ bool   Map2DClient::clearAllLocations()
     yarp::os::Bottle b;
     yarp::os::Bottle resp;
 
-    b.addVocab(VOCAB_INAVIGATION);
-    b.addVocab(VOCAB_NAV_CLEARALL_X);
-    b.addVocab(VOCAB_NAV_LOCATION);
+    b.addVocab32(VOCAB_INAVIGATION);
+    b.addVocab32(VOCAB_NAV_CLEARALL_X);
+    b.addVocab32(VOCAB_NAV_LOCATION);
 
     bool ret = m_rpcPort_to_Map2DServer.write(b, resp);
     if (ret)
     {
-        if (resp.get(0).asVocab() != VOCAB_OK)
+        if (resp.get(0).asVocab32() != VOCAB_OK)
         {
             yCError(MAP2DCLIENT) << "clearAllLocations() received error from locations server";
             return false;
@@ -775,14 +762,14 @@ bool   Map2DClient::clearAllAreas()
     yarp::os::Bottle b;
     yarp::os::Bottle resp;
 
-    b.addVocab(VOCAB_INAVIGATION);
-    b.addVocab(VOCAB_NAV_CLEARALL_X);
-    b.addVocab(VOCAB_NAV_AREA);
+    b.addVocab32(VOCAB_INAVIGATION);
+    b.addVocab32(VOCAB_NAV_CLEARALL_X);
+    b.addVocab32(VOCAB_NAV_AREA);
 
     bool ret = m_rpcPort_to_Map2DServer.write(b, resp);
     if (ret)
     {
-        if (resp.get(0).asVocab() != VOCAB_OK)
+        if (resp.get(0).asVocab32() != VOCAB_OK)
         {
             yCError(MAP2DCLIENT) << "clearAllAreas() received error from locations server";
             return false;
@@ -801,14 +788,14 @@ bool   Map2DClient::clearAllMapsTemporaryFlags()
     yarp::os::Bottle b;
     yarp::os::Bottle resp;
 
-    b.addVocab(VOCAB_INAVIGATION);
-    b.addVocab(VOCAB_NAV_CLEARALL_X);
-    b.addVocab(VOCAB_NAV_TEMPORARY_FLAGS);
+    b.addVocab32(VOCAB_INAVIGATION);
+    b.addVocab32(VOCAB_NAV_CLEARALL_X);
+    b.addVocab32(VOCAB_NAV_TEMPORARY_FLAGS);
 
     bool ret = m_rpcPort_to_Map2DServer.write(b, resp);
     if (ret)
     {
-        if (resp.get(0).asVocab() != VOCAB_OK)
+        if (resp.get(0).asVocab32() != VOCAB_OK)
         {
             yCError(MAP2DCLIENT) << "clearAllMapsTemporaryFlags() received error from locations server";
             return false;
@@ -827,15 +814,15 @@ bool   Map2DClient::clearMapTemporaryFlags(std::string map_name)
     yarp::os::Bottle b;
     yarp::os::Bottle resp;
 
-    b.addVocab(VOCAB_INAVIGATION);
-    b.addVocab(VOCAB_NAV_DELETE_X);
-    b.addVocab(VOCAB_NAV_TEMPORARY_FLAGS);
+    b.addVocab32(VOCAB_INAVIGATION);
+    b.addVocab32(VOCAB_NAV_DELETE_X);
+    b.addVocab32(VOCAB_NAV_TEMPORARY_FLAGS);
     b.addString(map_name);
 
     bool ret = m_rpcPort_to_Map2DServer.write(b, resp);
     if (ret)
     {
-        if (resp.get(0).asVocab() != VOCAB_OK)
+        if (resp.get(0).asVocab32() != VOCAB_OK)
         {
             yCError(MAP2DCLIENT) << "clearMapTemporaryFlags() received error from locations server";
             return false;
@@ -854,14 +841,14 @@ bool   Map2DClient::clearAllPaths()
     yarp::os::Bottle b;
     yarp::os::Bottle resp;
 
-    b.addVocab(VOCAB_INAVIGATION);
-    b.addVocab(VOCAB_NAV_CLEARALL_X);
-    b.addVocab(VOCAB_NAV_PATH);
+    b.addVocab32(VOCAB_INAVIGATION);
+    b.addVocab32(VOCAB_NAV_CLEARALL_X);
+    b.addVocab32(VOCAB_NAV_PATH);
 
     bool ret = m_rpcPort_to_Map2DServer.write(b, resp);
     if (ret)
     {
-        if (resp.get(0).asVocab() != VOCAB_OK)
+        if (resp.get(0).asVocab32() != VOCAB_OK)
         {
             yCError(MAP2DCLIENT) << "clearAllPaths() received error from locations server";
             return false;
@@ -877,5 +864,113 @@ bool   Map2DClient::clearAllPaths()
 
 bool Map2DClient::close()
 {
+    return true;
+}
+
+bool Map2DClient::saveMapsCollection(std::string maps_collection)
+{
+    yarp::os::Bottle b;
+    yarp::os::Bottle resp;
+
+    b.addVocab32(VOCAB_IMAP);
+    b.addVocab32(VOCAB_IMAP_SAVE_X);
+    b.addVocab32(VOCAB_IMAP_MAPS_COLLECTION);
+    b.addString(maps_collection);
+
+    bool ret = m_rpcPort_to_Map2DServer.write(b, resp);
+    if (ret)
+    {
+        if (resp.get(0).asVocab32() != VOCAB_OK)
+        {
+            yCError(MAP2DCLIENT) << "saveMapsCollection() received error from locations server";
+            return false;
+        }
+    }
+    else
+    {
+        yCError(MAP2DCLIENT) << "saveMapsCollection() error on writing on rpc port";
+        return false;
+    }
+    return true;
+}
+
+bool Map2DClient::loadMapsCollection(std::string maps_collection)
+{
+    yarp::os::Bottle b;
+    yarp::os::Bottle resp;
+
+    b.addVocab32(VOCAB_IMAP);
+    b.addVocab32(VOCAB_IMAP_LOAD_X);
+    b.addVocab32(VOCAB_IMAP_MAPS_COLLECTION);
+    b.addString(maps_collection);
+
+    bool ret = m_rpcPort_to_Map2DServer.write(b, resp);
+    if (ret)
+    {
+        if (resp.get(0).asVocab32() != VOCAB_OK)
+        {
+            yCError(MAP2DCLIENT) << "loadMapsCollection() received error from locations server";
+            return false;
+        }
+    }
+    else
+    {
+        yCError(MAP2DCLIENT) << "loadMapsCollection() error on writing on rpc port";
+        return false;
+    }
+    return true;
+}
+
+bool Map2DClient::saveLocationsAndExtras(std::string locations_collection)
+{
+    yarp::os::Bottle b;
+    yarp::os::Bottle resp;
+
+    b.addVocab32(VOCAB_IMAP);
+    b.addVocab32(VOCAB_IMAP_SAVE_X);
+    b.addVocab32(VOCAB_IMAP_LOCATIONS_COLLECTION);
+    b.addString(locations_collection);
+
+    bool ret = m_rpcPort_to_Map2DServer.write(b, resp);
+    if (ret)
+    {
+        if (resp.get(0).asVocab32() != VOCAB_IMAP_OK)
+        {
+            yCError(MAP2DCLIENT) << "saveLocationsAndExtras() received error from locations server";
+            return false;
+        }
+    }
+    else
+    {
+        yCError(MAP2DCLIENT) << "saveLocationsAndExtras() error on writing on rpc port";
+        return false;
+    }
+    return true;
+}
+
+bool Map2DClient::loadLocationsAndExtras(std::string locations_collection)
+{
+    yarp::os::Bottle b;
+    yarp::os::Bottle resp;
+
+    b.addVocab32(VOCAB_IMAP);
+    b.addVocab32(VOCAB_IMAP_LOAD_X);
+    b.addVocab32(VOCAB_IMAP_LOCATIONS_COLLECTION);
+    b.addString(locations_collection);
+
+    bool ret = m_rpcPort_to_Map2DServer.write(b, resp);
+    if (ret)
+    {
+        if (resp.get(0).asVocab32() != VOCAB_IMAP_OK)
+        {
+            yCError(MAP2DCLIENT) << "loadLocationsAndExtras() received error from locations server";
+            return false;
+        }
+    }
+    else
+    {
+        yCError(MAP2DCLIENT) << "loadLocationsAndExtras() error on writing on rpc port";
+        return false;
+    }
     return true;
 }

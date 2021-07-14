@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include "RPCMessagesParser.h"
@@ -26,7 +23,7 @@ inline void appendTimeStamp(Bottle& bot, Stamp& st)
 {
     int count = st.getCount();
     double time = st.getTime();
-    bot.addVocab(VOCAB_TIMESTAMP);
+    bot.addVocab32(VOCAB_TIMESTAMP);
     bot.addInt32(count);
     bot.addFloat64(time);
 }
@@ -36,13 +33,13 @@ void RPCMessagesParser::handleProtocolVersionRequest(const yarp::os::Bottle& cmd
                                                      bool* rec,
                                                      bool* ok)
 {
-    if (cmd.get(0).asVocab() != VOCAB_GET) {
+    if (cmd.get(0).asVocab32() != VOCAB_GET) {
         *rec = false;
         *ok = false;
         return;
     }
 
-    response.addVocab(VOCAB_PROTOCOL_VERSION);
+    response.addVocab32(VOCAB_PROTOCOL_VERSION);
     response.addInt32(PROTOCOL_VERSION_MAJOR);
     response.addInt32(PROTOCOL_VERSION_MINOR);
     response.addInt32(PROTOCOL_VERSION_TWEAK);
@@ -63,12 +60,12 @@ void RPCMessagesParser::handleImpedanceMsg(const yarp::os::Bottle& cmd,
         return;
     }
 
-    int code = cmd.get(0).asVocab();
+    int code = cmd.get(0).asVocab32();
     *ok = false;
     switch (code) {
     case VOCAB_SET: {
         yCTrace(CONTROLBOARD, "handleImpedanceMsg::VOCAB_SET command");
-        switch (cmd.get(2).asVocab()) {
+        switch (cmd.get(2).asVocab32()) {
         case VOCAB_IMP_PARAM: {
             Bottle* b = cmd.get(4).asList();
             if (b != nullptr) {
@@ -94,9 +91,9 @@ void RPCMessagesParser::handleImpedanceMsg(const yarp::os::Bottle& cmd,
         double offs = 0;
         yCTrace(CONTROLBOARD, "handleImpedanceMsg::VOCAB_GET command");
 
-        response.addVocab(VOCAB_IS);
+        response.addVocab32(VOCAB_IS);
         response.add(cmd.get(1));
-        switch (cmd.get(2).asVocab()) {
+        switch (cmd.get(2).asVocab32()) {
         case VOCAB_IMP_PARAM: {
             *ok = rpc_IImpedance->getImpedance(cmd.get(3).asInt32(), &stiff, &damp);
             Bottle& b = response.addList();
@@ -148,7 +145,7 @@ void RPCMessagesParser::handleControlModeMsg(const yarp::os::Bottle& cmd,
     }
 
     //handle here messages about  IControlMode interface
-    int code = cmd.get(0).asVocab();
+    int code = cmd.get(0).asVocab32();
     *ok = true;
     *rec = true; //or false
 
@@ -156,14 +153,14 @@ void RPCMessagesParser::handleControlModeMsg(const yarp::os::Bottle& cmd,
     case VOCAB_SET: {
         yCTrace(CONTROLBOARD, "handleControlModeMsg::VOCAB_SET command");
 
-        int method = cmd.get(2).asVocab();
+        int method = cmd.get(2).asVocab32();
 
         switch (method) {
         case VOCAB_CM_CONTROL_MODE: {
             int axis = cmd.get(3).asInt32();
             yCTrace(CONTROLBOARD) << "got VOCAB_CM_CONTROL_MODE";
             if (rpc_iCtrlMode) {
-                *ok = rpc_iCtrlMode->setControlMode(axis, cmd.get(4).asVocab());
+                *ok = rpc_iCtrlMode->setControlMode(axis, cmd.get(4).asVocab32());
             } else {
                 yCError(CONTROLBOARD) << "ControlBoardWrapper: Unable to handle setControlMode request! This should not happen!";
                 *rec = false;
@@ -183,7 +180,7 @@ void RPCMessagesParser::handleControlModeMsg(const yarp::os::Bottle& cmd,
             }
 
             for (int i = 0; i < n_joints; i++) {
-                modes[i] = modeList.get(i).asVocab();
+                modes[i] = modeList.get(i).asVocab32();
             }
             if (rpc_iCtrlMode) {
                 *ok = rpc_iCtrlMode->setControlModes(n_joints, js, modes);
@@ -206,7 +203,7 @@ void RPCMessagesParser::handleControlModeMsg(const yarp::os::Bottle& cmd,
             }
             int* modes = new int[controlledJoints];
             for (size_t i = 0; i < controlledJoints; i++) {
-                modes[i] = modeList->get(i).asVocab();
+                modes[i] = modeList->get(i).asVocab32();
             }
             if (rpc_iCtrlMode) {
                 *ok = rpc_iCtrlMode->setControlModes(modes);
@@ -223,12 +220,12 @@ void RPCMessagesParser::handleControlModeMsg(const yarp::os::Bottle& cmd,
             // try to be compatible as much as I can
 
             yCError(CONTROLBOARD) << " Error, received a set control mode message using a legacy version, trying to be handle the message anyway "
-                                         << " but please update your client to be compatible with the IControlMode2 interface";
+                                  << " but please update your client to be compatible with the IControlMode interface";
 
-            yCTrace(CONTROLBOARD) << " cmd.get(4).asVocab() is " << Vocab::decode(cmd.get(4).asVocab());
+            yCTrace(CONTROLBOARD) << " cmd.get(4).asVocab32() is " << Vocab32::decode(cmd.get(4).asVocab32());
             int axis = cmd.get(3).asInt32();
 
-            switch (cmd.get(4).asVocab()) {
+            switch (cmd.get(4).asVocab32()) {
             case VOCAB_CM_POSITION:
                 if (rpc_iCtrlMode) {
                     *ok = rpc_iCtrlMode->setControlMode(axis, VOCAB_CM_POSITION);
@@ -314,7 +311,7 @@ void RPCMessagesParser::handleControlModeMsg(const yarp::os::Bottle& cmd,
     case VOCAB_GET: {
         yCTrace(CONTROLBOARD, "GET command");
 
-        int method = cmd.get(2).asVocab();
+        int method = cmd.get(2).asVocab32();
 
         switch (method) {
         case VOCAB_CM_CONTROL_MODES: {
@@ -327,12 +324,12 @@ void RPCMessagesParser::handleControlModeMsg(const yarp::os::Bottle& cmd,
                 *ok = rpc_iCtrlMode->getControlModes(p);
             }
 
-            response.addVocab(VOCAB_IS);
-            response.addVocab(VOCAB_CM_CONTROL_MODES);
+            response.addVocab32(VOCAB_IS);
+            response.addVocab32(VOCAB_CM_CONTROL_MODES);
 
             Bottle& b = response.addList();
             for (size_t i = 0; i < controlledJoints; i++) {
-                b.addVocab(p[i]);
+                b.addVocab32(p[i]);
             }
             delete[] p;
 
@@ -348,9 +345,9 @@ void RPCMessagesParser::handleControlModeMsg(const yarp::os::Bottle& cmd,
                 *ok = rpc_iCtrlMode->getControlMode(axis, &p);
             }
 
-            response.addVocab(VOCAB_IS);
+            response.addVocab32(VOCAB_IS);
             response.addInt32(axis);
-            response.addVocab(p);
+            response.addVocab32(p);
 
             yCTrace(CONTROLBOARD, "Returning %d", p);
             *rec = true;
@@ -375,11 +372,11 @@ void RPCMessagesParser::handleControlModeMsg(const yarp::os::Bottle& cmd,
                 *ok = false;
             }
 
-            response.addVocab(VOCAB_IS);
-            response.addVocab(VOCAB_CM_CONTROL_MODE_GROUP);
+            response.addVocab32(VOCAB_IS);
+            response.addVocab32(VOCAB_CM_CONTROL_MODE_GROUP);
             Bottle& b = response.addList();
             for (int i = 0; i < n_joints; i++) {
-                b.addVocab(modes[i]);
+                b.addVocab32(modes[i]);
             }
 
             delete[] js;
@@ -419,13 +416,13 @@ void RPCMessagesParser::handleTorqueMsg(const yarp::os::Bottle& cmd,
         return;
     }
 
-    int code = cmd.get(0).asVocab();
+    int code = cmd.get(0).asVocab32();
     switch (code) {
     case VOCAB_SET: {
         *rec = true;
         yCTrace(CONTROLBOARD, "set command received");
 
-        switch (cmd.get(2).asVocab()) {
+        switch (cmd.get(2).asVocab32()) {
         case VOCAB_REF: {
             *ok = rpc_ITorque->setRefTorque(cmd.get(3).asInt32(), cmd.get(4).asFloat64());
         } break;
@@ -489,10 +486,10 @@ void RPCMessagesParser::handleTorqueMsg(const yarp::os::Bottle& cmd,
         yCTrace(CONTROLBOARD, "get command received");
         double dtmp = 0.0;
         double dtmp2 = 0.0;
-        response.addVocab(VOCAB_IS);
+        response.addVocab32(VOCAB_IS);
         response.add(cmd.get(1));
 
-        switch (cmd.get(2).asVocab()) {
+        switch (cmd.get(2).asVocab32()) {
         case VOCAB_AXES: {
             int tmp;
             *ok = rpc_ITorque->getAxes(&tmp);
@@ -587,17 +584,17 @@ void RPCMessagesParser::handleInteractionModeMsg(const yarp::os::Bottle& cmd,
 
     yCTrace(CONTROLBOARD) << "received command: " << cmd.toString();
 
-    int action = cmd.get(0).asVocab();
+    int action = cmd.get(0).asVocab32();
 
     switch (action) {
     case VOCAB_SET: {
-        switch (cmd.get(2).asVocab()) {
+        switch (cmd.get(2).asVocab32()) {
             yarp::os::Bottle* jointList;
             yarp::os::Bottle* modeList;
             yarp::dev::InteractionModeEnum* modes;
 
         case VOCAB_INTERACTION_MODE: {
-            *ok = rpc_IInteract->setInteractionMode(cmd.get(3).asInt32(), static_cast<yarp::dev::InteractionModeEnum>(cmd.get(4).asVocab()));
+            *ok = rpc_IInteract->setInteractionMode(cmd.get(3).asInt32(), static_cast<yarp::dev::InteractionModeEnum>(cmd.get(4).asVocab32()));
         } break;
 
         case VOCAB_INTERACTION_MODE_GROUP: {
@@ -615,8 +612,8 @@ void RPCMessagesParser::handleInteractionModeMsg(const yarp::os::Bottle& cmd,
             modes = new yarp::dev::InteractionModeEnum[n_joints];
             for (size_t i = 0; i < n_joints; i++) {
                 joints[i] = jointList->get(i).asInt32();
-                modes[i] = static_cast<yarp::dev::InteractionModeEnum>(modeList->get(i).asVocab());
-                yCTrace(CONTROLBOARD) << "CBW.cpp received vocab " << yarp::os::Vocab::decode(modes[i]);
+                modes[i] = static_cast<yarp::dev::InteractionModeEnum>(modeList->get(i).asVocab32());
+                yCTrace(CONTROLBOARD) << "CBW.cpp received vocab " << yarp::os::Vocab32::decode(modes[i]);
             }
             *ok = rpc_IInteract->setInteractionModes(n_joints, joints, modes);
             delete[] joints;
@@ -635,7 +632,7 @@ void RPCMessagesParser::handleInteractionModeMsg(const yarp::os::Bottle& cmd,
             }
             modes = new yarp::dev::InteractionModeEnum[controlledJoints];
             for (size_t i = 0; i < controlledJoints; i++) {
-                modes[i] = static_cast<yarp::dev::InteractionModeEnum>(modeList->get(i).asVocab());
+                modes[i] = static_cast<yarp::dev::InteractionModeEnum>(modeList->get(i).asVocab32());
             }
             *ok = rpc_IInteract->setInteractionModes(modes);
             delete[] modes;
@@ -653,11 +650,11 @@ void RPCMessagesParser::handleInteractionModeMsg(const yarp::os::Bottle& cmd,
     case VOCAB_GET: {
         yarp::os::Bottle* jointList;
 
-        switch (cmd.get(2).asVocab()) {
+        switch (cmd.get(2).asVocab32()) {
         case VOCAB_INTERACTION_MODE: {
             yarp::dev::InteractionModeEnum mode;
             *ok = rpc_IInteract->getInteractionMode(cmd.get(3).asInt32(), &mode);
-            response.addVocab(mode);
+            response.addVocab32(mode);
             yCTrace(CONTROLBOARD) << " resp is " << response.toString();
         } break;
 
@@ -680,7 +677,7 @@ void RPCMessagesParser::handleInteractionModeMsg(const yarp::os::Bottle& cmd,
 
             Bottle& c = response.addList();
             for (int i = 0; i < n_joints; i++) {
-                c.addVocab(modes[i]);
+                c.addVocab32(modes[i]);
             }
 
             yCTrace(CONTROLBOARD, "got response bottle: %s", response.toString().c_str());
@@ -697,7 +694,7 @@ void RPCMessagesParser::handleInteractionModeMsg(const yarp::os::Bottle& cmd,
 
             Bottle& b = response.addList();
             for (size_t i = 0; i < controlledJoints; i++) {
-                b.addVocab(modes[i]);
+                b.addVocab32(modes[i]);
             }
 
             yCTrace(CONTROLBOARD, "got response bottle: %s", response.toString().c_str());
@@ -726,8 +723,8 @@ void RPCMessagesParser::handleCurrentMsg(const yarp::os::Bottle& cmd, yarp::os::
         return;
     }
 
-    int code = cmd.get(0).asVocab();
-    int action = cmd.get(2).asVocab();
+    int code = cmd.get(0).asVocab32();
+    int action = cmd.get(2).asVocab32();
 
     *ok = false;
     *rec = true;
@@ -763,7 +760,7 @@ void RPCMessagesParser::handleCurrentMsg(const yarp::os::Bottle& cmd, yarp::os::
         yCTrace(CONTROLBOARD, "get command received");
         double dtmp = 0.0;
         double dtmp2 = 0.0;
-        response.addVocab(VOCAB_IS);
+        response.addVocab32(VOCAB_IS);
         response.add(cmd.get(1));
 
         switch (action) {
@@ -833,9 +830,9 @@ void RPCMessagesParser::handlePidMsg(const yarp::os::Bottle& cmd, yarp::os::Bott
         return;
     }
 
-    int code = cmd.get(0).asVocab();
-    int action = cmd.get(2).asVocab();
-    auto pidtype = static_cast<yarp::dev::PidControlTypeEnum>(cmd.get(3).asVocab());
+    int code = cmd.get(0).asVocab32();
+    int action = cmd.get(2).asVocab32();
+    auto pidtype = static_cast<yarp::dev::PidControlTypeEnum>(cmd.get(3).asVocab32());
 
     *ok = false;
     *rec = true;
@@ -976,7 +973,7 @@ void RPCMessagesParser::handlePidMsg(const yarp::os::Bottle& cmd, yarp::os::Bott
         *rec = true;
         yCTrace(CONTROLBOARD, "get command received");
         double dtmp = 0.0;
-        response.addVocab(VOCAB_IS);
+        response.addVocab32(VOCAB_IS);
         response.add(cmd.get(1));
 
         switch (action) {
@@ -1103,8 +1100,8 @@ void RPCMessagesParser::handlePWMMsg(const yarp::os::Bottle& cmd, yarp::os::Bott
         return;
     }
 
-    int code = cmd.get(0).asVocab();
-    int action = cmd.get(2).asVocab();
+    int code = cmd.get(0).asVocab32();
+    int action = cmd.get(2).asVocab32();
 
     *ok = false;
     *rec = true;
@@ -1132,7 +1129,7 @@ void RPCMessagesParser::handlePWMMsg(const yarp::os::Bottle& cmd, yarp::os::Bott
         yCTrace(CONTROLBOARD, "get command received");
         *rec = true;
         double dtmp = 0.0;
-        response.addVocab(VOCAB_IS);
+        response.addVocab32(VOCAB_IS);
         response.add(cmd.get(1));
 
         switch (action) {
@@ -1193,8 +1190,8 @@ void RPCMessagesParser::handleRemoteVariablesMsg(const yarp::os::Bottle& cmd, ya
         return;
     }
 
-    int code = cmd.get(0).asVocab();
-    int action = cmd.get(2).asVocab();
+    int code = cmd.get(0).asVocab32();
+    int action = cmd.get(2).asVocab32();
 
     *ok = false;
     *rec = true;
@@ -1219,7 +1216,7 @@ void RPCMessagesParser::handleRemoteVariablesMsg(const yarp::os::Bottle& cmd, ya
         yCTrace(CONTROLBOARD, "get command received");
 
         response.clear();
-        response.addVocab(VOCAB_IS);
+        response.addVocab32(VOCAB_IS);
         response.add(cmd.get(1));
         Bottle btmp;
 
@@ -1250,8 +1247,8 @@ void RPCMessagesParser::handleRemoteCalibratorMsg(const yarp::os::Bottle& cmd, y
         return;
     }
 
-    int code = cmd.get(0).asVocab();
-    int action = cmd.get(2).asVocab();
+    int code = cmd.get(0).asVocab32();
+    int action = cmd.get(2).asVocab32();
 
     *ok = false;
     *rec = true;
@@ -1310,7 +1307,7 @@ void RPCMessagesParser::handleRemoteCalibratorMsg(const yarp::os::Bottle& cmd, y
 
     case VOCAB_GET: {
         response.clear();
-        response.addVocab(VOCAB_IS);
+        response.addVocab32(VOCAB_IS);
         response.add(cmd.get(1));
 
         switch (action) {
@@ -1334,12 +1331,12 @@ bool RPCMessagesParser::respond(const yarp::os::Bottle& cmd, yarp::os::Bottle& r
 
     yCTrace(CONTROLBOARD, "command received: %s", cmd.toString().c_str());
 
-    int code = cmd.get(0).asVocab();
+    int code = cmd.get(0).asVocab32();
 
     if (cmd.size() < 2) {
         ok = false;
     } else {
-        switch (cmd.get(1).asVocab()) {
+        switch (cmd.get(1).asVocab32()) {
         case VOCAB_PID:
             handlePidMsg(cmd, response, &rec, &ok);
             break;
@@ -1442,7 +1439,7 @@ bool RPCMessagesParser::respond(const yarp::os::Bottle& cmd, yarp::os::Bottle& r
                 rec = true;
                 yCTrace(CONTROLBOARD, "set command received");
 
-                switch (cmd.get(1).asVocab()) {
+                switch (cmd.get(1).asVocab32()) {
                 case VOCAB_POSITION_MOVE: {
                     ok = rpc_IPosCtrl->positionMove(cmd.get(2).asInt32(), cmd.get(3).asFloat64());
                 } break;
@@ -1826,7 +1823,7 @@ bool RPCMessagesParser::respond(const yarp::os::Bottle& cmd, yarp::os::Bottle& r
                 {
                     yCError(CONTROLBOARD, "received an unknown command after a VOCAB_SET (%s)", cmd.toString().c_str());
                 } break;
-                } //switch(cmd.get(1).asVocab()
+                } //switch(cmd.get(1).asVocab32()
                 break;
             }
 
@@ -1836,10 +1833,10 @@ bool RPCMessagesParser::respond(const yarp::os::Bottle& cmd, yarp::os::Bottle& r
 
                 double dtmp = 0.0;
                 Bottle btmp;
-                response.addVocab(VOCAB_IS);
+                response.addVocab32(VOCAB_IS);
                 response.add(cmd.get(1));
 
-                switch (cmd.get(1).asVocab()) {
+                switch (cmd.get(1).asVocab32()) {
 
                 case VOCAB_TEMPERATURE_LIMIT: {
                     ok = rpc_IMotor->getTemperatureLimit(cmd.get(2).asInt32(), &dtmp);
@@ -2294,9 +2291,9 @@ bool RPCMessagesParser::respond(const yarp::os::Bottle& cmd, yarp::os::Bottle& r
 
                 default:
                 {
-                    yCError(CONTROLBOARD, "received an unknown request after a VOCAB_GET: %s", yarp::os::Vocab::decode(cmd.get(1).asVocab()).c_str());
+                    yCError(CONTROLBOARD, "received an unknown request after a VOCAB_GET: %s", yarp::os::Vocab32::decode(cmd.get(1).asVocab32()).c_str());
                 } break;
-                } //switch cmd.get(1).asVocab())
+                } //switch cmd.get(1).asVocab32())
 
                 lastRpcStamp.update();
                 appendTimeStamp(response, lastRpcStamp);
@@ -2313,9 +2310,9 @@ bool RPCMessagesParser::respond(const yarp::os::Bottle& cmd, yarp::os::Bottle& r
         if (!ok) {
             // failed thus send only a VOCAB back.
             response.clear();
-            response.addVocab(VOCAB_FAILED);
+            response.addVocab32(VOCAB_FAILED);
         } else {
-            response.addVocab(VOCAB_OK);
+            response.addVocab32(VOCAB_OK);
         }
     }
 
@@ -2345,7 +2342,7 @@ bool RPCMessagesParser::initialize()
             args += " ";
         }
         // removed dependency from yarp internals
-        //args = args + "$f" + yarp::NetType::toString(i);
+        //args = args + "$f" + yarp::yarp::conf::numeric::to_string(i);
     }
     addUsage((std::string("[set] [poss] (") + args + ")").c_str(),
              "command the position of all axes");

@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include "AnalogWrapper.h"
@@ -85,28 +82,27 @@ void AnalogServerHandler::setInterface(yarp::dev::IAnalogSensor *is)
 
 bool AnalogServerHandler::_handleIAnalog(yarp::os::Bottle &cmd, yarp::os::Bottle &reply)
 {
-    if (is==nullptr)
-      return false;
+    if (is == nullptr) {
+        return false;
+    }
 
     const size_t msgsize=cmd.size();
     int ret=IAnalogSensor::AS_ERROR;
 
-    int code=cmd.get(1).asVocab();
+    int code=cmd.get(1).asVocab32();
     switch (code)
     {
     case VOCAB_CALIBRATE:
-      if (msgsize==2)
-        ret=is->calibrateSensor();
-      else if (msgsize>2)
-      {
-        size_t offset=2;
-        Vector v(msgsize-offset);
-        for (unsigned int i=0; i<v.size(); i++)
-        {
-          v[i]=cmd.get(i+offset).asFloat64();
+        if (msgsize == 2) {
+            ret = is->calibrateSensor();
+        } else if (msgsize > 2) {
+            size_t offset = 2;
+            Vector v(msgsize - offset);
+            for (unsigned int i = 0; i < v.size(); i++) {
+                v[i] = cmd.get(i + offset).asFloat64();
+            }
+            ret = is->calibrateSensor(v);
         }
-        ret=is->calibrateSensor(v);
-      }
       break;
     case VOCAB_CALIBRATE_CHANNEL:
       if (msgsize==3)
@@ -134,10 +130,12 @@ bool AnalogServerHandler::read(yarp::os::ConnectionReader& connection)
     yarp::os::Bottle in;
     yarp::os::Bottle out;
     bool ok=in.read(connection);
-    if (!ok) return false;
+    if (!ok) {
+        return false;
+    }
 
     // parse in, prepare out
-    int code = in.get(0).asVocab();
+    int code = in.get(0).asVocab32();
     bool ret=false;
     if (code==VOCAB_IANALOG)
     {
@@ -147,7 +145,7 @@ bool AnalogServerHandler::read(yarp::os::ConnectionReader& connection)
     if (!ret)
     {
         out.clear();
-        out.addVocab(VOCAB_FAILED);
+        out.addVocab32(VOCAB_FAILED);
     }
 
     yarp::os::ConnectionWriter *returnToSender = connection.getWriter();
@@ -302,8 +300,9 @@ bool AnalogWrapper::openAndAttachSubDevice(Searchable &prop)
 bool AnalogWrapper::openDeferredAttach(yarp::os::Searchable &prop)
 {
     // nothing to do here?
-    if( (subDeviceOwned != nullptr) || (ownDevices == true) )
+    if ((subDeviceOwned != nullptr) || (ownDevices == true)) {
         yCError(ANALOGWRAPPER) << "AnalogWrapper: something wrong with the initialization.";
+    }
     return true;
 }
 
@@ -315,8 +314,9 @@ bool AnalogWrapper::openDeferredAttach(yarp::os::Searchable &prop)
 bool AnalogWrapper::attachAll(const PolyDriverList &analog2attach)
 {
     //check if we already instantiated a subdevice previously
-    if (ownDevices)
+    if (ownDevices) {
         return false;
+    }
 
     if (analog2attach.size() != 1)
     {
@@ -344,14 +344,16 @@ bool AnalogWrapper::attachAll(const PolyDriverList &analog2attach)
 bool AnalogWrapper::detachAll()
 {
     //check if we already instantiated a subdevice previously
-    if (ownDevices)
+    if (ownDevices) {
         return false;
+    }
 
     analogSensor_p = nullptr;
     for(unsigned int i=0; i<analogPorts.size(); i++)
     {
-        if(handlers[i] != nullptr)
+        if (handlers[i] != nullptr) {
             handlers[i]->setInterface(analogSensor_p);
+        }
     }
     return true;
 }
@@ -694,6 +696,12 @@ bool AnalogWrapper::initialize_ROS()
 
 bool AnalogWrapper::open(yarp::os::Searchable &config)
 {
+    yCWarning(ANALOGWRAPPER) << "The 'AnalogWrapper' device is deprecated.";
+    yCWarning(ANALOGWRAPPER) << "Possible alternatives, depending on the specific type sensor data, are:";
+    yCWarning(ANALOGWRAPPER) << "'MultipleAnalogSensorsRemapper`+`MultipleAnalogSensorsServer`, `PoseStampedRosPublisher`, `WrenchStampedRosPublisher`,`IMURosPublisher`,etc.";
+    yCWarning(ANALOGWRAPPER) << "The old device is no longer supported, and it will be deprecated in YARP 3.6 and removed in YARP 4.";
+    yCWarning(ANALOGWRAPPER) << "Please update your scripts.";
+
     Property params;
     params.fromString(config.toString());
     yCTrace(ANALOGWRAPPER) << "AnalogWrapper params are: " << config.toString();
@@ -760,8 +768,9 @@ bool AnalogWrapper::open(yarp::os::Searchable &config)
     else
     {
         ownDevices=false;
-        if(!openDeferredAttach(config))
+        if (!openDeferredAttach(config)) {
             return false;
+        }
     }
 
     return true;
@@ -791,8 +800,9 @@ bool AnalogWrapper::initialize_YARP(yarp::os::Searchable &params)
                 }
                 createPort((streamingPortName ).c_str(), _rate );
                 // since createPort always return true, check the port is really been opened is done here
-                if(! Network::exists(streamingPortName + "/rpc:i"))
+                if (!Network::exists(streamingPortName + "/rpc:i")) {
                     return false;
+                }
             }
             else
             {
@@ -892,10 +902,11 @@ void AnalogWrapper::run()
                     {
                         yarp::sig::Vector &pv = analogPort.port.prepare();
                         first = analogPort.offset;
-                        if(analogPort.length == -1)   // read the max length available
+                        if (analogPort.length == -1) { // read the max length available
                             last = lastDataRead.size()-1;
-                        else
+                        } else {
                             last = analogPort.offset + analogPort.length - 1;
+                        }
 
                         // check vector limit
                         if(last>=(int)lastDataRead.size()){
