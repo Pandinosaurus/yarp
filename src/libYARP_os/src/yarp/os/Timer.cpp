@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/Timer.h>
@@ -31,20 +28,6 @@ protected:
 public:
     using TimerCallback = yarp::os::Timer::TimerCallback;
 
-#ifndef YARP_NO_DEPRECATED // since YARP 3.3
-YARP_WARNING_PUSH
-YARP_DISABLE_DEPRECATED_WARNING
-    PrivateImpl(const TimerSettings& sett,
-                TimerCallback call,
-                yarp::os::Mutex* mutex) :
-            m_settings(sett),
-            m_callback(std::move(call)),
-            m_old_mutex(mutex)
-    {
-    }
-YARP_WARNING_POP
-#endif // YARP_NO_DEPRECATED
-
     PrivateImpl(const TimerSettings& sett,
                 TimerCallback call,
                 std::mutex* mutex = nullptr) :
@@ -70,26 +53,11 @@ YARP_WARNING_POP
     double m_startStamp{0.0};
     double m_lastReal{0.0};
     std::mutex* m_mutex{nullptr};
-#ifndef YARP_NO_DEPRECATED // since YARP 3.3
-YARP_WARNING_PUSH
-YARP_DISABLE_DEPRECATED_WARNING
-    yarp::os::Mutex* m_old_mutex{nullptr};
-YARP_WARNING_POP
-#endif // YARP_NO_DEPRECATED
 };
 
 class MonoThreadTimer : public yarp::os::Timer::PrivateImpl
 {
 public:
-
-#ifndef YARP_NO_DEPRECATED // since YARP 3.3
-YARP_WARNING_PUSH
-YARP_DISABLE_DEPRECATED_WARNING
-    MonoThreadTimer(const TimerSettings& sett,
-                    const TimerCallback& call,
-                    yarp::os::Mutex* mutex);
-YARP_WARNING_POP
-#endif // YARP_NO_DEPRECATED
 
     MonoThreadTimer(const TimerSettings& sett,
                     const TimerCallback& call,
@@ -211,23 +179,6 @@ public:
     }
 };
 
-#ifndef YARP_NO_DEPRECATED // since YARP 3.3
-YARP_WARNING_PUSH
-YARP_DISABLE_DEPRECATED_WARNING
-MonoThreadTimer::MonoThreadTimer(const TimerSettings& sett,
-                                 const TimerCallback& call,
-                                 yarp::os::Mutex* mutex) :
-        PrivateImpl(sett, call, mutex)
-{
-    TimerSingleton& singlInstance = TimerSingleton::self();
-    m_id = singlInstance.addTimer(this);
-    if (!singlInstance.isRunning()) {
-        singlInstance.start();
-    }
-}
-YARP_WARNING_POP
-#endif // YARP_NO_DEPRECATED
-
 MonoThreadTimer::MonoThreadTimer(const TimerSettings& sett,
                                  const TimerCallback& call,
                                  std::mutex* mutex) :
@@ -273,19 +224,6 @@ class ThreadedTimer :
     bool singleStep{false};
 
 public:
-#ifndef YARP_NO_DEPRECATED // since YARP 3.3
-YARP_WARNING_PUSH
-YARP_DISABLE_DEPRECATED_WARNING
-    ThreadedTimer(const TimerSettings& sett,
-                  const TimerCallback& call,
-                  yarp::os::Mutex* mutex) :
-            PrivateImpl(sett, call, mutex),
-            PeriodicThread(sett.period)
-    {
-    }
-YARP_WARNING_POP
-#endif // YARP_NO_DEPRECATED
-
     ThreadedTimer(const TimerSettings& sett,
                   const TimerCallback& call,
                   std::mutex* mutex = nullptr) :
@@ -330,19 +268,6 @@ bool ThreadedTimer::threadInit()
     return true;
 }
 
-#ifndef YARP_NO_DEPRECATED // since YARP 3.3
-YARP_WARNING_PUSH
-YARP_DISABLE_DEPRECATED_WARNING
-//the newThread parameter is not in the settings for it to be unmutable and only checked by the constructor
-Timer::Timer(const TimerSettings& settings, const TimerCallback& callback, bool newThread, Mutex* mutex) :
-        //added cast for incompatible operand error
-        impl(newThread ? dynamic_cast<PrivateImpl*>(new ThreadedTimer(settings, callback, mutex))
-                       : dynamic_cast<PrivateImpl*>(new MonoThreadTimer(settings, callback, mutex)))
-{
-}
-YARP_WARNING_POP
-#endif // YARP_NO_DEPRECATED
-
 //the newThread parameter is not in the settings for it to be unmutable and only checked by the constructor
 Timer::Timer(const TimerSettings& settings, const TimerCallback& callback, bool newThread, std::mutex* mutex) :
         //added cast for incompatible operand error
@@ -386,19 +311,7 @@ bool yarp::os::Timer::PrivateImpl::runTimer(unsigned int iteration, YarpTimerEve
         m_mutex->lock();
     }
 
-#ifndef YARP_NO_DEPRECATED // since YARP 3.3
-    if (m_old_mutex != nullptr) {
-        m_old_mutex->lock();
-    }
-#endif // YARP_NO_DEPRECATED
-
     bool ret = m_callback(event);
-
-#ifndef YARP_NO_DEPRECATED // since YARP 3.3
-    if (m_old_mutex != nullptr) {
-        m_old_mutex->unlock();
-    }
-#endif // YARP_NO_DEPRECATED
 
     if (m_mutex != nullptr) {
         m_mutex->unlock();

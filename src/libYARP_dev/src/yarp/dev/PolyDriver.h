@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_POLYDRIVER_H
@@ -13,8 +10,7 @@
 #include <yarp/dev/api.h>
 #include <yarp/dev/Drivers.h>
 
-namespace yarp {
-namespace dev {
+namespace yarp::dev {
 
 
 /**
@@ -109,52 +105,19 @@ public:
      */
     bool isValid() const;
 
-    /**
-     * After a call to PolyDriver::open, you can
-     * get a list of all the options checked by the
-     * device.
-     * @return a list of options checked by the device
-     */
-    yarp::os::Bottle getOptions();
-
-    /**
-     * After a call to PolyDriver::open, you can
-     * check if the device has documentation on a given option.
-     * @param option the name of the option to check
-     * @return the human-readable description of the option, if found
-     */
-    std::string getComment(const char *option);
-
-    /**
-     * After a call to PolyDriver::open, you can
-     * check if a given option has a particular default value.
-     * @param option the name of the option to check
-     * @return the default value of the option, if any.
-     */
-    yarp::os::Value getDefaultValue(const char *option);
-
-    /**
-     * After a call to PolyDriver::open, you can
-     * check what value was found for a particular option, if any.
-     * @param option the name of the option to check
-     * @return the value found for the option, if any.
-     */
-    yarp::os::Value getValue(const char *option);
-
     DeviceDriver *getImplementation() override;
 
 private:
-    DeviceDriver *dd;
+    DeviceDriver *m_dd;
 
     bool coreOpen(yarp::os::Searchable& config);
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
     class Private;
-    Private* mPriv;
+    Private* m_Priv;
 #endif
 };
 
-} // namespace dev
-} // namespace yarp
+} // namespace yarp::dev
 
 #endif // YARP_DEV_POLYDRIVER_H

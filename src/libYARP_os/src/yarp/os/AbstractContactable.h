@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_OS_ABSTRACTCONTACTABLE_H
@@ -12,8 +9,7 @@
 #include <yarp/os/Port.h>
 #include <yarp/os/UnbufferedContactable.h>
 
-namespace yarp {
-namespace os {
+namespace yarp::os {
 
 /**
  * A default implementation of an abstract port. The class hierarchy
@@ -113,12 +109,6 @@ public:
     // Documented in Contactable
     void promiseType(const Type& typ) override;
 
-    // Documented in Contactable
-    Property* acquireProperties(bool readOnly) override;
-
-    // Documented in Contactable
-    void releaseProperties(Property* prop) override;
-
     // Documented in UnbufferedContactable
     bool write(const PortWriter& writer,
                const PortWriter* callback = nullptr) const override;
@@ -138,18 +128,6 @@ public:
     bool replyAndDrop(PortWriter& writer) override;
 
     // Documented in Contactable
-    void includeNodeInName(bool flag) override;
-
-#ifndef YARP_NO_DEPRECATED // Since YARP 3.3
-YARP_WARNING_PUSH
-YARP_DISABLE_DEPRECATED_WARNING
-    // Documented in Contactable
-    YARP_DEPRECATED_MSG("Use setCallbackLock with std::mutex instead")
-    bool setCallbackLock(yarp::os::Mutex* mutex) override;
-YARP_WARNING_POP
-#endif
-
-    // Documented in Contactable
     bool setCallbackLock(std::mutex* mutex = nullptr) override;
 
     // Documented in Contactable
@@ -165,7 +143,6 @@ YARP_WARNING_POP
     void unlockCallback() override;
 };
 
-} // namespace os
-} // namespace yarp
+} // namespace yarp::os
 
 #endif // YARP_OS_ABSTRACTCONTACTABLE_H

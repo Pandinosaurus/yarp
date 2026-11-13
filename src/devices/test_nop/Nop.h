@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_NOP_NOP_H
@@ -11,15 +8,19 @@
 
 #include <yarp/os/PeriodicThread.h>
 #include <yarp/dev/DeviceDriver.h>
+#include "Nop_ParamsParser.h"
 
 /**
 * @ingroup dev_impl_fake
 *
 * \brief `test_nop`: A test device that does absolutely nothing.
+*
+* * Parameters required by this device are shown in class: FakeIMU_ParamsParser
 */
 class Nop :
         public yarp::dev::DeviceDriver,
-        public yarp::os::PeriodicThread
+        public yarp::os::PeriodicThread,
+        public Nop_ParamsParser
 {
 public:
     Nop();
@@ -35,8 +36,6 @@ public:
 
     void run() override;
 
-private:
-    yarp::conf::float64_t period{1.0};
 };
 
 #endif // YARP_NOP_NOP_H

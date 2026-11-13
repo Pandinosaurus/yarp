@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/impl/PortCoreOutputUnit.h>
@@ -27,12 +24,13 @@ using namespace yarp::os;
 
 PortCoreOutputUnit::PortCoreOutputUnit(PortCore& owner, int index, OutputProtocol* op) :
         PortCoreUnit(owner, index),
-        op(op),
+        op(op), // shared_ptr takes ownership of the raw pointer
         closing(false),
         finished(false),
         running(false),
         threaded(false),
         sending(false),
+        name(owner.getName()),
         phase(1),
         activate(0),
         trackerMutex(),
@@ -41,7 +39,7 @@ PortCoreOutputUnit::PortCoreOutputUnit(PortCore& owner, int index, OutputProtoco
         cachedCallback(nullptr),
         cachedTracker(nullptr)
 {
-    yCAssert(PORTCOREOUTPUTUNIT, op != nullptr);
+    yCIAssert(PORTCOREOUTPUTUNIT, getName(), op != nullptr);
 }
 
 PortCoreOutputUnit::~PortCoreOutputUnit()
@@ -88,14 +86,14 @@ void PortCoreOutputUnit::run()
         phase.post();
         Route r = getRoute();
         while (!closing) {
-            yCDebug(PORTCOREOUTPUTUNIT, "waiting");
+            yCIDebug(PORTCOREOUTPUTUNIT, getName(), "waiting");
             activate.wait();
-            yCDebug(PORTCOREOUTPUTUNIT, "woken");
+            yCIDebug(PORTCOREOUTPUTUNIT, getName(), "woken");
             if (!closing) {
                 if (sending) {
-                    yCDebug(PORTCOREOUTPUTUNIT, "write something in background");
+                    yCIDebug(PORTCOREOUTPUTUNIT, getName(), "write something in background");
                     sendHelper();
-                    yCDebug(PORTCOREOUTPUTUNIT, "wrote something in background");
+                    yCIDebug(PORTCOREOUTPUTUNIT, getName(), "wrote something in background");
                     trackerMutex.lock();
                     if (cachedTracker != nullptr) {
                         void* t = cachedTracker;
@@ -108,9 +106,9 @@ void PortCoreOutputUnit::run()
                     trackerMutex.unlock();
                 }
             }
-            yCDebug(PORTCOREOUTPUTUNIT, "wrote something in background");
+            yCIDebug(PORTCOREOUTPUTUNIT, getName(), "wrote something in background");
         }
-        yCDebug(PORTCOREOUTPUTUNIT, "thread closing");
+        yCIDebug(PORTCOREOUTPUTUNIT, getName(), "thread closing");
         sending = false;
     }
 }
@@ -118,15 +116,19 @@ void PortCoreOutputUnit::run()
 
 void PortCoreOutputUnit::runSingleThreaded()
 {
-    if (op != nullptr) {
-        Route route = op->getRoute();
+    // Local copy: guarantees the object stays alive for the duration of
+    // this function, independent of concurrent modifications to `op`.
+    std::shared_ptr<OutputProtocol> localOp = op;
+
+    if (localOp) {
+        Route route = localOp->getRoute();
         setMode();
         getOwner().reportUnit(this, true);
 
         std::string msg = std::string("Sending output from ") + route.getFromName() + " to " + route.getToName() + " using " + route.getCarrierName();
         if (Name(route.getToName()).isRooted()) {
             if (Name(route.getFromName()).isRooted()) {
-                yCInfo(PORTCOREOUTPUTUNIT, "%s", msg.c_str());
+                yCIInfo(PORTCOREOUTPUTUNIT, getName(), "%s", msg.c_str());
             }
         }
 
@@ -150,24 +152,30 @@ void PortCoreOutputUnit::runSingleThreaded()
 void PortCoreOutputUnit::closeBasic()
 {
     bool waitForOther = false;
-    if (op != nullptr) {
-        op->getConnection().prepareDisconnect();
-        Route route = op->getRoute();
-        if (op->getConnection().isConnectionless() || op->getConnection().isBroadcast()) {
-            yCInfo(PORTCOREOUTPUTUNIT, "output for route %s asking other side to close by out-of-band means",
+
+    // Take a local, private, strong reference. This keeps the pointed-to
+    // OutputProtocol alive for the whole function, even if another thread
+    // concurrently resets the shared `op` member (see closeMain()).
+    std::shared_ptr<OutputProtocol> localOp = op;
+
+    if (localOp) {
+        localOp->getConnection().prepareDisconnect();
+        Route route = localOp->getRoute();
+        if (localOp->getConnection().isConnectionless() || localOp->getConnection().isBroadcast()) {
+            yCIInfo(PORTCOREOUTPUTUNIT, getName(), "output for route %s asking other side to close by out-of-band means",
                        route.toString().c_str());
             NetworkBase::disconnectInput(route.getToName(),
                                          route.getFromName(),
                                          true);
         } else {
-            if (op->getConnection().canEscape()) {
-                BufferedConnectionWriter buf(op->getConnection().isTextMode(),
-                                             op->getConnection().isBareMode());
+            if (localOp->getConnection().canEscape()) {
+                BufferedConnectionWriter buf(localOp->getConnection().isTextMode(),
+                                             localOp->getConnection().isBareMode());
                 PortCommand pc('\0', std::string("q"));
                 pc.write(buf);
                 //printf("Asked for %s to close...\n",
                 //     op->getRoute().toString().c_str());
-                waitForOther = op->write(buf);
+                waitForOther = localOp->write(buf);
             }
         }
 
@@ -175,7 +183,7 @@ void PortCoreOutputUnit::closeBasic()
 
         if (Name(route.getToName()).isRooted()) {
             if (Name(route.getFromName()).isRooted()) {
-                yCInfo(PORTCOREOUTPUTUNIT, "%s", msg.c_str());
+                yCIInfo(PORTCOREOUTPUTUNIT, getName(), "%s", msg.c_str());
             }
         }
 
@@ -195,18 +203,24 @@ void PortCoreOutputUnit::closeBasic()
     }
 
 
-    if (op != nullptr) {
+    if (localOp) {
         if (waitForOther) {
             // quit is only acknowledged in certain conditions
-            if (op->getConnection().isTextMode() && op->getConnection().supportReply()) {
-                InputStream& is = op->getInputStream();
+            if (localOp->getConnection().isTextMode() && localOp->getConnection().supportReply()) {
+                InputStream& is = localOp->getInputStream();
                 ManagedBytes dummy(1);
                 is.read(dummy.bytes());
             }
         }
-        op->close();
-        delete op;
-        op = nullptr;
+        localOp->close();
+
+        // Release our copy and clear the shared member. The underlying
+        // OutputProtocol is only actually destroyed once every other
+        // outstanding shared_ptr copy (e.g. localOp here, or one held
+        // briefly by another thread in closeMain()/getRoute()) has also
+        // gone out of scope. No explicit delete or additional locking is
+        // needed: shared_ptr's atomic refcounting handles this safely.
+        op.reset();
     }
 }
 
@@ -216,13 +230,17 @@ void PortCoreOutputUnit::closeMain()
         return;
     }
 
-    yCDebug(PORTCOREOUTPUTUNIT, "closing");
+    yCIDebug(PORTCOREOUTPUTUNIT, getName(), "closing");
 
     if (running) {
         // give a kick (unfortunately unavoidable)
 
-        if (op != nullptr) {
-            op->interrupt();
+        // Local copy so that even if another thread concurrently clears
+        // `op` inside closeBasic(), the object we call interrupt() on
+        // (if any) remains valid for the duration of this call.
+        std::shared_ptr<OutputProtocol> localOp = op;
+        if (localOp) {
+            localOp->interrupt();
         }
 
         closing = true;
@@ -231,22 +249,23 @@ void PortCoreOutputUnit::closeMain()
         join();
     }
 
-    yCDebug(PORTCOREOUTPUTUNIT, "internal join");
+    yCIDebug(PORTCOREOUTPUTUNIT, getName(), "internal join");
 
     closeBasic();
     running = false;
     closing = false;
     finished = true;
 
-    yCDebug(PORTCOREOUTPUTUNIT, "closed");
+    yCIDebug(PORTCOREOUTPUTUNIT, getName(), "closed");
 }
 
 
 Route PortCoreOutputUnit::getRoute()
 {
-    if (op != nullptr) {
-        Route r = op->getRoute();
-        op->beginWrite();
+    std::shared_ptr<OutputProtocol> localOp = op;
+    if (localOp) {
+        Route r = localOp->getRoute();
+        localOp->beginWrite();
         return r;
     }
     return PortCoreUnit::getRoute();
@@ -255,23 +274,27 @@ Route PortCoreOutputUnit::getRoute()
 bool PortCoreOutputUnit::sendHelper()
 {
     bool replied = false;
-    if (op != nullptr) {
+
+    // Local copy for the whole helper, for the same reason as elsewhere.
+    std::shared_ptr<OutputProtocol> localOp = op;
+
+    if (localOp) {
         bool done = false;
-        BufferedConnectionWriter buf(op->getConnection().isTextMode(),
-                                     op->getConnection().isBareMode());
+        BufferedConnectionWriter buf(localOp->getConnection().isTextMode(),
+                                     localOp->getConnection().isBareMode());
         if (cachedReader != nullptr) {
             buf.setReplyHandler(*cachedReader);
         }
 
-        if (op->getSender().modifiesOutgoingData()) {
-            if (op->getSender().acceptOutgoingData(*cachedWriter)) {
-                cachedWriter = &op->getSender().modifyOutgoingData(*cachedWriter);
+        if (localOp->getSender().modifiesOutgoingData()) {
+            if (localOp->getSender().acceptOutgoingData(*cachedWriter)) {
+                cachedWriter = &localOp->getSender().modifyOutgoingData(*cachedWriter);
             } else {
                 return (done = true);
             }
         }
 
-        if (op->getConnection().isLocal()) {
+        if (localOp->getConnection().isLocal()) {
             // WARNING Cast away const qualifier.
             //         This may actually cause bugs when using the local carrier
             //         with something that is actually const (i.e. that is using
@@ -279,12 +302,12 @@ bool PortCoreOutputUnit::sendHelper()
             auto* pw = const_cast<yarp::os::PortWriter*>(cachedWriter);
             auto* p = dynamic_cast<yarp::os::Portable*>(pw);
             if (p == nullptr) {
-                yCError(PORTCOREOUTPUTUNIT, "cast failed.");
+                yCIError(PORTCOREOUTPUTUNIT, getName(), "cast failed.");
                 return false;
             }
             buf.setReference(p);
         } else {
-            yCAssert(PORTCOREOUTPUTUNIT, cachedWriter != nullptr);
+            yCIAssert(PORTCOREOUTPUTUNIT, getName(), cachedWriter != nullptr);
             bool ok = cachedWriter->write(buf);
             if (!ok) {
                 done = true;
@@ -293,9 +316,9 @@ bool PortCoreOutputUnit::sendHelper()
             bool suppressReply = (buf.getReplyHandler() == nullptr);
 
             if (!done) {
-                if (!op->getConnection().canEscape()) {
+                if (!localOp->getConnection().canEscape()) {
                     if (!cachedEnvelope.empty()) {
-                        op->getConnection().handleEnvelope(cachedEnvelope);
+                        localOp->getConnection().handleEnvelope(cachedEnvelope);
                     }
                 } else {
                     buf.addToHeader();
@@ -317,13 +340,13 @@ bool PortCoreOutputUnit::sendHelper()
         }
 
         if (!done) {
-            if (op->getConnection().isActive()) {
-                replied = op->write(buf);
-                if (replied && op->getSender().modifiesReply() && cachedReader != nullptr) {
-                    cachedReader = &op->getSender().modifyReply(*cachedReader);
+            if (localOp->getConnection().isActive()) {
+                replied = localOp->write(buf);
+                if (replied && localOp->getSender().modifiesReply() && cachedReader != nullptr) {
+                    cachedReader = &localOp->getSender().modifyReply(*cachedReader);
                 }
             }
-            if (!op->isOk()) {
+            if (!localOp->isOk()) {
                 done = true;
             }
         }
@@ -354,9 +377,12 @@ void* PortCoreOutputUnit::send(const yarp::os::PortWriter& writer,
 {
     bool replied = false;
 
-    if (op != nullptr) {
-        if (!op->getConnection().isActive()) {
-            return tracker;
+    {
+        std::shared_ptr<OutputProtocol> localOp = op;
+        if (localOp) {
+            if (!localOp->getConnection().isActive()) {
+                return tracker;
+            }
         }
     }
 
@@ -364,14 +390,14 @@ void* PortCoreOutputUnit::send(const yarp::os::PortWriter& writer,
         if (!running) {
             // we must have a thread if we're going to be skipping waits
             threaded = true;
-            yCDebug(PORTCOREOUTPUTUNIT, "starting a thread for output");
+            yCIDebug(PORTCOREOUTPUTUNIT, getName(), "starting a thread for output");
             start();
-            yCDebug(PORTCOREOUTPUTUNIT, "started a thread for output");
+            yCIDebug(PORTCOREOUTPUTUNIT, getName(), "started a thread for output");
         }
     }
 
     if ((!waitBefore) && waitAfter) {
-        yCError(PORTCOREOUTPUTUNIT, "chosen port wait combination not yet implemented");
+        yCIError(PORTCOREOUTPUTUNIT, getName(), "chosen port wait combination not yet implemented");
     }
     if (!sending) {
         cachedWriter = &writer;
@@ -392,7 +418,7 @@ void* PortCoreOutputUnit::send(const yarp::os::PortWriter& writer,
             trackerMutex.unlock();
         }
     } else {
-        yCDebug(PORTCOREOUTPUTUNIT, "skipping connection tagged as sending something");
+        yCIDebug(PORTCOREOUTPUTUNIT, getName(), "skipping connection tagged as sending something");
     }
 
     if (waitAfter) {
@@ -423,21 +449,30 @@ bool PortCoreOutputUnit::isBusy()
     return sending;
 }
 
+// The carrier parameters are handled by the modifier of the outgoing data
+// (e.g. a "send.portmonitor"), as done by PortCoreInputUnit with the modifier
+// of the incoming data.
 void PortCoreOutputUnit::setCarrierParams(const yarp::os::Property& params)
 {
-    if (op != nullptr) {
-        op->getConnection().setCarrierParams(params);
+    std::shared_ptr<OutputProtocol> localOp = op;
+    if (localOp) {
+        localOp->getSender().setCarrierParams(params);
     }
 }
 
 void PortCoreOutputUnit::getCarrierParams(yarp::os::Property& params)
 {
-    if (op != nullptr) {
-        op->getConnection().getCarrierParams(params);
+    std::shared_ptr<OutputProtocol> localOp = op;
+    if (localOp) {
+        localOp->getSender().getCarrierParams(params);
     }
 }
 
 OutputProtocol* PortCoreOutputUnit::getOutPutProtocol()
 {
-    return op;
+    // Callers (e.g. PortCore::getTypeOfService()) treat this as a
+    // transient, "use immediately" raw pointer; they do not store it
+    // long-term. Returning op.get() preserves the existing API/ABI while
+    // the shared_ptr keeps the object's lifetime managed safely elsewhere.
+    return op.get();
 }

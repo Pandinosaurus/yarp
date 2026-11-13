@@ -1,3 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!--
+  SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+  SPDX-License-Identifier: BSD-3-Clause
+-->
+
 <application>
 <name>yarpdataplayer example</name>
 <dependencies>
@@ -40,11 +47,6 @@
     <connection>
         <from>/icub/head/state:o</from>
         <to>/iCubGui/head:i</to>
-        <protocol>udp</protocol>
-    </connection>
-    <connection>
-        <from>/icub/inertial</from>
-        <to>/iCubGui/inertial:i</to>
         <protocol>udp</protocol>
     </connection>
     <connection>

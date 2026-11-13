@@ -1,15 +1,13 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/companion/impl/Companion.h>
 
 #include <yarp/os/Bottle.h>
+#include <yarp/os/CommandBottle.h>
 #include <yarp/os/Contact.h>
 #include <yarp/os/Name.h>
 #include <yarp/os/Network.h>
@@ -17,6 +15,7 @@
 #include <yarp/os/Value.h>
 #include <yarp/os/Vocab.h>
 #include <yarp/os/impl/Terminal.h>
+#include <yarp/os/LogStream.h>
 
 #ifdef YARP_HAS_Libedit
 #include <editline/readline.h>
@@ -26,6 +25,7 @@
 
 using yarp::companion::impl::Companion;
 using yarp::os::Bottle;
+using yarp::os::CommandBottle;
 using yarp::os::Contact;
 using yarp::os::Name;
 using yarp::os::NetworkBase;
@@ -69,24 +69,24 @@ char* command_generator (const char* text, int state)
     if (!commandListInitialized)
     {
         commands.clear();
-        yarp::os::Bottle helpCommand, helpBottle;
-        helpCommand.addString("help");
+        CommandBottle help;
+        help.cmd.addString("help");
         bool helpOk=false;
-        if (rpcHelpPort)
-            helpOk = rpcHelpPort->write(helpCommand, helpBottle);
+        if (rpcHelpPort) {
+            helpOk = rpcHelpPort->write(help, help);
+        }
         if (helpOk)
         {
             yarp::os::Bottle* cmdList = nullptr;
-            if (helpBottle.get(0).isVocab() && helpBottle.get(0).asVocab()==yarp::os::createVocab('m', 'a', 'n', 'y') )
-            {
-                cmdList=helpBottle.get(1).asList();
+            if (help.reply.get(0).isVocab32() && help.reply.get(0).asVocab32()==yarp::os::createVocab32('m', 'a', 'n', 'y') ) {
+                cmdList = help.reply.get(1).asList();
+            } else {
+                cmdList = help.reply.get(0).asList();
             }
-            else
-                cmdList=helpBottle.get(0).asList();
-            if (cmdList && cmdList->get(0).asString() == "*** Available commands:")
-            {
-                for (size_t i=1; i<cmdList->size(); ++i)
+            if (cmdList && cmdList->get(0).asString() == "*** Available commands:") {
+                for (size_t i = 1; i < cmdList->size(); ++i) {
                     commands.push_back(cmdList->get(i).asString());
+                }
             }
         }
         commands.emplace_back(" ");
@@ -95,8 +95,9 @@ char* command_generator (const char* text, int state)
     while ((list_index<commands.size()) && (name = (char*)commands[list_index].c_str()))
         {
         list_index++;
-        if (strncmp (name, text, len) == 0)
+        if (strncmp(name, text, len) == 0) {
             return (dupstr(name));
+        }
         }
 
     /* if no names matched, then return null. */
@@ -116,12 +117,13 @@ char ** my_completion (const char* text, int start, int end)
     /* If this word is at the start of the line, then it is a command
        to complete. If we are completing after "help ", it is a command again.
        Otherwise, stop completing. */
-    if (start == 0)
+    if (start == 0) {
         matches = rl_completion_matches(text, &command_generator);
-    else if (start == 5 && strncmp (text, "help ", 5) != 0)
+    } else if (start == 5 && strncmp(text, "help ", 5) != 0) {
         matches = rl_completion_matches(text, &command_generator);
-    else
-        rl_attempted_completion_over=1;
+    } else {
+        rl_attempted_completion_over = 1;
+    }
 
     return (matches);
 }
@@ -183,28 +185,27 @@ int Companion::rpc(const char *connectionName, const char *targetName)
                         break;  // for example, horrible windows ^D
                     }
                 }
-                Bottle bot;
+                CommandBottle command;
                 if (!resendFlag) {
-                    bot.fromString(txt);
+                    command.cmd.fromString(txt);
                 } else {
-                    bot = resendContent;
+                    command.cmd = resendContent;
                     resendFlag = false;
                 }
 
-                Bottle reply;
-                bool ok = port.write(bot, reply);
+                bool ok = port.write(command, command);
                 if (!ok) {
-                    resendContent = bot;
+                    resendContent = command.cmd;
                     resendFlag = true;
                     resendCount++;
                     break;
                 }
-                if (reply.get(0).isVocab() && reply.get(0).asVocab()==yarp::os::createVocab('m', 'a', 'n', 'y')) {
+                if (command.reply.get(0).isVocab32() && command.reply.get(0).asVocab32()==yarp::os::createVocab32('m', 'a', 'n', 'y')) {
                     yCInfo(COMPANION, "Responses:");
-                    Bottle *lst = &reply;
+                    Bottle *lst = &command.reply;
                     int start = 1;
-                    if (reply.size()==2 && reply.get(1).isList()) {
-                        lst = reply.get(1).asList();
+                    if (command.reply.size()==2 && command.reply.get(1).isList()) {
+                        lst = command.reply.get(1).asList();
                         start = 0;
                     }
                     for (size_t i=start; i<lst->size(); i++) {
@@ -216,7 +217,7 @@ int Companion::rpc(const char *connectionName, const char *targetName)
                         }
                     }
                 } else {
-                    yCInfo(COMPANION, "Response: %s", reply.toString().c_str());
+                    yCInfo(COMPANION, "Response: %s", command.reply.toString().c_str());
                 }
                 resendCount = 0;
             }
@@ -259,11 +260,10 @@ int Companion::rpcClient(int argc, char *argv[])
         if (yarp::os::impl::Terminal::EOFreached()) {
             break;
         }
-        Bottle cmd(txt);
-        Bottle reply;
-        ok = p.write(cmd, reply);
+        CommandBottle cmd(txt);
+        ok = p.write(cmd, cmd);
         if (ok) {
-            yCInfo(COMPANION, "%s", reply.toString().c_str());
+            yCInfo(COMPANION, "%s", cmd.reply.toString().c_str());
         }
     }
     return 0;

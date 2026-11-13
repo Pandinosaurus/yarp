@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_IMPLEMENTPWMCONTROL_H
@@ -13,41 +10,40 @@
 #include <yarp/dev/IPWMControl.h>
 #include <yarp/dev/api.h>
 #include <yarp/conf/system.h>
+#include <vector>
 
-namespace yarp {
-    namespace dev {
-        class ImplementPWMControl;
-    }
+namespace yarp::dev {
+class ImplementPWMControl;
 }
 
-namespace yarp {
-namespace dev {
-namespace impl {
+namespace yarp::dev::impl {
 
 template <typename T>
 class FixedSizeBuffersManager;
 
-} // namespace impl
-} // namespace dev
-} // namespace yarp
+} // namespace yarp::dev::impl
 
 class YARP_dev_API yarp::dev::ImplementPWMControl: public IPWMControl
 {
-    void *helper;
-    yarp::dev::IPWMControlRaw *raw;
-    yarp::dev::impl::FixedSizeBuffersManager<double> *doubleBuffManager;
+    yarp::dev::IPWMControlRaw* m_iraw=nullptr;
+    void*                      m_helper=nullptr;
+    std::vector<int>           m_buffer_ints;
+    std::vector<double>        m_buffer_doubles;
+    std::mutex                 m_imp_mutex;
+
+
 public:
     bool initialize(int k, const int *amap, const double* dutyToPWM);
     bool uninitialize();
     ImplementPWMControl(IPWMControlRaw *v);
     ~ImplementPWMControl();
-    bool getNumberOfMotors(int *ax) override;
-    bool setRefDutyCycle(int j, double v) override;
-    bool setRefDutyCycles(const double *v) override;
-    bool getRefDutyCycle(int j, double *v) override;
-    bool getRefDutyCycles(double *v) override;
-    bool getDutyCycle(int j, double *v) override;
-    bool getDutyCycles(double *v) override;
+    yarp::dev::ReturnValue getNumberOfMotors(int *ax) override;
+    yarp::dev::ReturnValue setRefDutyCycle(int j, double v) override;
+    yarp::dev::ReturnValue setRefDutyCycles(const double *v) override;
+    yarp::dev::ReturnValue getRefDutyCycle(int j, double *v) override;
+    yarp::dev::ReturnValue getRefDutyCycles(double *v) override;
+    yarp::dev::ReturnValue getDutyCycle(int j, double *v) override;
+    yarp::dev::ReturnValue getDutyCycles(double *v) override;
 
 };
 

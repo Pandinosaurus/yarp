@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef MJPEGSTREAM_INC
@@ -18,9 +15,24 @@
 #include <yarp/sig/Image.h>
 #include <yarp/sig/ImageNetworkHeader.h>
 
-#include <yarp/wire_rep_utils/BlobNetworkHeader.h>
-
 #include "MjpegDecompression.h"
+
+YARP_BEGIN_PACK
+class BlobNetworkHeader {
+public:
+    yarp::os::NetInt32 listTag;
+    yarp::os::NetInt32 listLen;
+    yarp::os::NetInt32 blobLen;
+
+    void init(int len) {
+        // state that the following data is a list containing 1 blob
+        listTag = BOTTLE_TAG_LIST + BOTTLE_TAG_BLOB;
+        listLen = 1;
+        blobLen = len;
+    }
+
+};
+YARP_END_PACK
 
 class MjpegStream :
         public yarp::os::TwoWayStream,
@@ -33,7 +45,7 @@ private:
     yarp::os::StringOutputStream sos;
     yarp::sig::FlexImage img;
     yarp::sig::ImageNetworkHeader imgHeader;
-    yarp::wire_rep_utils::BlobNetworkHeader blobHeader;
+    BlobNetworkHeader blobHeader;
     yarp::os::ManagedBytes cimg;
     MjpegDecompression decompression;
     int phase;
@@ -44,7 +56,7 @@ private:
 public:
     MjpegStream(TwoWayStream *delegate, bool autocompress) :
             delegate(delegate),
-            blobHeader(yarp::wire_rep_utils::BlobNetworkHeader{0,0,0}),
+            blobHeader(BlobNetworkHeader{0,0,0}),
             phase(0),
             cursor(NULL),
             remaining(0),

@@ -1,8 +1,5 @@
--- Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
--- All rights reserved.
---
--- This software may be modified and distributed under the terms of the
--- BSD-3-Clause license. See the accompanying LICENSE file for details.
+-- SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+-- SPDX-License-Identifier: BSD-3-Clause
 
 -- loading lua-yarp binding library
 require("yarp")
@@ -67,11 +64,9 @@ PortMonitor.accept = function(thing)
         if frame_rate < 28.0 then
             print(string.format("QOS low! frame rate = %d", frame_rate))
             local cmd = yarp.Bottle()
-            cmd:fromString("prop set /view (qos ((tos 16)))")
-            print(cmd:toString())
-            admin_port:write(cmd)
-            cmd:clear()
-            cmd:fromString("prop set /view (sched ((priority 10) (policy 1)))")
+            -- setConnectionQosOut portname scheduler_priority scheduler_policy qos_tos
+            -- (sets the qos of the output connection from /grabber to /view)
+            cmd:fromString("setConnectionQosOut /view 10 1 16")
             print(cmd:toString())
             admin_port:write(cmd)
         end

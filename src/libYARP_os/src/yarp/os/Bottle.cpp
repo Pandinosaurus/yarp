@@ -1,11 +1,8 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * Copyright (C) 2006, 2008 Arjan Gijsberts
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-FileCopyrightText: 2006, 2008 Arjan Gijsberts
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/Bottle.h>
@@ -164,10 +161,16 @@ void Bottle::addFloat64(yarp::conf::float64_t x)
     implementation->addFloat64(x);
 }
 
-void Bottle::addVocab(int x)
+void Bottle::addVocab32(yarp::conf::vocab32_t x)
 {
     implementation->edit();
-    implementation->addVocab(x);
+    implementation->addVocab32(x);
+}
+
+void Bottle::addVocab64(yarp::conf::vocab64_t x)
+{
+    implementation->edit();
+    implementation->addVocab64(x);
 }
 
 void Bottle::addString(const char* str)
@@ -188,11 +191,6 @@ Bottle& Bottle::addList()
     return implementation->addList();
 }
 
-Property& Bottle::addDict()
-{
-    implementation->edit();
-    return implementation->addDict();
-}
 
 Value Bottle::pop()
 {
@@ -290,39 +288,12 @@ bool Bottle::check(const std::string& key) const
 Value& Bottle::find(const std::string& key) const
 {
     Value& val = implementation->findBit(key);
-
-    if (getMonitor() != nullptr) {
-        SearchReport report;
-        report.key = key;
-        report.isFound = !val.isNull();
-        report.value = val.toString();
-        reportToMonitor(report);
-    }
-
     return val;
 }
 
 Bottle& Bottle::findGroup(const std::string& key) const
 {
     Value& bb = implementation->findGroupBit(key);
-
-    if (getMonitor() != nullptr) {
-        SearchReport report;
-        report.key = key;
-        report.isGroup = true;
-        if (bb.isList()) {
-            report.isFound = true;
-            report.value = bb.toString();
-        }
-        reportToMonitor(report);
-        if (bb.isList()) {
-            std::string context = getMonitorContext();
-            context += ".";
-            context += key;
-            bb.asList()->setMonitor(getMonitor(),
-                                    context.c_str()); // pass on any monitoring
-        }
-    }
 
     if (bb.isList()) {
         return *(bb.asList());
@@ -400,25 +371,30 @@ Bottle Bottle::tail() const
 
 std::string Bottle::toString(int x)
 {
-    return NetType::toString(x);
+    return yarp::conf::numeric::to_string(x);
 }
 
 std::string Bottle::describeBottleCode(int code)
 {
-    int unit = code & ~(BOTTLE_TAG_LIST | BOTTLE_TAG_DICT);
+    //unit is the code with the flag LIST removed
+    int unit = code & ~(BOTTLE_TAG_LIST);
+
     std::string unitName = "mixed";
     switch (unit) {
     case 0:
         unitName = "mixed";
         break;
     case BOTTLE_TAG_INT32:
-        unitName = "int";
+        unitName = "int32";
         break;
-    case BOTTLE_TAG_VOCAB:
-        unitName = "vocab";
+    case BOTTLE_TAG_VOCAB32:
+        unitName = "vocab32";
+        break;
+    case BOTTLE_TAG_VOCAB64:
+        unitName = "vocab64";
         break;
     case BOTTLE_TAG_FLOAT64:
-        unitName = "float";
+        unitName = "float64";
         break;
     case BOTTLE_TAG_STRING:
         unitName = "string";
@@ -433,8 +409,6 @@ std::string Bottle::describeBottleCode(int code)
     std::string result = unitName;
     if ((code & BOTTLE_TAG_LIST) != 0) {
         result = "list of " + unitName;
-    } else if ((code & BOTTLE_TAG_DICT) != 0) {
-        result = "dict of " + unitName;
     }
     return result;
 }

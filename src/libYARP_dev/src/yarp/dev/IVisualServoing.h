@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_VISUALSERVOING_H
@@ -16,14 +13,14 @@
 #include <yarp/sig/Vector.h>
 #include <yarp/dev/api.h>
 
-namespace yarp{
-    namespace dev {
-        class IVisualServoing;
-    }
+namespace yarp::dev {
+class IVisualServoing;
 }
 
 
-/*!
+/**
+ * @ingroup dev_iface_other
+ *
  * \brief Interface for visual servoing controllers.
  */
 class YARP_dev_API yarp::dev::IVisualServoing

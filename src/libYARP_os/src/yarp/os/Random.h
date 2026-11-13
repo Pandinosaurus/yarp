@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_OS_RANDOM_H
@@ -18,8 +15,7 @@
  */
 
 
-namespace yarp {
-namespace os {
+namespace yarp::os {
 
 /**
  * \ingroup key_class
@@ -56,15 +52,14 @@ public:
     static double normal();
 
     /**
-     * A random number in a specified range.
+     * A random integer in a specified range.
      * @param min is the minimum of the range.
      * @param max is the maximum of the range.
      * @return a random integer in the specified range.
      */
-    static int uniform(int min, int max);
+    static int uniformInt(int min, int max);
 };
 
-} // namespace os
-} // namespace yarp
+} // namespace yarp::os
 
 #endif // YARP_OS_RANDOM_H

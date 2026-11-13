@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_OS_MONITOROBJECT_H
@@ -12,15 +9,12 @@
 
 #include <yarp/os/api.h>
 
-namespace yarp {
-namespace os {
+namespace yarp::os {
 class Property;
 class Things;
-} // namespace os
-} // namespace yarp
+} // namespace yarp::os
 
-namespace yarp {
-namespace os {
+namespace yarp::os {
 
 class YARP_os_API MonitorObject
 {
@@ -42,7 +36,7 @@ public:
     virtual void destroy();
 
     /**
-     * This will be called when the portmonitor carrier parameters are set via Yarp admin port
+     * This will be called when the portmonitor carrier parameters are set via YARP admin port
      *
      * @param params The Property
      * @return Returns true if parameters are correctly set
@@ -50,7 +44,7 @@ public:
     virtual bool setparam(const yarp::os::Property& params);
 
     /**
-     * This will be called when the portmonitor carrier parameters are requested via Yarp admin port
+     * This will be called when the portmonitor carrier parameters are requested via YARP admin port
      *
      * @param params The Property
      * @return Returns true of any parameter is available
@@ -96,7 +90,6 @@ public:
     virtual yarp::os::Things& updateReply(yarp::os::Things& thing);
 };
 
-} // namespace os
-} // namespace yarp
+} // namespace yarp::os
 
 #endif // YARP_OS_MONITOROBJECT_H

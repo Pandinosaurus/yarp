@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/Bottle.h>
@@ -61,7 +58,7 @@ int main(int argc, char* argv[])
         tmp.add(cmd.get(1));
         std::string key = tmp.toString();
 
-        switch (yarp::os::Vocab::encode(cmd.get(0).toString())) {
+        switch (cmd.get(0).asVocab32()) {
         case VOCAB_SET:
             state.put(key, cmd.get(2));
             break;
@@ -72,7 +69,7 @@ int main(int argc, char* argv[])
             break;
         }
         Value& v = state.find(key);
-        response.addVocab(v.isNull() ? VOCAB_NOT : VOCAB_IS);
+        response.addVocab32(v.isNull() ? VOCAB_NOT : VOCAB_IS);
         response.add(cmd.get(1));
         if (!v.isNull()) {
             response.add(v);

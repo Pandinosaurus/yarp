@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef PORTMONITOR_INC
@@ -19,7 +16,7 @@
 #include "MonitorEvent.h"
 
 #include <mutex>
-
+#include <memory>
 
 class PortMonitor;
 
@@ -37,6 +34,7 @@ public:
 
 
 /**
+ * \ingroup carriers_lists
  * Allow to monitor and modify port data from Lua script  Under development.
  * Affected by carrier modifiers.
  *
@@ -65,7 +63,31 @@ public:
         if (!portName.empty()) {
             getPeers().remove(portName,this);
         }
-        delete binder;
+        for (auto it=binder.begin(); it!=binder.end(); ++it)
+        {
+            if (*it) {
+                delete *it;
+                *it = nullptr;
+            }
+        }
+        binder.clear();
+    }
+
+    void close() override
+    {
+        bReady = false;
+        if (!portName.empty()) {
+            getPeers().remove(portName, this);
+            portName.clear();
+        }
+        for (auto it = binder.begin(); it != binder.end(); ++it)
+        {
+            if (*it) {
+                delete *it;
+                *it = nullptr;
+            }
+        }
+        binder.clear();
     }
 
     Carrier *create() const override
@@ -110,7 +132,10 @@ public:
         if(!bReady) {
             return nullptr;
         }
-        return binder;
+        if (binder.empty()) {
+            return nullptr;
+        }
+        return binder[0];
     }
 
 public:
@@ -118,7 +143,7 @@ public:
     std::string sourceName;
 
 private:
-    static yarp::os::ElectionOf<PortMonitorGroup> *peers;
+    static std::unique_ptr<yarp::os::ElectionOf<PortMonitorGroup>> peers;
     static yarp::os::ElectionOf<PortMonitorGroup>& getPeers();
 
 
@@ -127,7 +152,7 @@ private:
     yarp::os::DummyConnector con;
     yarp::os::ConnectionReader* localReader {nullptr};
     yarp::os::Things thing;
-    MonitorBinding* binder {nullptr};
+    std::vector<MonitorBinding*> binder;
     PortMonitorGroup *group {nullptr};
     mutable std::mutex mutex;
 };

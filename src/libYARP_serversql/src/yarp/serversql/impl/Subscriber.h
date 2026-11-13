@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_SERVERSQL_IMPL_SUBSCRIBER_H
@@ -19,9 +16,7 @@
 #include <yarp/os/NameSpace.h>
 
 
-namespace yarp {
-namespace serversql {
-namespace impl {
+namespace yarp::serversql::impl {
 
 /**
  * Abstract interface for maintaining persistent connections.
@@ -31,8 +26,7 @@ class Subscriber :
 {
 public:
     Subscriber() :
-            store(nullptr),
-            delegate(nullptr)
+            store(nullptr)
     {
     }
 
@@ -99,29 +93,16 @@ public:
 
     int replyCode(bool flag)
     {
-        return flag ? yarp::os::createVocab('o', 'k')
-                    : yarp::os::createVocab('f', 'a', 'i', 'l');
-    }
-
-    void setDelegate(yarp::os::NameSpace *delegate)
-    {
-        this->delegate = delegate;
-    }
-
-    yarp::os::NameSpace *getDelegate()
-    {
-        return delegate;
+        return flag ? yarp::os::createVocab32('o', 'k')
+                    : yarp::os::createVocab32('f', 'a', 'i', 'l');
     }
 
 private:
     yarp::os::NameStore *store;
     ConnectManager manager;
-    yarp::os::NameSpace *delegate;
 };
 
-} // namespace impl
-} // namespace serversql
-} // namespace yarp
+} // namespace yarp::serversql::impl
 
 
 #endif // YARP_SERVERSQL_IMPL_SUBSCRIBER_H

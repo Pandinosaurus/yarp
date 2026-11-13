@@ -1,12 +1,9 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2007 Alexandre Bernardino
- * Copyright (C) 2007 Carlos Beltran-Gonzalez
- * Copyright (C) 2007 Francesco Giovannini
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2007 Alexandre Bernardino
+ * SPDX-FileCopyrightText: 2007 Carlos Beltran-Gonzalez
+ * SPDX-FileCopyrightText: 2007 Francesco Giovannini
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef SerialDeviceDriverh
@@ -111,7 +108,7 @@ public:
      * @return true on success
      */
     bool send(const Bottle& msg) override;
-    bool send(char *msg, size_t size) override;
+    bool send(const char *msg, size_t size) override;
     //bool putMessage(Bottle& msg, bool waitreply, double replytimeout, Bottle& reply, char *replydelimiter, int replysize );
     /**
      * Gets the existing chars in the receive queue.

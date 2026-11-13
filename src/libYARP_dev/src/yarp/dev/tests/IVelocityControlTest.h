@@ -1,0 +1,108 @@
+/*
+ * SPDX-FileCopyrightText: 2023-2023 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
+#ifndef IVELOCITYCONTROLTEST_H
+#define IVELOCITYCONTROLTEST_H
+
+#include <memory>
+#include <numeric>
+
+#include <yarp/dev/IVelocityControl.h>
+#include <yarp/dev/IControlMode.h>
+#include <yarp/os/Time.h>
+#include <catch2/catch_amalgamated.hpp>
+#include "TestUtils.h"
+
+using namespace yarp::dev;
+using namespace yarp::os;
+
+namespace yarp::dev::tests
+{
+    inline void exec_iVelocityControl_test_1(IVelocityControl* ivel, IControlMode* icmd)
+    {
+        REQUIRE(ivel != nullptr);
+        REQUIRE(icmd != nullptr);
+
+        bool b;
+        size_t ax=0;
+
+        b = ivel->getAxes(ax);
+        CHECK(b);
+        REQUIRE(ax > 0);
+
+        for (size_t i = 0; i< ax; i++)
+        {
+            b = icmd->setControlMode(i, yarp::dev::SelectableControlModeEnum::VOCAB_CM_VELOCITY);
+            CHECK(b);
+            wait_safe(); // Allow some time for the command to take effect
+
+            yarp::dev::ControlModeEnum mode_ret;
+            b = icmd->getControlMode(i, mode_ret);
+            CHECK(b);
+            CHECK(mode_ret == yarp::dev::ControlModeEnum::VOCAB_CM_VELOCITY);
+        }
+
+        const double ref_test=1.123;
+        double ref=0;
+        b = ivel->setTrajAcceleration(0, ref_test);
+        CHECK(b);
+        b = ivel->getTrajAcceleration(0, &ref);
+        CHECK(b);
+        CHECK(fabs(ref-ref_test)<0.001);
+
+        b = ivel->velocityMove(0, ref_test);
+        CHECK(b);
+        wait_safe();
+        b = ivel->getTargetVelocity(0,&ref);
+        CHECK(b);
+        CHECK(fabs(ref - ref_test) < 0.001);
+
+        b = ivel->stop();
+        CHECK(b);
+    }
+
+    inline void exec_iVelocityControl_test_unimplemented_interface(IVelocityControl* ivel, IControlMode* icmd)
+    {
+        REQUIRE(ivel != nullptr);
+        REQUIRE(icmd != nullptr);
+
+        bool b;
+        size_t ax=0;
+        b = ivel->getAxes(ax);
+        CHECK(b);
+        REQUIRE(ax > 0);
+
+        double ref = 0;
+        auto refs = std::vector<double>(ax);
+
+        for (size_t i = 0; i < ax; i++)
+        {
+            b = icmd->setControlMode(i, yarp::dev::SelectableControlModeEnum::VOCAB_CM_VELOCITY);
+            //CHECK(b); //this will fail
+        }
+
+        b = ivel->setTrajAcceleration(0, ref);
+        CHECK(!b);
+        b = ivel->getTrajAcceleration(0, &ref);
+        CHECK(!b);
+        b = ivel->setTrajAccelerations( refs.data());
+        CHECK(!b);
+        b = ivel->getTrajAccelerations( refs.data());
+        CHECK(!b);
+
+        b = ivel->velocityMove(0, ref);
+        CHECK(!b);
+
+        b = ivel->getTargetVelocity(0, &ref);
+        CHECK(!b);
+        b = ivel->getTargetVelocities(refs.data());
+        CHECK(!b);
+
+        b = ivel->stop();
+        CHECK(!b);
+    }
+}
+
+#endif

@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_OS_IMPL_PORTCOREOUTPUTUNIT_H
@@ -15,11 +12,10 @@
 #include <yarp/os/impl/PortCore.h>
 #include <yarp/os/impl/PortCoreUnit.h>
 
+#include <memory>
 #include <mutex>
 
-namespace yarp {
-namespace os {
-namespace impl {
+namespace yarp::os::impl {
 
 /**
  * Manager for a single output from a port.  Associated
@@ -78,6 +74,11 @@ public:
         return finished;
     }
 
+    const std::string& getName()
+    {
+        return name;
+    }
+
     // documented in PortCoreUnit
     Route getRoute() override;
 
@@ -107,12 +108,13 @@ public:
     OutputProtocol* getOutPutProtocol();
 
 private:
-    OutputProtocol *op; ///< protocol object for writing/reading
+    std::shared_ptr<OutputProtocol> op;
     bool closing;       ///< should this connection close
     bool finished;      ///< has this connection finished
     bool running;       ///< is a thread running
     bool threaded;      ///< do we need a thread for background writing
     bool sending;       ///< are we sending something right now
+    std::string name;
     yarp::os::Semaphore phase;        ///< let main thread kick sending thread
     yarp::os::Semaphore activate;     ///< signal when we have a new tracker
     std::mutex trackerMutex; ///< protect the tracker during outside access
@@ -139,8 +141,6 @@ private:
     void closeMain();
 };
 
-} // namespace impl
-} // namespace os
-} // namespace yarp
+} // namespace yarp::os::impl
 
 #endif // YARP_OS_IMPL_PORTCOREOUTPUTUNIT_H

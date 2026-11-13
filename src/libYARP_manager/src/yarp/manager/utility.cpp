@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/manager/utility.h>
@@ -17,7 +14,6 @@
 
 
 using namespace yarp::manager;
-using namespace std;
 
 
 //#if defined(_MSC_VER) && (_MSC_VER == 1600)
@@ -106,12 +102,21 @@ ErrorLogger* ErrorLogger::Instance()
 }
 
 void ErrorLogger::addWarning(const char* szWarning) {
-    if(szWarning)
-        warnings.emplace_back(szWarning);
+    if (szWarning) {
+        ClockStart& clock = ClockStart::getInstance();
+        std::string elapsedTime = getElapsedTimeString(clock.getStartTime());
+        std::string timeinfo = "[time: " + elapsedTime + "] ";
+        std::string szWarningWithTime = timeinfo + szWarning;
+        warnings.emplace_back(szWarningWithTime);
+    }
 }
 
-void ErrorLogger::addWarning(const string &str) {
-    warnings.push_back(str);
+void ErrorLogger::addWarning(const std::string &str) {
+    ClockStart& clock = ClockStart::getInstance();
+    std::string elapsedTime = getElapsedTimeString(clock.getStartTime());
+    std::string timeinfo = "[time: " + elapsedTime + "] ";
+    std::string strWithTime = timeinfo + str;
+    warnings.push_back(strWithTime);
 }
 
 void ErrorLogger::addWarning(OSTRINGSTREAM &stream) {
@@ -119,12 +124,21 @@ void ErrorLogger::addWarning(OSTRINGSTREAM &stream) {
 }
 
 void ErrorLogger::addError(const char* szError) {
-    if(szError)
-        errors.emplace_back(szError);
+    if (szError) {
+        ClockStart& clock = ClockStart::getInstance();
+        std::string elapsedTime = getElapsedTimeString(clock.getStartTime());
+        std::string timeinfo = "[time: " + elapsedTime + "] ";
+        std::string szErrorWithTime = timeinfo + szError;
+        errors.emplace_back(szErrorWithTime);
+    }
 }
 
-void ErrorLogger::addError(const string &str) {
-    errors.push_back(str);
+void ErrorLogger::addError(const std::string &str) {
+    ClockStart& clock = ClockStart::getInstance();
+    std::string elapsedTime = getElapsedTimeString(clock.getStartTime());
+    std::string timeinfo = "[time: " + elapsedTime + "] ";
+    std::string strWithTime = timeinfo + str;
+    errors.push_back(strWithTime);
 }
 
 void ErrorLogger::addError(OSTRINGSTREAM &stream) {
@@ -132,36 +146,40 @@ void ErrorLogger::addError(OSTRINGSTREAM &stream) {
 }
 
 const char* ErrorLogger::getLastError() {
-    if(errors.empty())
+    if (errors.empty()) {
         return nullptr;
-    static string msg;
+    }
+    static std::string msg;
     msg = errors.back();
     errors.pop_back();
     return msg.c_str();
 }
 
 const char* ErrorLogger::getFormatedErrorString() {
-    static string msgs;
+    static std::string msgs;
     char* err;
-    while((err=(char*)getLastError()) != nullptr)
-        msgs += string(err) + " ";
+    while ((err = (char*)getLastError()) != nullptr) {
+        msgs += std::string(err) + " ";
+    }
     return msgs.c_str();
 }
 
 const char* ErrorLogger::getLastWarning() {
-    if(warnings.empty())
+    if (warnings.empty()) {
         return nullptr;
-    static string msg;
+    }
+    static std::string msg;
     msg = warnings.back();
     warnings.pop_back();
     return msg.c_str();
 }
 
 const char* ErrorLogger::getFormatedWarningString() {
-    static string msgs;
+    static std::string msgs;
     char* err;
-    while((err=(char*)getLastWarning()) != nullptr)
-        msgs += string(err) + " ";
+    while ((err = (char*)getLastWarning()) != nullptr) {
+        msgs += std::string(err) + " ";
+    }
     return msgs.c_str();
 }
 
@@ -180,7 +198,7 @@ int ErrorLogger::warningCount() {
 }
 
 
-const string GRAPH_LEGEND =
+const std::string GRAPH_LEGEND =
 "{"
 "   rank=sink;"
 "   style=filled;"
@@ -291,12 +309,15 @@ OS yarp::manager::strToOS(const char* szOS)
 {
     if(szOS)
     {
-        if(compareString(szOS, "LINUX"))
+        if (compareString(szOS, "LINUX")) {
             return LINUX;
-        if (compareString(szOS, "WINDOWS"))
+        }
+        if (compareString(szOS, "WINDOWS")) {
             return WINDOWS;
-        if (compareString(szOS, "MAC"))
+        }
+        if (compareString(szOS, "MAC")) {
             return MAC;
+        }
     }
     return OTHER;
 }
@@ -304,47 +325,109 @@ OS yarp::manager::strToOS(const char* szOS)
 
 bool yarp::manager::compareString(const char* szFirst, const char* szSecond)
 {
-    if(!szFirst && !szSecond)
+    if (!szFirst && !szSecond) {
         return true;
-    if( !szFirst || !szSecond)
+    }
+    if (!szFirst || !szSecond) {
         return false;
+    }
 
-    string strFirst(szFirst);
-    string strSecond(szSecond);
+    std::string strFirst(szFirst);
+    std::string strSecond(szSecond);
     transform(strFirst.begin(), strFirst.end(), strFirst.begin(),
               (int(*)(int))toupper);
     transform(strSecond.begin(), strSecond.end(), strSecond.begin(),
               (int(*)(int))toupper);
-    if(strFirst == strSecond)
+    if (strFirst == strSecond) {
         return true;
+    }
     return false;
 }
 
-void yarp::manager::trimString(string& str)
+std::string yarp::manager::getCurrentTimeString() {
+    auto now = std::chrono::system_clock::now();
+    std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
+
+    std::tm localTime;
+#ifdef _WIN32
+    localtime_s(&localTime, &currentTime); // Windows
+#else
+    localtime_r(&currentTime, &localTime); // POSIX
+#endif
+    std::ostringstream oss;
+    oss << std::put_time(&localTime, "%H:%M:%S");
+    return oss.str();
+}
+
+std::string yarp::manager::getElapsedTimeString(const std::string& startTimeStr) {
+    std::tm startTime{};
+    std::istringstream iss(startTimeStr);
+    iss >> std::get_time(&startTime, "%H:%M:%S");
+    if (iss.fail()) {
+        throw std::invalid_argument("Invalid time format. Expected %H:%M:%S");
+    }
+
+    auto now = std::chrono::system_clock::now();
+    std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
+
+    std::tm localTime;
+#ifdef _WIN32
+    localtime_s(&localTime, &currentTime); // Windows
+#else
+    localtime_r(&currentTime, &localTime); // POSIX
+#endif
+
+    localTime.tm_hour = startTime.tm_hour;
+    localTime.tm_min = startTime.tm_min;
+    localTime.tm_sec = startTime.tm_sec;
+
+    std::time_t startTimestamp = std::mktime(&localTime);
+
+    auto elapsedSeconds = std::difftime(currentTime, startTimestamp);
+    if (elapsedSeconds < 0) {
+        elapsedSeconds += 24 * 60 * 60; // Handle cases where the start time is on the previous day
+    }
+
+    int hours = static_cast<int>(elapsedSeconds) / 3600;
+    int minutes = (static_cast<int>(elapsedSeconds) % 3600) / 60;
+    int seconds = static_cast<int>(elapsedSeconds) % 60;
+
+    std::ostringstream oss;
+    oss << std::setfill('0') << std::setw(2) << hours << ":"
+        << std::setfill('0') << std::setw(2) << minutes << ":"
+        << std::setfill('0') << std::setw(2) << seconds;
+
+    return oss.str();
+}
+
+void yarp::manager::trimString(std::string& str)
 {
-    string::size_type pos = str.find_last_not_of(' ');
-    if(pos != string::npos)
+    std::string::size_type pos = str.find_last_not_of(' ');
+    if(pos != std::string::npos)
     {
         str.erase(pos + 1);
         pos = str.find_first_not_of(' ');
-        if(pos != string::npos)
+        if (pos != std::string::npos) {
             str.erase(0, pos);
+        }
+    } else {
+        str.erase(str.begin(), str.end());
     }
-    else str.erase(str.begin(), str.end());
 }
 
 
 bool yarp::manager::exportDotGraph(Graph& graph, const char* szFileName)
 {
-    ofstream dot;
+    std::ofstream dot;
     dot.open(szFileName);
-    if(!dot.is_open())
+    if (!dot.is_open()) {
         return false;
+    }
 
-    dot<<"digraph G {"<<endl;
-    dot<<"rankdir=LR;"<<endl;
-    dot<<"ranksep=0.0;"<<endl;
-    dot<<"nodesep=0.2;"<<endl;
+    dot<<"digraph G {\n";
+    dot<<"rankdir=LR\n;";
+    dot<<"ranksep=0.0\n;";
+    dot<<"nodesep=0.2\n;";
 
     for(GraphIterator itr=graph.begin(); itr!=graph.end(); itr++)
     {
@@ -353,18 +436,18 @@ bool yarp::manager::exportDotGraph(Graph& graph, const char* szFileName)
                     auto* mod = (Module*)(*itr);
                     dot<<"\""<<mod->getLabel()<<"\"";
                     dot<<" [label=\""<< mod->getName()<<"\"";
-                    dot<<" shape=component, color=midnightblue, fillcolor=lightslategrey, peripheries=1, style=filled, penwidth=2];"<<endl;
+                    dot<<" shape=component, color=midnightblue, fillcolor=lightslategrey, peripheries=1, style=filled, penwidth=2];\n";
                     for(int i=0; i<mod->sucCount(); i++)
                     {
                         Link l = mod->getLinkAt(i);
                         auto* in = (InputData*)l.to();
                         dot<<"\""<<mod->getLabel()<<"\" -> ";
                         dot<<"\""<<in->getLabel()<<"\"";
-                        if(!l.isVirtual())
-                            dot<<" [label=\"\"];"<<endl;
-                        else
-                            dot<<" [label=\"\" style=dashed];"<<endl;
-
+                        if (!l.isVirtual()) {
+                            dot<<" [label=\"\"];\n";
+                        } else {
+                            dot << " [label=\"\" style=dashed];\n";
+                        }
                     }
 
                     break;
@@ -375,12 +458,12 @@ bool yarp::manager::exportDotGraph(Graph& graph, const char* szFileName)
                     if(in->withPriority())
                     {
                         dot<<" [color=red, fillcolor=lightgrey, peripheries=1, style=filled";
-                        dot<<" label=\""<< in->getName()<<"\\n"<<in->getPort()<<"\"];"<<endl;
+                        dot<<" label=\""<< in->getName()<<"\\n"<<in->getPort()<<"\"];\n";
                     }
                     else
                     {
                         dot<<" [color=black, fillcolor=lightgrey, peripheries=1, style=filled";
-                        dot<<" label=\""<< in->getName()<<"\\n"<<in->getPort()<<"\"];"<<endl;
+                        dot<<" label=\""<< in->getName()<<"\\n"<<in->getPort()<<"\"];\n";
                     }
                     for(int i=0; i<in->sucCount(); i++)
                     {
@@ -388,10 +471,11 @@ bool yarp::manager::exportDotGraph(Graph& graph, const char* szFileName)
                         auto* out = (OutputData*)l.to();
                         dot<<"\""<<in->getLabel()<<"\" -> ";
                         dot<<"\""<<out->getLabel()<<"\"";
-                        if(!l.isVirtual())
-                            dot<<" [label=\""<<l.weight()<<"\"];"<<endl;
-                        else
-                            dot<<" [label=\""<<l.weight()<<"\" style=dashed];"<<endl;
+                        if (!l.isVirtual()) {
+                            dot<<" [label=\""<<l.weight()<<"\"];\n";
+                        } else {
+                            dot << " [label=\"" << l.weight() << "\" style=dashed];\n";
+                        }
                     }
 
                     break;
@@ -400,14 +484,14 @@ bool yarp::manager::exportDotGraph(Graph& graph, const char* szFileName)
                     auto* out = (OutputData*)(*itr);
                     dot<<"\""<<out->getLabel()<<"\"";
                     dot<<" [color=black, fillcolor=wheat, peripheries=1, style=filled";
-                    dot<<" label=\""<< out->getName()<<"\\n"<<out->getPort()<<"\"];"<<endl;
+                    dot<<" label=\""<< out->getName()<<"\\n"<<out->getPort()<<"\"];\n";
                     for(int i=0; i<out->sucCount(); i++)
                     {
                         Link l = out->getLinkAt(i);
                         auto* mod = (Module*)l.to();
                         dot<<"\""<<out->getLabel()<<"\" -> ";
                         dot<<"\""<<mod->getLabel()<<"\"";
-                        dot<<" [label=\"\" arrowhead=none];"<<endl;
+                        dot<<" [label=\"\" arrowhead=none];\n";
                     }
 
                     break;
@@ -417,17 +501,18 @@ bool yarp::manager::exportDotGraph(Graph& graph, const char* szFileName)
                     auto* app = (Application*)(*itr);
                     dot<<"\""<<app->getLabel()<<"\"";
                     dot<<" [shape=folder, color=darkgreen, fillcolor=darkseagreen, peripheries=1, style=filled, penwidth=2";
-                    dot<<" label=\""<<app->getLabel()<<"\""<<"];"<<endl;
+                    dot<<" label=\""<<app->getLabel()<<"\""<<"];\n";
                     for(int i=0; i<app->sucCount(); i++)
                     {
                         Link l = app->getLinkAt(i);
                         auto* mod = (Module*)l.to();
                         dot<<"\""<<app->getLabel()<<"\" -> ";
                         dot<<"\""<<mod->getLabel()<<"\"";
-                        if(!l.isVirtual())
-                            dot<<" [label=\"\"];"<<endl;
-                        else
-                            dot<<" [label=\"\" style=dashed];"<<endl;
+                        if (!l.isVirtual()) {
+                            dot<<" [label=\"\"];\n";
+                        } else {
+                            dot << " [label=\"\" style=dashed];\n";
+                        }
                     }
                     break;
             }
@@ -435,18 +520,19 @@ bool yarp::manager::exportDotGraph(Graph& graph, const char* szFileName)
             case RESOURCE:{
                     auto* res = (GenericResource*)(*itr);
                     dot<<"\""<<res->getLabel()<<"\"";
-                    if(res->owner())
+                    if (res->owner()) {
                         dot<<" [shape=rect, color=black, fillcolor=salmon, peripheries=1, style=filled ";
-                    else
-                        dot<<" [shape=house, color=maroon, fillcolor=indianred, peripheries=1, style=filled, penwidth=2";
-                    dot<<" label=\""<<res->getName()<<"\""<<"];"<<endl;
+                    } else {
+                        dot << " [shape=house, color=maroon, fillcolor=indianred, peripheries=1, style=filled, penwidth=2";
+                    }
+                    dot<<" label=\""<<res->getName()<<"\""<<"];\n";
                     for(int i=0; i<res->sucCount(); i++)
                     {
                         Link l = res->getLinkAt(i);
                         Node* prov = l.to();
                         dot<<"\""<<res->getLabel()<<"\" -> ";
                         dot<<"\""<<prov->getLabel()<<"\"";
-                        dot<<" [label=\""<<l.weight()<<"\"];"<<endl;
+                        dot<<" [label=\""<<l.weight()<<"\"];\n";
                     }
 
                     break;
@@ -458,7 +544,7 @@ bool yarp::manager::exportDotGraph(Graph& graph, const char* szFileName)
     }
 
     dot<<GRAPH_LEGEND;
-    dot<<"}"<<endl;
+    dot<<"}\n";
     dot.close();
     return true;
 }

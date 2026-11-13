@@ -1,27 +1,26 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <cstdio>
 
 #include <yarp/dev/ControlBoardInterfacesImpl.h>
 #include <yarp/dev/ControlBoardHelper.h>
+#include <yarp/dev/ControlBoardHelpers.h>
 #include <yarp/dev/ImplementInteractionMode.h>
 #include <yarp/dev/impl/FixedSizeBuffersManager.h>
 
 using namespace yarp::dev;
 using namespace yarp::os;
-#define JOINTIDCHECK if (j >= castToMapper(helper)->axes()){yError("joint id out of bound"); return false;}
+
+namespace {
+YARP_LOG_COMPONENT(IMPLEMENT_LAYER_COMPONENT, "yarp.ImplementInteractionMode")
+}
 
 ImplementInteractionMode::ImplementInteractionMode(yarp::dev::IInteractionModeRaw *class_p) :
-    iInteraction(class_p),
-    helper(nullptr),
-    imodeBuffManager(nullptr),
-    intBuffManager(nullptr)
+    m_iraw(class_p),
+    m_helper(nullptr)
 {;}
 
 
@@ -43,17 +42,16 @@ bool ImplementInteractionMode::initialize(int size, const int *amap)
 
 bool ImplementInteractionMode::initialize(int size, const int *amap, const double *enc, const double *zos)
 {
-    if(helper != nullptr)
+    if (m_helper != nullptr) {
         return false;
+    }
 
-    helper=(void *)(new ControlBoardHelper(size, amap, enc, zos));
-    yAssert(helper != nullptr);
+    m_helper=(void *)(new ControlBoardHelper(size, amap, enc, zos));
+    yAssert(m_helper != nullptr);
 
-    intBuffManager = new yarp::dev::impl::FixedSizeBuffersManager<int> (size);
-    yAssert (intBuffManager != nullptr);
-
-    imodeBuffManager = new yarp::dev::impl::FixedSizeBuffersManager<yarp::dev::InteractionModeEnum> (size, 1);
-    yAssert (imodeBuffManager != nullptr);
+    m_buffer_ints.resize   (size);
+    m_buffer_doubles.resize(size);
+    m_buffer_enums.resize(size);
 
     return true;
 }
@@ -64,98 +62,92 @@ bool ImplementInteractionMode::initialize(int size, const int *amap, const doubl
  */
 bool ImplementInteractionMode::uninitialize()
 {
-    if(helper != nullptr)
+    if(m_helper != nullptr)
     {
-        delete castToMapper(helper);
-        helper = nullptr;
+        delete castToMapper(m_helper);
+        m_helper = nullptr;
     }
 
-    if(intBuffManager)
-    {
-        delete intBuffManager;
-        intBuffManager=nullptr;
-    }
-
-    if(imodeBuffManager)
-    {
-        delete imodeBuffManager;
-        imodeBuffManager=nullptr;
-    }
     return true;
 }
 
-bool ImplementInteractionMode::getInteractionMode(int axis, yarp::dev::InteractionModeEnum* mode)
+ReturnValue ImplementInteractionMode::getInteractionMode(int axis, yarp::dev::InteractionModeEnum& mode)
 {
-    int j = castToMapper(helper)->toHw(axis);
-    return iInteraction->getInteractionModeRaw(j, mode);
+    std::lock_guard lock(m_imp_mutex);
+
+    int j = castToMapper(m_helper)->toHw(axis);
+    return m_iraw->getInteractionModeRaw(j, mode);
 }
 
-bool ImplementInteractionMode::getInteractionModes(int n_joints, int *joints, yarp::dev::InteractionModeEnum* modes)
+ReturnValue ImplementInteractionMode::getInteractionModes(const std::vector<int>& joints, std::vector<yarp::dev::InteractionModeEnum>& modes)
 {
-    if(!castToMapper(helper)->checkAxesIds(n_joints, joints))
-        return false;
+    std::lock_guard lock(m_imp_mutex);
+    VECCHECK_GET_SOME(IMPLEMENT_LAYER_COMPONENT,joints,modes);
 
-    yarp::dev::impl::Buffer<int> buffJoints =  intBuffManager->getBuffer();
-
-    for (int i = 0; i < n_joints; i++)
+    std::vector<int> vectorInt_tmp(joints.size());
+    for (int i = 0; i < joints.size(); i++)
     {
-        buffJoints[i] = castToMapper(helper)->toHw(joints[i]);
+        vectorInt_tmp[i] = castToMapper(m_helper)->toHw(joints[i]);
     }
-    bool ret = iInteraction->getInteractionModesRaw(n_joints, buffJoints.getData(), modes);
+    ReturnValue ret = m_iraw->getInteractionModesRaw(vectorInt_tmp, modes);
 
-    intBuffManager->releaseBuffer(buffJoints);
     return ret;
 }
 
-bool ImplementInteractionMode::getInteractionModes(yarp::dev::InteractionModeEnum* modes)
+ReturnValue ImplementInteractionMode::getInteractionModes(std::vector < yarp::dev::InteractionModeEnum>& modes)
 {
-    yarp::dev::impl::Buffer<yarp::dev::InteractionModeEnum> buffValues = imodeBuffManager->getBuffer();
-    if(!iInteraction->getInteractionModesRaw(buffValues.getData()) )
+    std::lock_guard lock(m_imp_mutex);
+    VECCHECK_GET_ALL(IMPLEMENT_LAYER_COMPONENT,modes);
+
+    ReturnValue ret = m_iraw->getInteractionModesRaw(m_buffer_enums);
+    if(!ret)
     {
-        imodeBuffManager->releaseBuffer(buffValues);
-        return false;
+        return ret;
     }
-    for(int idx=0; idx<castToMapper(helper)->axes(); idx++)
+    for(int idx=0; idx<castToMapper(m_helper)->axes(); idx++)
     {
-        int j = castToMapper(helper)->toUser(idx);
-        modes[j] = buffValues[idx];
+        int j = castToMapper(m_helper)->toUser(idx);
+        modes[j] = m_buffer_enums[idx];
     }
-    imodeBuffManager->releaseBuffer(buffValues);
-    return true;
+
+    return ReturnValue_ok;
 }
 
-bool ImplementInteractionMode::setInteractionMode(int axis, yarp::dev::InteractionModeEnum mode)
+ReturnValue ImplementInteractionMode::setInteractionMode(int axis, yarp::dev::InteractionModeEnum mode)
 {
-    int j = castToMapper(helper)->toHw(axis);
-    return iInteraction->setInteractionModeRaw(j, mode);
+    std::lock_guard lock(m_imp_mutex);
+
+    int j = castToMapper(m_helper)->toHw(axis);
+    return m_iraw->setInteractionModeRaw(j, mode);
 }
 
-bool ImplementInteractionMode::setInteractionModes(int n_joints, int *joints, yarp::dev::InteractionModeEnum* modes)
+ReturnValue ImplementInteractionMode::setInteractionModes(const std::vector<int>& joints, const std::vector<yarp::dev::InteractionModeEnum>& modes)
 {
-    if(!castToMapper(helper)->checkAxesIds(n_joints, joints))
-        return false;
+    std::lock_guard lock(m_imp_mutex);
+    VECCHECK_SET_SOME(IMPLEMENT_LAYER_COMPONENT,joints, modes)
 
-    yarp::dev::impl::Buffer<int> buffJoints =  intBuffManager->getBuffer();
-
-    for(int idx=0; idx<n_joints; idx++)
+    std::vector<int> vectorInt_tmp(joints.size());
+    for(int idx=0; idx<joints.size(); idx++)
     {
-        buffJoints[idx] = castToMapper(helper)->toHw(joints[idx]);
+        vectorInt_tmp[idx] = castToMapper(m_helper)->toHw(joints[idx]);
     }
-    bool ret = iInteraction->setInteractionModesRaw(n_joints, buffJoints.getData(), modes);
-    intBuffManager->releaseBuffer(buffJoints);
+    ReturnValue ret = m_iraw->setInteractionModesRaw(vectorInt_tmp, modes);
+
     return ret;
 }
 
-bool ImplementInteractionMode::setInteractionModes(yarp::dev::InteractionModeEnum* modes)
+ReturnValue ImplementInteractionMode::setInteractionModes(const std::vector<yarp::dev::InteractionModeEnum>& modes)
 {
-    yarp::dev::impl::Buffer<yarp::dev::InteractionModeEnum> buffValues = imodeBuffManager->getBuffer();
-    for(int idx=0; idx< castToMapper(helper)->axes(); idx++)
+    std::lock_guard lock(m_imp_mutex);
+    VECCHECK_SET_ALL(IMPLEMENT_LAYER_COMPONENT,modes)
+
+    for(int idx=0; idx< castToMapper(m_helper)->axes(); idx++)
     {
-        int j = castToMapper(helper)->toHw(idx);
-        buffValues[j] = modes[idx];
+        int j = castToMapper(m_helper)->toHw(idx);
+        m_buffer_enums[j] = modes[idx];
     }
 
-    bool ret = iInteraction->setInteractionModesRaw(buffValues.getData());
-    imodeBuffManager->releaseBuffer(buffValues);
+    ReturnValue ret = m_iraw->setInteractionModesRaw(m_buffer_enums);
+
     return ret;
 }

@@ -1,37 +1,26 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#ifndef YARP_QUATERNION
-#define YARP_QUATERNION
+#ifndef YARP_QUATERNION_H
+#define YARP_QUATERNION_H
 
 #include <yarp/math/api.h>
 #include <yarp/sig/Vector.h>
 #include <yarp/sig/Matrix.h>
-#include <yarp/os/Portable.h>
+#include <yarp/sig/QuaternionData.h>
 
-// network stuff
-#include <yarp/os/NetInt32.h>
-
-namespace yarp {
-    namespace math {
-        class Quaternion;
-    }
+namespace yarp::math {
+class Quaternion;
 }
 
-class YARP_math_API yarp::math::Quaternion : public yarp::os::Portable
+class YARP_math_API yarp::math::Quaternion : public yarp::sig::QuaternionData
 {
-    double internal_data[4]; // stored as [w x y z]
-
 public:
     Quaternion();
     Quaternion(double x, double y, double z, double w);
-    double* data();
-    const double* data() const;
+
     double x() const;
     double y() const;
     double z() const;
@@ -52,6 +41,11 @@ public:
     * Normalizes the quaternion elements.
     */
     void normalize();
+
+    /**
+    * Check if the quaternion is valid.
+    */
+    bool isValid() const;
 
     /**
     * Computes the inverse of the quaternion.
@@ -105,16 +99,6 @@ public:
     */
     void fromRotationMatrix(const yarp::sig::Matrix &R);
 
-#ifndef YARP_NO_DEPRECATED // Since YARP 3.0.0
-    /**
-     * Converts a quaternion to a rotation matrix.
-     *
-     * @deprecated since YARP 3.0.0. Use toRotationMatrix4x4 instead.
-     */
-    YARP_DEPRECATED_MSG("Use toRotationMatrix4x4 instead")
-    yarp::sig::Matrix toRotationMatrix() const { return toRotationMatrix4x4(); }
-#endif
-
     /**
     * Converts a quaternion to a rotation matrix.
     *
@@ -153,26 +137,6 @@ public:
     * Converts the quaternion to a vector of length 4.
     */
     yarp::sig::Vector toVector() const;
-
-    ///////// Serialization methods
-    /*
-    * Read vector from a connection.
-    * return true iff a vector was read correctly
-    */
-    bool read(yarp::os::ConnectionReader& connection) override;
-
-    /**
-    * Write vector to a connection.
-    * return true iff a vector was written correctly
-    */
-    bool write(yarp::os::ConnectionWriter& connection) const override;
-
-    yarp::os::Type getType() const override
-    {
-        return yarp::os::Type::byName("yarp/quaternion");
-    }
-
-
 };
 
 #endif

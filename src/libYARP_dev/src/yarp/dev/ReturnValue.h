@@ -1,0 +1,121 @@
+/*
+ * SPDX-FileCopyrightText: 2025-2025 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
+#ifndef ReturnValue_H
+#define ReturnValue_H
+
+#include <yarp/dev/api.h>
+#include <yarp/os/Log.h>
+#include <yarp/os/LogComponent.h>
+#include <yarp/os/Portable.h>
+#include <yarp/os/Vocab.h>
+
+#if __cplusplus >= 202002L
+#include <source_location>
+#endif
+
+#include <string>
+
+// If this macro is enabled (default value=enabled), a bool value cannot be automatically converted to ReturnValue.
+// Automatic conversions of this type should be generally avoided, because they make the code less clear.
+// It is thus preferable that user assigns a precise value to a ReturnValue.
+#define YARP_RETURNVALUE_DISABLE_BOOL_INPUT 1
+
+// If this macro is enabled (default value=disabled), a ReturnValue cannot be automatically converted to bool
+// unless explicitly requested using the bool() operator.
+// The following macro is used for testing/development purposes only.
+// If enabled, it will break backward compatibility with user-application code.
+#define YARP_RETURNVALUE_DISABLE_BOOL_OUTPUT 0
+
+namespace yarp::dev {
+
+class YARP_dev_API ReturnValue : public yarp::os::Portable
+{
+    public:
+    enum class YARP_dev_API return_code
+    {
+
+        return_value_ok                                = yarp::os::createVocab32('o','k'), /// Method was successfully executed
+        return_value_error_generic                     = yarp::os::createVocab32('e', 'r', 'r', '1'),
+        return_value_error_not_implemented_by_device   = yarp::os::createVocab32('e', 'r', 'r', '2'), /// Method is not (yet) implemented
+        return_value_error_nws_nwc_communication_error = yarp::os::createVocab32('e', 'r', 'r', '3'), /// Command answer lost during network transmission. Status unknown.
+        return_value_error_deprecated                  = yarp::os::createVocab32('e', 'r', 'r', '4'), /// Method is deprecated
+        return_value_error_method_failed               = yarp::os::createVocab32('e', 'r', 'r', '5'), /// Method failed due to invalid internal status/invalid request
+        return_value_error_not_ready                   = yarp::os::createVocab32('e', 'r', 'r', '6'), /// Method failed because some initialization is missing
+        return_value_error_input_out_of_bounds         = yarp::os::createVocab32('e', 'r', 'r', '7'), /// Method failed because some input parameters are out of bounds
+        return_value_uninitialized                     = yarp::os::createVocab32('m', 'i', 's', 's') /// Default value, should never be explicitly assigned
+    };
+
+    private:
+    return_code value_b = return_code::return_value_uninitialized;
+
+    public:
+    ReturnValue();
+    ~ReturnValue() = default;
+#if !YARP_RETURNVALUE_DISABLE_BOOL_INPUT
+    ReturnValue(const bool& val);
+#endif
+    ReturnValue(return_code code);
+    ReturnValue(const ReturnValue& other) = default;
+    ReturnValue& operator && (const ReturnValue& other);
+    ReturnValue& operator &= (const ReturnValue& other);
+#if !YARP_RETURNVALUE_DISABLE_BOOL_INPUT
+    ReturnValue& operator=(const bool& bool_val);
+#endif
+    bool operator == (const return_code& code) const;
+    bool operator == (const ReturnValue& value) const;
+    std::string toString();
+#if !YARP_RETURNVALUE_DISABLE_BOOL_OUTPUT
+    operator bool() const;
+#else
+    explicit operator bool() const;
+#endif
+
+public:
+    bool read(yarp::os::ConnectionReader& connection) override;
+    bool write(yarp::os::ConnectionWriter& connection) const override;
+};
+
+#ifndef SWIG_PREPROCESSOR_SHOULD_SKIP_THIS
+#define ReturnValue_ok ReturnValue(yarp::dev::ReturnValue::return_code::return_value_ok)
+#define ReturnValue_error_generic                     ReturnValue(yarp::dev::ReturnValue::return_code::return_value_error_generic)
+#define ReturnValue_error_not_implemented_by_device   ReturnValue(yarp::dev::ReturnValue::return_code::return_value_error_not_implemented_by_device)
+#define ReturnValue_error_nws_nwc_communication_error ReturnValue(yarp::dev::ReturnValue::return_code::return_value_error_nws_nwc_communication_error)
+#define ReturnValue_error_deprecated                  ReturnValue(yarp::dev::ReturnValue::return_code::return_value_error_deprecated)
+#define ReturnValue_error_method_failed               ReturnValue(yarp::dev::ReturnValue::return_code::return_value_error_method_failed)
+#define ReturnValue_error_not_ready                   ReturnValue(yarp::dev::ReturnValue::return_code::return_value_error_not_ready)
+#define ReturnValue_error_input_out_of_bounds         ReturnValue(yarp::dev::ReturnValue::return_code::return_value_error_input_out_of_bounds)
+#define ReturnValue_uninitialized                     ReturnValue(yarp::dev::ReturnValue::return_code::return_value_uninitialized)
+
+#if __cplusplus >= 202002L
+inline ReturnValue YARP_METHOD_NOT_YET_IMPLEMENTED(const std::source_location& location = std::source_location::current(), std::string custom_string = "")
+{
+    yError("Method %s not yet implemented. %s\n", location.function_name(), custom_string.c_str());
+    return ReturnValue(yarp::dev::ReturnValue::return_code::return_value_error_not_implemented_by_device);
+}
+inline ReturnValue YARP_METHOD_DEPRECATED(const std::source_location& location = std::source_location::current(), std::string custom_string = "")
+{
+    yError("Method %s has been deprecated. %s\n", location.function_name(), custom_string.c_str());
+    return ReturnValue(yarp::dev::ReturnValue::return_code::return_value_error_deprecated);
+}
+#else
+inline ReturnValue yarp_method_not_implemented(std::string location, std::string custom_string = "")
+{
+    yError("Method %s not yet implemented. %s\n", location.c_str(), custom_string.c_str());
+    return ReturnValue(yarp::dev::ReturnValue::return_code::return_value_error_not_implemented_by_device);
+}
+#define YARP_METHOD_NOT_YET_IMPLEMENTED() yarp_method_not_implemented(__func__)
+inline ReturnValue yarp_method_deprecated(std::string location, std::string custom_string = "")
+{
+    yError("Method %s has been deprecated. %s\n", location.c_str(), custom_string.c_str());
+    return ReturnValue(yarp::dev::ReturnValue::return_code::return_value_error_deprecated);
+}
+#define YARP_METHOD_DEPRECATED() yarp_method_deprecated(__func__)
+#endif
+#endif // SWIG_PREPROCESSOR_SHOULD_SKIP_THIS
+
+}
+
+#endif // ReturnValue_H

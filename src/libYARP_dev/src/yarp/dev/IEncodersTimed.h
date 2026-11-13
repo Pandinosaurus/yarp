@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_IENCODERSTIMED_H
@@ -12,15 +9,13 @@
 #include <yarp/dev/IEncoders.h>
 #include <yarp/dev/api.h>
 
-namespace yarp {
-    namespace dev {
-        class IEncodersTimed;
-        class IEncodersTimedRaw;
-    }
+namespace yarp::dev {
+class IEncodersTimed;
+class IEncodersTimedRaw;
 }
 
 /**
- * \ingroup dev_iface_motor
+ * \ingroup dev_iface_motor_raw
  *
  * \brief Control board, extend encoder raw interface adding timestamps.
  */
@@ -38,7 +33,7 @@ public:
      * \param stamps pointer to the array that will contain individual timestamps
      * \return return true if all goes well, false if anything bad happens.
      */
-    virtual bool getEncodersTimedRaw(double *encs, double *stamps)=0;
+    virtual yarp::dev::ReturnValue getEncodersTimedRaw(double *encs, double *stamps)=0;
 
      /**
      * Read the instantaneous acceleration of all axes.
@@ -47,7 +42,7 @@ public:
      * \param stamp corresponding timestamp
      * \return true if all goes well, false if anything bad happens.
      */
-    virtual bool getEncoderTimedRaw(int j, double *encs, double *stamp)=0;
+    virtual yarp::dev::ReturnValue getEncoderTimedRaw(int j, double *encs, double *stamp)=0;
 };
 
 /**
@@ -69,7 +64,7 @@ public:
      * \param time pointer to the array that will contain individual timestamps
      * \return true if all goes well, false if anything bad happens.
      */
-    virtual bool getEncodersTimed(double *encs, double *time)=0;
+    virtual yarp::dev::ReturnValue getEncodersTimed(double *encs, double *time)=0;
 
     /**
     * Read the instantaneous acceleration of all axes.
@@ -78,7 +73,7 @@ public:
     * \param time corresponding timestamp (pointer to)
     * \return true if all goes well, false if anything bad happens.
     */
-    virtual bool getEncoderTimed(int j, double *encs, double *time)=0;
+    virtual yarp::dev::ReturnValue getEncoderTimed(int j, double *encs, double *time)=0;
 };
 
 

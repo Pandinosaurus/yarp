@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/AbstractContactable.h>
@@ -136,16 +133,6 @@ void yarp::os::AbstractContactable::promiseType(const Type& typ)
     asPort().promiseType(typ);
 }
 
-yarp::os::Property* yarp::os::AbstractContactable::acquireProperties(bool readOnly)
-{
-    return asPort().acquireProperties(readOnly);
-}
-
-void yarp::os::AbstractContactable::releaseProperties(Property* prop)
-{
-    asPort().releaseProperties(prop);
-}
-
 bool yarp::os::AbstractContactable::write(const PortWriter& writer,
                                           const PortWriter* callback) const
 {
@@ -174,21 +161,6 @@ bool yarp::os::AbstractContactable::replyAndDrop(PortWriter& writer)
 {
     return asPort().replyAndDrop(writer);
 }
-
-void yarp::os::AbstractContactable::includeNodeInName(bool flag)
-{
-    asPort().includeNodeInName(flag);
-}
-
-#ifndef YARP_NO_DEPRECATED // Since YARP 3.3
-YARP_WARNING_PUSH
-YARP_DISABLE_DEPRECATED_WARNING
-bool yarp::os::AbstractContactable::setCallbackLock(yarp::os::Mutex* mutex)
-{
-    return asPort().setCallbackLock(mutex);
-}
-YARP_WARNING_POP
-#endif
 
 bool yarp::os::AbstractContactable::setCallbackLock(std::mutex* mutex)
 {

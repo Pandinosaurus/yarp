@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_UPOWERBATTERY_H
@@ -38,12 +35,12 @@ public:
     bool open(yarp::os::Searchable& config) override;
     bool close() override;
 
-    bool getBatteryVoltage(double& voltage) override;
-    bool getBatteryCurrent(double& current) override;
-    bool getBatteryCharge(double& charge) override;
-    bool getBatteryStatus(Battery_status& status) override;
-    bool getBatteryInfo(std::string& info) override;
-    bool getBatteryTemperature(double& temperature) override;
+    yarp::dev::ReturnValue getBatteryVoltage(double& voltage) override;
+    yarp::dev::ReturnValue getBatteryCurrent(double& current) override;
+    yarp::dev::ReturnValue getBatteryCharge(double& charge) override;
+    yarp::dev::ReturnValue getBatteryStatus(Battery_status& status) override;
+    yarp::dev::ReturnValue getBatteryInfo(std::string& info) override;
+    yarp::dev::ReturnValue getBatteryTemperature(double& temperature) override;
 
 private:
     QDBusInterface *m_interface { nullptr };

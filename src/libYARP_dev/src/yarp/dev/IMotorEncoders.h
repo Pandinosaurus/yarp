@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_IMOTORENCODERS_H
@@ -11,16 +8,15 @@
 
 #include <yarp/os/Vocab.h>
 #include <yarp/dev/api.h>
+#include <yarp/dev/ReturnValue.h>
 
-namespace yarp {
-    namespace dev {
-        class IMotorEncodersRaw;
-        class IMotorEncoders;
-      }
+namespace yarp::dev {
+class IMotorEncodersRaw;
+class IMotorEncoders;
 }
 
 /**
- * @ingroup dev_iface_motor
+ * @ingroup dev_iface_motor_raw
  *
  * Control board, encoder interface.
  */
@@ -37,20 +33,20 @@ public:
      * @param m pointer to a value representing the number of available motor encoders.
      * @return true/false
      */
-    virtual bool getNumberOfMotorEncodersRaw(int *num) = 0;
+    virtual yarp::dev::ReturnValue getNumberOfMotorEncodersRaw(int *num) = 0;
 
     /**
      * Reset motor encoder, single motor. Set the encoder value to zero.
      * @param m motor number
      * @return true/false
      */
-    virtual bool resetMotorEncoderRaw(int m)=0;
+    virtual yarp::dev::ReturnValue resetMotorEncoderRaw(int m)=0;
 
     /**
      * Reset motor encoders. Set the motor encoders value to zero.
      * @return true/false
      */
-    virtual bool resetMotorEncodersRaw()=0;
+    virtual yarp::dev::ReturnValue resetMotorEncodersRaw()=0;
 
     /**
      * Sets number of counts per revolution for motor encoder m.
@@ -58,7 +54,7 @@ public:
      * @param cpr new value
      * @return true/false
      */
-    virtual bool setMotorEncoderCountsPerRevolutionRaw(int m, const double cpr)=0;
+    virtual yarp::dev::ReturnValue setMotorEncoderCountsPerRevolutionRaw(int m, const double cpr)=0;
 
     /**
      * Gets number of counts per revolution for motor encoder m.
@@ -66,7 +62,7 @@ public:
      * @param cpr vals pointer to the new value
      * @return true/false
      */
-    virtual bool getMotorEncoderCountsPerRevolutionRaw(int m, double *cpr)=0;
+    virtual yarp::dev::ReturnValue getMotorEncoderCountsPerRevolutionRaw(int m, double *cpr)=0;
 
     /**
      * Set the value of the motor encoder for a given motor.
@@ -74,14 +70,14 @@ public:
      * @param val new value
      * @return true/false
      */
-    virtual bool setMotorEncoderRaw(int m, const double val)=0;
+    virtual yarp::dev::ReturnValue setMotorEncoderRaw(int m, const double val)=0;
 
     /**
      * Set the value of all motor encoders.
      * @param vals pointer to the new values
      * @return true/false
      */
-    virtual bool setMotorEncodersRaw(const double *vals)=0;
+    virtual yarp::dev::ReturnValue setMotorEncodersRaw(const double *vals)=0;
 
     /**
      * Read the value of a motor encoder.
@@ -89,14 +85,14 @@ public:
      * @param v pointer to storage for the return value
      * @return true/false
      */
-    virtual bool getMotorEncoderRaw(int m, double *v)=0;
+    virtual yarp::dev::ReturnValue getMotorEncoderRaw(int m, double *v)=0;
 
     /**
      * Read the position of all motor encoders.
      * @param encs pointer to the array that will contain the output
      * @return true/false
      */
-    virtual bool getMotorEncodersRaw(double *encs)=0;
+    virtual yarp::dev::ReturnValue getMotorEncodersRaw(double *encs)=0;
 
     /**
      * Read the instantaneous position of all motor encoders.
@@ -104,7 +100,7 @@ public:
      * @param time pointer to the array that will contain individual timestamps
      * @return true if successful, false otherwise.
      */
-    virtual bool getMotorEncodersTimedRaw(double *encs, double *stamps)=0;
+    virtual yarp::dev::ReturnValue getMotorEncodersTimedRaw(double *encs, double *stamps)=0;
 
    /**
     * Read the instantaneous position of a motor encoder.
@@ -113,22 +109,22 @@ public:
     * @param time corresponding timestamp (pointer to)
     * @return true if successful, false otherwise.
     */
-    virtual bool getMotorEncoderTimedRaw(int m, double *encs, double *stamp)=0;
+    virtual yarp::dev::ReturnValue getMotorEncoderTimedRaw(int m, double *encs, double *stamp)=0;
 
     /**
-     * Read the istantaneous speed of a motor encoder.
+     * Read the instantaneous speed of a motor encoder.
      * @param m motor number
      * @param sp pointer to storage for the output
      * @return true if successful, false otherwise.
      */
-    virtual bool getMotorEncoderSpeedRaw(int m, double *sp)=0;
+    virtual yarp::dev::ReturnValue getMotorEncoderSpeedRaw(int m, double *sp)=0;
 
     /**
      * Read the instantaneous speed of all motor encoders.
      * @param spds pointer to storage for the output values
      * @return true if successful, false otherwise.
      */
-    virtual bool getMotorEncoderSpeedsRaw(double *spds)=0;
+    virtual yarp::dev::ReturnValue getMotorEncoderSpeedsRaw(double *spds)=0;
 
     /**
      * Read the instantaneous acceleration of a motor encoder
@@ -136,14 +132,14 @@ public:
      * @param acc pointer to the array that will contain the output
      * @return true if successful, false otherwise.
      */
-    virtual bool getMotorEncoderAccelerationRaw(int m, double *spds)=0;
+    virtual yarp::dev::ReturnValue getMotorEncoderAccelerationRaw(int m, double *spds)=0;
 
     /**
      * Read the instantaneous acceleration of all motor encoders.
      * @param accs pointer to the array that will contain the output
      * @return true if successful, false otherwise.
      */
-    virtual bool getMotorEncoderAccelerationsRaw(double *accs)=0;
+    virtual yarp::dev::ReturnValue getMotorEncoderAccelerationsRaw(double *accs)=0;
 };
 
 /**
@@ -164,20 +160,20 @@ public:
      * @param m pointer to a value representing the number of available motor encoders.
      * @return true/false
      */
-    virtual bool getNumberOfMotorEncoders(int *num) = 0;
+    virtual yarp::dev::ReturnValue getNumberOfMotorEncoders(int *num) = 0;
 
     /**
      * Reset motor encoder, single motor. Set the encoder value to zero.
      * @param m motor number
      * @return true/false
      */
-    virtual bool resetMotorEncoder(int m)=0;
+    virtual yarp::dev::ReturnValue resetMotorEncoder(int m)=0;
 
     /**
      * Reset motor encoders. Set the motor encoders value to zero.
      * @return true/false
      */
-    virtual bool resetMotorEncoders()=0;
+    virtual yarp::dev::ReturnValue resetMotorEncoders()=0;
 
     /**
      * Sets number of counts per revolution for motor encoder m.
@@ -185,7 +181,7 @@ public:
      * @param cpr new value
      * @return true/false
      */
-    virtual bool setMotorEncoderCountsPerRevolution(int m, const double cpr)=0;
+    virtual yarp::dev::ReturnValue setMotorEncoderCountsPerRevolution(int m, const double cpr)=0;
 
     /**
      * Gets number of counts per revolution for motor encoder m.
@@ -193,7 +189,7 @@ public:
      * @param cpr vals pointer to the new value
      * @return true/false
      */
-    virtual bool getMotorEncoderCountsPerRevolution(int m, double *cpr)=0;
+    virtual yarp::dev::ReturnValue getMotorEncoderCountsPerRevolution(int m, double *cpr)=0;
 
     /**
      * Set the value of the motor encoder for a given motor.
@@ -201,14 +197,14 @@ public:
      * @param val new value
      * @return true/false
      */
-    virtual bool setMotorEncoder(int m, const double val)=0;
+    virtual yarp::dev::ReturnValue setMotorEncoder(int m, const double val)=0;
 
     /**
      * Set the value of all motor encoders.
      * @param vals pointer to the new values
      * @return true/false
      */
-    virtual bool setMotorEncoders(const double *vals)=0;
+    virtual yarp::dev::ReturnValue setMotorEncoders(const double *vals)=0;
 
     /**
      * Read the value of a motor encoder.
@@ -216,14 +212,14 @@ public:
      * @param v pointer to storage for the return value
      * @return true/false
      */
-    virtual bool getMotorEncoder(int m, double *v)=0;
+    virtual yarp::dev::ReturnValue getMotorEncoder(int m, double *v)=0;
 
     /**
      * Read the position of all motor encoders.
      * @param encs pointer to the array that will contain the output
      * @return true/false
      */
-    virtual bool getMotorEncoders(double *encs)=0;
+    virtual yarp::dev::ReturnValue getMotorEncoders(double *encs)=0;
 
     /**
      * Read the instantaneous position of all motor encoders.
@@ -231,7 +227,7 @@ public:
      * @param time pointer to the array that will contain individual timestamps
      * @return true if successful, false otherwise.
      */
-    virtual bool getMotorEncodersTimed(double *encs, double *time)=0;
+    virtual yarp::dev::ReturnValue getMotorEncodersTimed(double *encs, double *time)=0;
 
    /**
     * Read the instantaneous position of a motor encoder.
@@ -240,22 +236,22 @@ public:
     * @param time corresponding timestamp (pointer to)
     * @return true if successful, false otherwise.
     */
-    virtual bool getMotorEncoderTimed(int m, double *encs, double *time)=0;
+    virtual yarp::dev::ReturnValue getMotorEncoderTimed(int m, double *encs, double *time)=0;
 
     /**
-     * Read the istantaneous speed of a motor encoder.
+     * Read the instantaneous speed of a motor encoder.
      * @param m motor number
      * @param sp pointer to storage for the output
      * @return true if successful, false otherwise.
      */
-    virtual bool getMotorEncoderSpeed(int m, double *sp)=0;
+    virtual yarp::dev::ReturnValue getMotorEncoderSpeed(int m, double *sp)=0;
 
     /**
      * Read the instantaneous speed of all motor encoders.
      * @param spds pointer to storage for the output values
      * @return true if successful, false otherwise.
      */
-    virtual bool getMotorEncoderSpeeds(double *spds)=0;
+    virtual yarp::dev::ReturnValue getMotorEncoderSpeeds(double *spds)=0;
 
     /**
      * Read the instantaneous acceleration of a motor encoder
@@ -263,28 +259,23 @@ public:
      * @param acc pointer to the array that will contain the output
      * @return true if successful, false otherwise.
      */
-    virtual bool getMotorEncoderAcceleration(int m, double *acc)=0;
+    virtual yarp::dev::ReturnValue getMotorEncoderAcceleration(int m, double *acc)=0;
 
     /**
      * Read the instantaneous acceleration of all motor encoders.
      * @param accs pointer to the array that will contain the output
      * @return true if successful, false otherwise.
      */
-    virtual bool getMotorEncoderAccelerations(double *accs)=0;
+    virtual yarp::dev::ReturnValue getMotorEncoderAccelerations(double *accs)=0;
 };
 
-// interface IMotorEncoders sets
-constexpr yarp::conf::vocab32_t VOCAB_MOTOR_E_RESET  = yarp::os::createVocab('m','r','e');
-constexpr yarp::conf::vocab32_t VOCAB_MOTOR_E_RESETS = yarp::os::createVocab('m','r','e','s');
-constexpr yarp::conf::vocab32_t VOCAB_MOTOR_ENCODER  = yarp::os::createVocab('m','n','c');
-constexpr yarp::conf::vocab32_t VOCAB_MOTOR_ENCODERS = yarp::os::createVocab('m','n','c','s');
-constexpr yarp::conf::vocab32_t VOCAB_MOTOR_CPR      = yarp::os::createVocab('m','c','p','r');
-
 // interface IMotorEncoders gets
-constexpr yarp::conf::vocab32_t VOCAB_MOTOR_ENCODER_NUMBER        =  yarp::os::createVocab('m','n','u','m');
-constexpr yarp::conf::vocab32_t VOCAB_MOTOR_ENCODER_SPEED         = yarp::os::createVocab('m','s','p');
-constexpr yarp::conf::vocab32_t VOCAB_MOTOR_ENCODER_SPEEDS        = yarp::os::createVocab('m','s','p','s');
-constexpr yarp::conf::vocab32_t VOCAB_MOTOR_ENCODER_ACCELERATION  = yarp::os::createVocab('m','a','c');
-constexpr yarp::conf::vocab32_t VOCAB_MOTOR_ENCODER_ACCELERATIONS = yarp::os::createVocab('m','a','c','s');
+constexpr yarp::conf::vocab32_t VOCAB_MOTOR_ENCODER_NUMBER        =  yarp::os::createVocab32('m','n','u','m');
+constexpr yarp::conf::vocab32_t VOCAB_MOTOR_ENCODER               = yarp::os::createVocab32('m','n','c');
+constexpr yarp::conf::vocab32_t VOCAB_MOTOR_ENCODERS              = yarp::os::createVocab32('m','n','c','s');
+constexpr yarp::conf::vocab32_t VOCAB_MOTOR_ENCODER_SPEED         = yarp::os::createVocab32('m','s','p');
+constexpr yarp::conf::vocab32_t VOCAB_MOTOR_ENCODER_SPEEDS        = yarp::os::createVocab32('m','s','p','s');
+constexpr yarp::conf::vocab32_t VOCAB_MOTOR_ENCODER_ACCELERATION  = yarp::os::createVocab32('m','a','c');
+constexpr yarp::conf::vocab32_t VOCAB_MOTOR_ENCODER_ACCELERATIONS = yarp::os::createVocab32('m','a','c','s');
 
 #endif // YARP_DEV_IMOTORENCODERS_H

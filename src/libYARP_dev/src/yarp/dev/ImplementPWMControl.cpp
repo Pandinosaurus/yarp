@@ -1,13 +1,11 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include "yarp/dev/ImplementPWMControl.h"
 #include <yarp/dev/ControlBoardHelper.h>
+#include <yarp/dev/ControlBoardHelpers.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/dev/impl/FixedSizeBuffersManager.h>
 #include <iostream>
@@ -15,25 +13,27 @@
 using namespace yarp::dev;
 using namespace yarp::os;
 
-#define JOINTIDCHECK if (j >= castToMapper(helper)->axes()){yError("joint id out of bound"); return false;}
+namespace {
+YARP_LOG_COMPONENT(IMPLEMENT_LAYER_COMPONENT, "yarp.ImplementPWMControl")
+}
 
 /////////////// implement ImplemenPWMControl
 ImplementPWMControl::ImplementPWMControl(IPWMControlRaw *r) :
-    helper(nullptr),
-    raw(r),
-    doubleBuffManager(nullptr)
+    m_helper(nullptr),
+    m_iraw(r)
 {;}
 
 bool ImplementPWMControl::initialize(int size, const int *amap, const double* dutyToPWM)
 {
-    if (helper != nullptr)
+    if (m_helper != nullptr) {
         return false;
+    }
 
-    helper = (void *)(new ControlBoardHelper(size, amap, nullptr, nullptr, nullptr, nullptr, nullptr, dutyToPWM));
-    yAssert(helper != nullptr);
+    m_helper = (void *)(new ControlBoardHelper(size, amap, nullptr, nullptr, nullptr, nullptr, nullptr, dutyToPWM));
+    yAssert(m_helper != nullptr);
 
-    doubleBuffManager = new yarp::dev::impl::FixedSizeBuffersManager<double> (size);
-    yAssert (doubleBuffManager != nullptr);
+    m_buffer_ints.resize   (size);
+    m_buffer_doubles.resize(size);
 
     return true;
 }
@@ -45,78 +45,89 @@ ImplementPWMControl::~ImplementPWMControl()
 
 bool ImplementPWMControl::uninitialize()
 {
-    if (helper != nullptr)
+    if (m_helper != nullptr)
     {
-        delete castToMapper(helper);
-        helper = nullptr;
-    }
-
-    if(doubleBuffManager)
-    {
-        delete doubleBuffManager;
-        doubleBuffManager=nullptr;
+        delete castToMapper(m_helper);
+        m_helper = nullptr;
     }
 
     return true;
 }
 
-bool ImplementPWMControl::getNumberOfMotors(int *axes)
+ReturnValue ImplementPWMControl::getNumberOfMotors(int *axes)
 {
-    return raw->getNumberOfMotorsRaw(axes);
+    std::lock_guard lock(m_imp_mutex);
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,axes);
+
+    return m_iraw->getNumberOfMotorsRaw(axes);
 }
 
-bool ImplementPWMControl::setRefDutyCycle(int j, double duty)
+ReturnValue ImplementPWMControl::setRefDutyCycle(int j, double duty)
 {
-    JOINTIDCHECK
+    std::lock_guard lock(m_imp_mutex);
+    JOINTIDCHECK(IMPLEMENT_LAYER_COMPONENT,j)
+
     int k;
     double pwm;
-    castToMapper(helper)->dutycycle2PWM(duty, j, pwm, k);
-    return raw->setRefDutyCycleRaw(k, pwm);
+    castToMapper(m_helper)->dutycycle2PWM(duty, j, pwm, k);
+    return m_iraw->setRefDutyCycleRaw(k, pwm);
 }
 
-bool ImplementPWMControl::setRefDutyCycles(const double *duty)
+ReturnValue ImplementPWMControl::setRefDutyCycles(const double *duty)
 {
-    yarp::dev::impl::Buffer<double> buffValues = doubleBuffManager->getBuffer();
-    castToMapper(helper)->dutycycle2PWM(duty, buffValues.getData());
-    bool ret = raw->setRefDutyCyclesRaw( buffValues.getData());
-    doubleBuffManager->releaseBuffer(buffValues);
+    std::lock_guard lock(m_imp_mutex);
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,duty);
+
+    castToMapper(m_helper)->dutycycle2PWM(duty, m_buffer_doubles.data());
+    ReturnValue ret = m_iraw->setRefDutyCyclesRaw( m_buffer_doubles.data());
+
     return ret;
 }
 
-bool ImplementPWMControl::getRefDutyCycle(int j, double *v)
+ReturnValue ImplementPWMControl::getRefDutyCycle(int j, double *v)
 {
-    JOINTIDCHECK
+    std::lock_guard lock(m_imp_mutex);
+    JOINTIDCHECK(IMPLEMENT_LAYER_COMPONENT,j)
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,v);
+
     double pwm;
-    int k = castToMapper(helper)->toHw(j);
-    bool ret = raw->getRefDutyCycleRaw(k, &pwm);
-    *v = castToMapper(helper)->PWM2dutycycle(pwm, k);
+    int k = castToMapper(m_helper)->toHw(j);
+    ReturnValue ret = m_iraw->getRefDutyCycleRaw(k, &pwm);
+    *v = castToMapper(m_helper)->PWM2dutycycle(pwm, k);
     return ret;
 }
 
-bool ImplementPWMControl::getRefDutyCycles(double *duty)
+ReturnValue ImplementPWMControl::getRefDutyCycles(double *duty)
 {
-    yarp::dev::impl::Buffer<double> buffValues = doubleBuffManager->getBuffer();
-    bool ret = raw->getRefDutyCyclesRaw(buffValues.getData());
-    castToMapper(helper)->PWM2dutycycle(buffValues.getData(), duty);
-    doubleBuffManager->releaseBuffer(buffValues);
+    std::lock_guard lock(m_imp_mutex);
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,duty);
+
+    ReturnValue ret = m_iraw->getRefDutyCyclesRaw(m_buffer_doubles.data());
+    castToMapper(m_helper)->PWM2dutycycle(m_buffer_doubles.data(), duty);
+
     return ret;
 }
 
-bool ImplementPWMControl::getDutyCycle(int j, double *duty)
+ReturnValue ImplementPWMControl::getDutyCycle(int j, double *duty)
 {
-    JOINTIDCHECK
+    std::lock_guard lock(m_imp_mutex);
+    JOINTIDCHECK(IMPLEMENT_LAYER_COMPONENT,j)
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,duty);
+
     double pwm;
-    int k = castToMapper(helper)->toHw(j);
-    bool ret = raw->getDutyCycleRaw(k, &pwm);
-    *duty = castToMapper(helper)->PWM2dutycycle(pwm, k);
+    int k = castToMapper(m_helper)->toHw(j);
+    ReturnValue ret = m_iraw->getDutyCycleRaw(k, &pwm);
+    *duty = castToMapper(m_helper)->PWM2dutycycle(pwm, k);
     return ret;
 }
 
-bool ImplementPWMControl::getDutyCycles(double *duty)
+ReturnValue ImplementPWMControl::getDutyCycles(double *duty)
 {
-    yarp::dev::impl::Buffer<double> buffValues = doubleBuffManager->getBuffer();
-    bool ret = raw->getDutyCyclesRaw(buffValues.getData());
-    castToMapper(helper)->PWM2dutycycle(buffValues.getData(), duty);
-    doubleBuffManager->releaseBuffer(buffValues);
+    std::lock_guard lock(m_imp_mutex);
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,duty);
+
+    ReturnValue ret = m_iraw->getDutyCyclesRaw(m_buffer_doubles.data());
+    castToMapper(m_helper)->PWM2dutycycle(m_buffer_doubles.data(), duty);
+
     return ret;
 }

@@ -1,14 +1,11 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2010 Ze Ji
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2010 Ze Ji
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
  /*
- * Yarp Driver for Dynamixel AX-12, controlled using USB to Dynamixel Adapter
+ * YARP Driver for Dynamixel AX-12, controlled using USB to Dynamixel Adapter
  * The default IDs for the motors are for Kaspar robot. As different robots would have different settings,
  * it is necessary to define the IDs, this can be done via a configuration file. In this example, check the
  * file sensorindex.cfg. The format is:
@@ -192,7 +189,7 @@ public:
         @param config Config file containing string pairs for parameters
         @return true on success
      */
-    bool configure(yarp::os::Searchable& config) override;
+    bool configure(yarp::os::Searchable& config);
 
     /** Send instruction to device
         Send an instruction to a device of given ID. The instruction has to be a byte arry containing
@@ -214,85 +211,92 @@ public:
      */
     virtual int readParameter(unsigned char id, unsigned char param);
 
-    bool getAxes(int *ax) override;
-
     /**
-     * @param refs should be in range [1 300]
+     * Interfaces methods
      */
-    bool positionMove(int j, double ref) override;
-    bool positionMove(const double *refs) override;
-    bool relativeMove(int j, double delta) override;
-    bool relativeMove(const double *deltas) override;
-    bool checkMotionDone(int j, bool *flag) override;
-    bool checkMotionDone(bool *flag) override;
-    bool setRefSpeed(int j, double sp) override;
-    bool setRefSpeeds(const double *spds) override;
-    bool setRefAcceleration(int j, double acc) override;
-    bool setRefAccelerations(const double *accs) override;
-    bool getRefSpeed(int j, double *ref) override;
-    bool getRefSpeeds(double *spds) override;
-    bool getRefAcceleration(int j, double *acc) override;
-    bool getRefAccelerations(double *accs) override;
-    bool stop(int j) override;
-    bool stop() override;
+    yarp::dev::ReturnValue getAxes(size_t& ax) override;
 
-    bool getRefTorques(double *t) override;
-    bool getRefTorque(int j, double *t) override;
-    bool setTorques(const double *t);
-    bool setTorque(int j, double t);
-    bool setTorquePid(int j, const Pid &pid);
-    bool getTorque(int j, double *t) override;
-    bool getTorques(double *t) override;
-    bool setTorquePids(const Pid *pids);
-    bool setTorqueErrorLimit(int j, double limit);
-    bool setTorqueErrorLimits(const double *limits);
-    bool getTorqueError(int j, double *err);
-    bool getTorqueErrors(double *errs);
-    bool getTorquePidOutput(int j, double *out);
-    bool getTorquePidOutputs(double *outs);
-    bool getTorquePid(int j, Pid *pid);
-    bool getTorquePids(Pid *pids);
-    bool getTorqueErrorLimit(int j, double *limit);
-    bool getTorqueErrorLimits(double *limits);
-    bool resetTorquePid(int j);
-    bool disableTorquePid(int j);
-    bool enableTorquePid(int j);
-    bool setTorqueOffset(int j, double v);
+    yarp::dev::ReturnValue positionMove(int j, double ref) override;
+    yarp::dev::ReturnValue positionMove(const double *refs) override;
+    yarp::dev::ReturnValue relativeMove(int j, double delta) override;
+    yarp::dev::ReturnValue relativeMove(const double *deltas) override;
+    yarp::dev::ReturnValue checkMotionDone(bool& flag) override;
+    yarp::dev::ReturnValue checkMotionDone(int j, bool& flag) override;
+    yarp::dev::ReturnValue setTrajSpeed(int j, double sp) override;
+    yarp::dev::ReturnValue setTrajSpeeds(const double *spds) override;
+    yarp::dev::ReturnValue setTrajAcceleration(int j, double acc) override;
+    yarp::dev::ReturnValue setTrajAccelerations(const double *accs) override;
+    yarp::dev::ReturnValue getTrajSpeed(int j, double *ref) override;
+    yarp::dev::ReturnValue getTrajSpeeds(double *spds) override;
+    yarp::dev::ReturnValue getTrajAcceleration(int j, double *acc) override;
+    yarp::dev::ReturnValue getTrajAccelerations(double *accs) override;
+    yarp::dev::ReturnValue stop(int j) override;
+    yarp::dev::ReturnValue stop() override;
 
-    bool getBemfParam(int j, double *bemf);
-    bool setBemfParam(int j, double bemf);
+    yarp::dev::ReturnValue getRefTorques(double *t) override;
+    yarp::dev::ReturnValue getRefTorque(int j, double *t) override;
+    yarp::dev::ReturnValue setTorques(const double *t);
+    yarp::dev::ReturnValue setTorque(int j, double t);
+    yarp::dev::ReturnValue setTorquePid(int j, const Pid &pid);
+    yarp::dev::ReturnValue getTorque(int j, double *t) override;
+    yarp::dev::ReturnValue getTorques(double *t) override;
+    yarp::dev::ReturnValue setTorquePids(const Pid *pids);
+    yarp::dev::ReturnValue setTorqueErrorLimit(int j, double limit);
+    yarp::dev::ReturnValue setTorqueErrorLimits(const double *limits);
+    yarp::dev::ReturnValue getTorqueError(int j, double *err);
+    yarp::dev::ReturnValue getTorqueErrors(double *errs);
+    yarp::dev::ReturnValue getTorquePidOutput(int j, double *out);
+    yarp::dev::ReturnValue getTorquePidOutputs(double *outs);
+    yarp::dev::ReturnValue getTorquePid(int j, Pid *pid);
+    yarp::dev::ReturnValue getTorquePids(Pid *pids);
+    yarp::dev::ReturnValue getTorqueErrorLimit(int j, double *limit);
+    yarp::dev::ReturnValue getTorqueErrorLimits(double *limits);
+    yarp::dev::ReturnValue resetTorquePid(int j);
+    yarp::dev::ReturnValue disableTorquePid(int j);
+    yarp::dev::ReturnValue enableTorquePid(int j);
+    yarp::dev::ReturnValue setTorqueOffset(int j, double v);
 
-    bool resetEncoder(int j) override;
-    bool resetEncoders() override;
+    yarp::dev::ReturnValue getBemfParam(int j, double *bemf);
+    yarp::dev::ReturnValue setBemfParam(int j, double bemf);
 
-    bool setEncoder(int j, double val) override;
-    bool setEncoders(const double *vals) override;
+    yarp::dev::ReturnValue resetEncoder(int j) override;
+    yarp::dev::ReturnValue resetEncoders() override;
+
+    yarp::dev::ReturnValue setEncoder(int j, double val) override;
+    yarp::dev::ReturnValue setEncoders(const double *vals) override;
     /**
      * Get the angle of servo.
      */
-    bool getEncoder(int j, double *v) override;
-    bool getEncoders(double *encs) override;
-    bool getEncoderSpeed(int j, double *sp) override;
-    bool getEncoderSpeeds(double *spds) override;
-    bool getEncoderAcceleration(int j, double *spds) override;
-    bool getEncoderAccelerations(double *accs) override;
+    yarp::dev::ReturnValue getEncoder(int j, double *v) override;
+    yarp::dev::ReturnValue getEncoders(double *encs) override;
+    yarp::dev::ReturnValue getEncoderSpeed(int j, double *sp) override;
+    yarp::dev::ReturnValue getEncoderSpeeds(double *spds) override;
+    yarp::dev::ReturnValue getEncoderAcceleration(int j, double *spds) override;
+    yarp::dev::ReturnValue getEncoderAccelerations(double *accs) override;
 
     using yarp::dev::ITorqueControl::setRefTorques;
-    bool setRefTorques(const double* t) override;
+    yarp::dev::ReturnValue setRefTorques(const double* t) override;
 
-    bool setRefTorque(int j, double t) override;
-    bool getTorqueRange(int j, double* min, double* max) override;
-    bool getTorqueRanges(double* min, double* max) override;
+    yarp::dev::ReturnValue setRefTorque(int j, double t) override;
+    yarp::dev::ReturnValue getTorqueRange(int j, double* min, double* max) override;
+    yarp::dev::ReturnValue getTorqueRanges(double* min, double* max) override;
 
     // multiple joint version
-    bool positionMove(const int n_joint, const int *joints, const double *refs) override;
-    bool relativeMove(const int n_joint, const int *joints, const double *deltas) override;
-    bool checkMotionDone(const int n_joint, const int *joints, bool *flag) override;
-    bool setRefSpeeds(const int n_joint, const int *joints, const double *spds) override;
-    bool setRefAccelerations(const int n_joint, const int *joints, const double *accs) override;
-    bool getRefSpeeds(const int n_joint, const int *joints, double *spds) override;
-    bool getRefAccelerations(const int n_joint, const int *joints, double *accs) override;
-    bool stop(const int n_joint, const int *joints) override;
+    yarp::dev::ReturnValue positionMove(const int n_joint, const int *joints, const double *refs) override;
+    yarp::dev::ReturnValue relativeMove(const int n_joint, const int *joints, const double *deltas) override;
+    yarp::dev::ReturnValue checkMotionDone(const std::vector<int>& joints, bool& flag) override;
+    yarp::dev::ReturnValue setTrajSpeeds(const int n_joint, const int *joints, const double *spds) override;
+    yarp::dev::ReturnValue setTrajAccelerations(const int n_joint, const int *joints, const double *accs) override;
+    yarp::dev::ReturnValue getTrajSpeeds(const int n_joint, const int *joints, double *spds) override;
+    yarp::dev::ReturnValue getTrajAccelerations(const int n_joint, const int *joints, double *accs) override;
+    yarp::dev::ReturnValue stop(const int n_joint, const int *joints) override;
+
+    yarp::dev::ReturnValue getTargetPosition(const int joint, double *ref) override;
+    yarp::dev::ReturnValue getTargetPositions(double *refs) override;
+    yarp::dev::ReturnValue getTargetPositions(const int n_joint, const int *joints, double *refs) override;
+    yarp::dev::ReturnValue setRefTorques(const int n_joint, const int *joints, const double *t) override;
+    yarp::dev::ReturnValue getMotorTorqueParams(int j,  yarp::dev::MotorTorqueParameters *params) override;
+    yarp::dev::ReturnValue setMotorTorqueParams(int j,  const yarp::dev::MotorTorqueParameters params) override;
 
 private:
 

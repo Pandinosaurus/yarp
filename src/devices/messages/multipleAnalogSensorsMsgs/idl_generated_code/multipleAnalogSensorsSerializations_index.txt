@@ -1,0 +1,6 @@
+SensorMetadata.h
+SensorMetadata.cpp
+SensorRPCData.h
+SensorRPCData.cpp
+MultipleAnalogSensorsMetadata.h
+MultipleAnalogSensorsMetadata.cpp

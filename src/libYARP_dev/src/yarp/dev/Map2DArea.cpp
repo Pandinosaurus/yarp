@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/dev/api.h>
@@ -24,7 +21,6 @@ using namespace yarp::dev::Nav2D;
 using namespace yarp::sig;
 using namespace yarp::os;
 using namespace yarp::math;
-using namespace std;
 
 int pnpoly(std::vector<yarp::math::Vec2D<double>> points, double testx, double testy)
 {
@@ -41,15 +37,17 @@ int pnpoly(std::vector<yarp::math::Vec2D<double>> points, double testx, double t
     return c;
 }
 
-Map2DArea::Map2DArea(const std::string& map_name, const std::vector<yarp::math::Vec2D<double>> area_points)
+Map2DArea::Map2DArea(const std::string& map_name, const std::vector<yarp::math::Vec2D<double>>& area_points, const std::string& desc)
 {
     map_id = map_name;
     points = area_points;
+    description = desc;
 }
 
-Map2DArea::Map2DArea(const std::string& map_name, const std::vector<Map2DLocation> area_points)
+Map2DArea::Map2DArea(const std::string& map_name, const std::vector<Map2DLocation>& area_points, const std::string& desc)
 {
     map_id = map_name;
+    description = desc;
     for (auto it = area_points.begin(); it != area_points.end(); it++)
     {
 #if 0
@@ -72,68 +70,6 @@ Map2DArea::Map2DArea()
     map_id = "";
 }
 
-bool Map2DArea::read(yarp::os::ConnectionReader& connection)
-{
-    // auto-convert text mode interaction
-    connection.convertTextMode();
-
-    //[[maybe_unused]] int32_t dummy; //@@@FIXME To be used as soon as C++17 becomes available
-    int32_t dummy;
-
-    dummy = connection.expectInt32();
-    assert(dummy == BOTTLE_TAG_LIST);
-    dummy = connection.expectInt32();
-
-    dummy = connection.expectInt32();
-    assert(dummy == BOTTLE_TAG_STRING);
-    int string_size = connection.expectInt32();
-    this->map_id.resize(string_size);
-    connection.expectBlock(const_cast<char*>(this->map_id.data()), string_size);
-
-    dummy = connection.expectInt32();
-    assert(dummy == BOTTLE_TAG_INT32);
-    size_t siz = connection.expectInt32();
-
-    this->points.clear();
-    for (size_t i = 0; i < siz; i++)
-    {
-        dummy = connection.expectInt32();
-        assert(dummy == BOTTLE_TAG_FLOAT64);
-        double x = connection.expectFloat64();
-        dummy = connection.expectInt32();
-        assert(dummy == BOTTLE_TAG_FLOAT64);
-        double y = connection.expectFloat64();
-        this->points.push_back(yarp::math::Vec2D<double>(x, y));
-    }
-
-    return !connection.isError();
-}
-
-bool Map2DArea::write(yarp::os::ConnectionWriter& connection) const
-{
-    size_t siz = this->points.size();
-
-    connection.appendInt32(BOTTLE_TAG_LIST);
-    connection.appendInt32(2+siz*2);
-
-    connection.appendInt32(BOTTLE_TAG_STRING);
-    connection.appendString(map_id);
-
-    connection.appendInt32(BOTTLE_TAG_INT32);
-    connection.appendInt32(siz);
-
-    for (size_t i = 0; i < siz; i++)
-    {
-        connection.appendInt32(BOTTLE_TAG_FLOAT64);
-        connection.appendFloat64(this->points[i].x);
-        connection.appendInt32(BOTTLE_TAG_FLOAT64);
-        connection.appendFloat64(this->points[i].y);
-    }
-
-    connection.convertTextMode();
-    return !connection.isError();
-}
-
 std::string Map2DArea::toString() const
 {
     std::ostringstream stringStream;
@@ -144,14 +80,35 @@ std::string Map2DArea::toString() const
     {
         stringStream << " point " << i << "(" << points[i].x << "," << points[i].y << ")";
     }
+    stringStream << std::string("desc:") << description;
     return stringStream.str();
 }
 
 bool Map2DArea::checkLocationInsideArea(Map2DLocation loc)
 {
-    if (loc.map_id != this->map_id) return false;
-    if (points.size() < 3) return false;
-    if (pnpoly(points, loc.x, loc.y) > 0) return true;
+    if (loc.map_id != this->map_id) {
+        return false;
+    }
+    if (points.size() < 3) {
+        return false;
+    }
+    if (pnpoly(points, loc.x, loc.y) > 0) {
+        return true;
+    }
+    return false;
+}
+
+bool Map2DArea::checkObjectInsideArea(Map2DObject obj)
+{
+    if (obj.map_id != this->map_id) {
+        return false;
+    }
+    if (points.size() < 3) {
+        return false;
+    }
+    if (pnpoly(points, obj.x, obj.y) > 0) {
+        return true;
+    }
     return false;
 }
 
@@ -181,9 +138,28 @@ bool Map2DArea::operator==(const Map2DArea& r) const
 
 bool Map2DArea::isValid() const
 {
-    if (points.size() < 3) return false;
-    if (map_id == "") return false;
+    if (points.size() < 3) {
+        return false;
+    }
+    if (map_id == "") {
+        return false;
+    }
     return true;
+}
+
+bool Map2DArea::getCentroid(yarp::dev::Nav2D::Map2DLocation& cent)
+{
+    Map2DLocation lt;
+    Map2DLocation rb;
+    bool ret = findAreaBounds (lt,rb);
+    if (ret == true)
+    {
+        cent.map_id=this->map_id;
+        cent.x = (rb.x - lt.x) / 2.0;
+        cent.y = (rb.y - lt.y) / 2.0;
+        return true;
+    }
+    return false;
 }
 
 bool  Map2DArea::findAreaBounds(Map2DLocation& lt, Map2DLocation& rb)
@@ -191,7 +167,9 @@ bool  Map2DArea::findAreaBounds(Map2DLocation& lt, Map2DLocation& rb)
     lt.map_id = rb.map_id = this->map_id;
     lt.x = lt.y = std::numeric_limits<double>::max();
     rb.x = rb.y = std::numeric_limits<double>::min();
-    if (isValid() == false) return false;
+    if (isValid() == false) {
+        return false;
+    }
     for (auto it = points.begin(); it != points.end(); it++)
     {
         if (it->x > rb.x) { rb.x = it->x; }
@@ -206,8 +184,9 @@ bool  Map2DArea::getRandomLocation(Map2DLocation& loc)
 {
     Map2DLocation lt;
     Map2DLocation rb;
-    if (findAreaBounds(lt, rb) == false)
+    if (findAreaBounds(lt, rb) == false) {
         return false;
+    }
 
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -225,7 +204,9 @@ bool  Map2DArea::getRandomLocation(Map2DLocation& loc)
         loc.y = rnd_y;
         loc.theta = 0;
         count_trials++;
-        if (this->checkLocationInsideArea(loc)) break;
+        if (this->checkLocationInsideArea(loc)) {
+            break;
+        }
     } while (count_trials < 20);
 
     if (count_trials >= 20)
@@ -239,6 +220,7 @@ bool  Map2DArea::getRandomLocation(Map2DLocation& loc)
 
 void Map2DArea::clear()
 {
+    this->description="";
     this->map_id = "";
     this->points.clear();
 }

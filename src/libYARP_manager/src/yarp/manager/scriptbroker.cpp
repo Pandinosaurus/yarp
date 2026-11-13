@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/manager/scriptbroker.h>
@@ -21,11 +18,10 @@
 
 using namespace yarp::os;
 using namespace yarp::manager;
-using namespace std;
 namespace fs = yarp::conf::filesystem;
 
 constexpr fs::value_type slash = fs::preferred_separator;
-constexpr fs::value_type sep   = fs::path_separator;
+constexpr auto sep = yarp::conf::environment::path_separator;
 
 ////// adapted from YARP_os: ResourceFinder.cpp
 static Bottle parsePaths(const std::string& txt) {
@@ -53,10 +49,9 @@ static Bottle parsePaths(const std::string& txt) {
 static bool fileExists(const char *fname) {
         FILE *fp=nullptr;
         fp = fopen(fname,"r");
-        if(fp == nullptr)
+        if (fp == nullptr) {
             return false;
-        else
-        {
+        } else {
             fclose(fp);
             return true;
         }
@@ -72,7 +67,7 @@ bool ScriptLocalBroker::init(const char* szcmd, const char* szparam,
     std::string strCmd;
     if(szcmd)
     {
-        yarp::os::Bottle possiblePaths = parsePaths(yarp::conf::environment::getEnvironment("PATH"));
+        yarp::os::Bottle possiblePaths = parsePaths(yarp::conf::environment::get_string("PATH"));
         for (size_t i=0; i<possiblePaths.size(); ++i)
         {
             std::string guessString=possiblePaths.get(i).asString() +
@@ -90,19 +85,23 @@ bool ScriptLocalBroker::init(const char* szcmd, const char* szparam,
         }
 
     }
-    if(strCmd=="")
+    if (strCmd == "") {
         return false;
-    if(szparam) strParam = szparam;
+    }
+    if (szparam) {
+        strParam = szparam;
+    }
     strDevParam<<strCmd<<" "<<strParam;
     return LocalBroker::init(script.c_str(), strDevParam.str().c_str(),
                                 szhost, szstdio, szworkdir, szenv);
      }
 
 
-bool ScriptYarprunBroker::whichFile(const char* server, const char* filename, std::string& filenameWithPath)
+bool ScriptYarprunBroker::whichFile(const std::string& server, const std::string& filename, std::string& filenameWithPath)
 {
-    if(!strlen(server))
+    if (server.empty()) {
         return false;
+    }
 
     yarp::os::Bottle msg, grp;
     grp.clear();
@@ -147,13 +146,16 @@ bool ScriptYarprunBroker::init(const char* szcmd, const char* szparam,
     if(szcmd)
     {
         std::string strHost;
-        if(szhost[0] != '/')
-            strHost = string("/") + string(szhost);
-        else
+        if (szhost[0] != '/') {
+            strHost = std::string("/") + std::string(szhost);
+        } else {
             strHost = szhost;
+        }
         whichFile(strHost.c_str(), szcmd, strCmd);
     }
-    if(szparam) strParam = szparam;
+    if (szparam) {
+        strParam = szparam;
+    }
     strDevParam<<strCmd<<" "<<strParam;
     return YarpBroker::init(script.c_str(), strDevParam.str().c_str(),
                                 szhost, szstdio, szworkdir, szenv);

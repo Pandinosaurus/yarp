@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/impl/NameClient.h>
@@ -177,7 +174,7 @@ Contact NameClient::registerName(const std::string& name, const Contact& suggest
     } else {
         cmd.addString("...");
     }
-    std::string prefix = yarp::conf::environment::getEnvironment("YARP_IP");
+    std::string prefix = yarp::conf::environment::get_string("YARP_IP");
     const NestedContact& nc = suggest.getNested();
     std::string typ = nc.getTypeNameStar();
     if (suggest.isValid() || !prefix.empty() || typ != "*") {
@@ -361,10 +358,17 @@ std::string NameClient::send(const std::string& cmd, bool multi, const ContactSt
             if (alt.isValid()) {
                 address = alt;
                 if (allowSaveScan) {
-                    reportSaveScan = true;
                     NameConfig nc;
                     nc.setAddress(alt);
-                    nc.toFile();
+                    if (nc.toFile())
+                    {
+                        yCInfo(NAMECLIENT, "New configuration stored to file");
+                        reportSaveScan = true;
+                    }
+                    else
+                    {
+                        yCError(NAMECLIENT, "Unable to write configuration");
+                    }
                 }
                 server = getAddress();
                 server.setTimeout(timeout);
@@ -489,11 +493,6 @@ NameStore* NameClient::getQueryBypass()
 std::string NameClient::getMode()
 {
     return mode;
-}
-
-yarp::os::Nodes& NameClient::getNodes()
-{
-    return nodes;
 }
 
 NameServer& NameClient::getServer()

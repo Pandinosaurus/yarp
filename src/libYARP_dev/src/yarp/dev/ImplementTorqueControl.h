@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_IMPLEMENTTORQUECONTROL_H
@@ -12,30 +9,27 @@
 #include <yarp/dev/ITorqueControl.h>
 #include <yarp/dev/api.h>
 
-namespace yarp {
-    namespace dev {
-        class ImplementTorqueControl;
-    }
+namespace yarp::dev {
+class ImplementTorqueControl;
 }
 
-namespace yarp {
-namespace dev {
-namespace impl {
+namespace yarp::dev::impl {
 
 template <typename T>
 class FixedSizeBuffersManager;
 
-} // namespace impl
-} // namespace dev
-} // namespace yarp
+} // namespace yarp::dev::impl
 
 class YARP_dev_API yarp::dev::ImplementTorqueControl: public ITorqueControl
 {
 protected:
-    yarp::dev::ITorqueControlRaw *iTorqueRaw;
-    void *helper;
-    yarp::dev::impl::FixedSizeBuffersManager<int> *intBuffManager;
-    yarp::dev::impl::FixedSizeBuffersManager<double> *doubleBuffManager;
+    yarp::dev::ITorqueControlRaw* m_iraw=nullptr;
+    void*                         m_helper=nullptr;
+    std::vector<int>              m_buffer_ints;
+    std::vector<double>           m_buffer_doubles;
+    std::vector<double>           m_buffer_doubles2;
+    std::mutex                    m_imp_mutex;
+
     /**
      * Initialize the internal data and alloc memory.
      * @param size is the number of controlled axes the driver deals with.
@@ -64,18 +58,18 @@ public:
      */
     virtual ~ImplementTorqueControl();
 
-    bool getAxes(int *ax) override;
-    bool getRefTorque(int j, double *) override;
-    bool getRefTorques(double *t) override;
-    bool setRefTorques(const double *t) override;
-    bool setRefTorque(int j, double t) override;
-    bool setRefTorques(const int n_joint, const int *joints, const double *t) override;
-    bool getTorques(double *t) override;
-    bool getTorque(int j, double *t) override;
-    bool setMotorTorqueParams(int j, const yarp::dev::MotorTorqueParameters params) override;
-    bool getMotorTorqueParams(int j, yarp::dev::MotorTorqueParameters *params) override;
-    bool getTorqueRange(int j, double *min, double *max) override;
-    bool getTorqueRanges(double *min, double *max) override;
+    yarp::dev::ReturnValue getAxes(size_t& ax) override;
+    yarp::dev::ReturnValue getRefTorque(int j, double *) override;
+    yarp::dev::ReturnValue getRefTorques(double *t) override;
+    yarp::dev::ReturnValue setRefTorques(const double *t) override;
+    yarp::dev::ReturnValue setRefTorque(int j, double t) override;
+    yarp::dev::ReturnValue setRefTorques(const int n_joint, const int *joints, const double *t) override;
+    yarp::dev::ReturnValue getTorques(double *t) override;
+    yarp::dev::ReturnValue getTorque(int j, double *t) override;
+    yarp::dev::ReturnValue setMotorTorqueParams(int j, const yarp::dev::MotorTorqueParameters params) override;
+    yarp::dev::ReturnValue getMotorTorqueParams(int j, yarp::dev::MotorTorqueParameters *params) override;
+    yarp::dev::ReturnValue getTorqueRange(int j, double *min, double *max) override;
+    yarp::dev::ReturnValue getTorqueRanges(double *min, double *max) override;
 };
 
 #endif // YARP_DEV_IMPLEMENTTORQUECONTROL_H

@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/companion/impl/Companion.h>
@@ -34,7 +31,9 @@ int Companion::cmdConf(int argc, char *argv[])
         } else {
             nc.setMode("yarp");
         }
-        nc.toFile();
+        if (!nc.toFile()) {
+            yCError(COMPANION, "Unable to write configuration file");
+        }
         nc.fromFile();
         Contact current = nc.getAddress();
         std::string currentMode = nc.getMode();
@@ -66,9 +65,13 @@ int Companion::cmdConf(int argc, char *argv[])
     }
     if (argc==1) {
         if (std::string(argv[0])=="--clean") {
-            nc.toFile(true);
-            yCInfo(COMPANION, "Cleared configuration file:");
-            yCInfo(COMPANION, "  %s", nc.getConfigFileName().c_str());
+            if (nc.toFile(true)) {
+                yCInfo(COMPANION, "Cleared configuration file:");
+                yCInfo(COMPANION, "  %s", nc.getConfigFileName().c_str());
+            }
+            else {
+                yCError(COMPANION, "Unable to clear configuration file");
+            }
             return 0;
         }
     }

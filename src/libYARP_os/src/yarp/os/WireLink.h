@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_OS_WIRELINK_H
@@ -13,8 +10,7 @@
 
 #include <string>
 
-namespace yarp {
-namespace os {
+namespace yarp::os {
 
 class PortReader;
 class PortWriter;
@@ -89,7 +85,7 @@ public:
      * @param reader a recipient for the reply.
      * @return true on success
      */
-    bool write(PortWriter& writer, PortReader& reader);
+    bool write(const PortWriter& writer, PortReader& reader) const;
 
     /**
      * Put a message in a stack to call later, asynchronously.  Used
@@ -118,7 +114,6 @@ private:
 #endif // DOXYGEN_SHOULD_SKIP_THIS
 };
 
-} // namespace os
-} // namespace yarp
+} // namespace yarp::os
 
 #endif // YARP_OS_WIRELINK_H

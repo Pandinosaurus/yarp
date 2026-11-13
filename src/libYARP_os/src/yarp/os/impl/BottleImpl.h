@@ -1,11 +1,8 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * Copyright (C) 2006, 2008 Arjan Gijsberts
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-FileCopyrightText: 2006, 2008 Arjan Gijsberts
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_OS_IMPL_BOTTLEIMPL_H
@@ -16,15 +13,16 @@
 
 #include <vector>
 
-namespace yarp {
-namespace os {
+namespace yarp::os {
 
 class Bottle;
 class Property;
 class ConnectionReader;
 class ConnectionWriter;
 
-namespace impl {
+} // namespace yarp::os
+
+namespace yarp::os::impl {
 
 
 /**
@@ -87,9 +85,14 @@ public:
         add(new StoreFloat64(x));
     }
 
-    void addVocab(std::int32_t x)
+    void addVocab32(yarp::conf::vocab32_t x)
     {
-        add(new StoreVocab(x));
+        add(new StoreVocab32(x));
+    }
+
+    void addVocab64(yarp::conf::vocab64_t x)
+    {
+        add(new StoreVocab64(x));
     }
 
     void addString(const std::string& text)
@@ -98,8 +101,6 @@ public:
     }
 
     yarp::os::Bottle& addList();
-
-    yarp::os::Property& addDict();
 
     void clear();
 
@@ -203,9 +204,7 @@ private:
     void synch() const;
 };
 
-} // namespace impl
-} // namespace os
-} // namespace yarp
+} // namespace yarp::os::impl
 
 
 #endif // YARP_OS_IMPL_BOTTLEIMPL_H

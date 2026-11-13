@@ -4,9 +4,9 @@ data in an input port
 ------------------------------------------------------------------------
 
 
--- Compile Yarp with Lua binding support
+-- Compile YARP with Lua binding support
 
--- Set LUA_CPATH to include Yarp-Lua binding library
+-- Set LUA_CPATH to include YARP-Lua binding library
     (e.g., export LUA_CPATH=";;;$YARP_ROOT/bindings/build-lua/?.so")
 
 -- Open a terminal and run yarpserver
@@ -27,9 +27,9 @@ data in an input port
    To do this, open another terminal and try the following commands:
 
     $ yarp admin rpc /modified/yarpview/img:i
-    $ set in /grabber (fg 0 255 0)      // this set the foreground color to Green (0 G 0)
-    $ set in /grabber (bg 0 0 255)      // this set the foreground color to Blue (0 0 B)
-    $ get in /grabber                   // will show the parameter's value
+    $ setConnectionParamsIn /grabber "(fg 0 255 0)"   // this set the foreground color to Green (0 G 0)
+    $ setConnectionParamsIn /grabber "(bg 0 0 255)"   // this set the background color to Blue (0 0 B)
+    $ getConnectionParamsIn /grabber                  // will show the parameter's value
 
 
 -- To stop the application, in the yarpmanager's console, type:

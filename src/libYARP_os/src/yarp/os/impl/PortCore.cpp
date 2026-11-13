@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/impl/PortCore.h>
@@ -17,7 +14,6 @@
 #include <yarp/os/Name.h>
 #include <yarp/os/Network.h>
 #include <yarp/os/PortInfo.h>
-#include <yarp/os/RosNameSpace.h>
 #include <yarp/os/StringOutputStream.h>
 #include <yarp/os/SystemInfo.h>
 #include <yarp/os/Time.h>
@@ -28,6 +24,10 @@
 #include <yarp/os/impl/PortCoreInputUnit.h>
 #include <yarp/os/impl/PortCoreOutputUnit.h>
 #include <yarp/os/impl/StreamConnectionReader.h>
+#include <yarp/os/PortInfoData.h>
+#include <yarp/os/ThreadInfoData.h>
+
+#include <yarp/os/PortCoreMsgs.h>
 
 #include <cstdio>
 #include <functional>
@@ -70,15 +70,15 @@ PortCore::~PortCore()
 
 bool PortCore::listen(const Contact& address, bool shouldAnnounce)
 {
-    yCDebug(PORTCORE, "Starting listening on %s", address.toURI().c_str());
+    yCIDebug(PORTCORE, getName(), "Starting listening on %s", address.toURI().c_str());
     // If we're using ACE, we really need to have it initialized before
     // this point.
     if (!NetworkBase::initialized()) {
-        yCError(PORTCORE, "YARP not initialized; create a yarp::os::Network object before using ports");
+        yCIError(PORTCORE, getName(), "YARP not initialized; create a yarp::os::Network object before using ports");
         return false;
     }
 
-    yCTrace(PORTCORE, "listen");
+    yCITrace(PORTCORE, getName(), "listen");
 
     {
         // Critical section
@@ -88,11 +88,11 @@ bool PortCore::listen(const Contact& address, bool shouldAnnounce)
         // We can assume this because it is not a user-facing class,
         // and we carefully never call this method again without
         // calling close().
-        yCAssert(PORTCORE, !m_listening);
-        yCAssert(PORTCORE, !m_running);
-        yCAssert(PORTCORE, !m_closing.load());
-        yCAssert(PORTCORE, !m_finished.load());
-        yCAssert(PORTCORE, m_face == nullptr);
+        yCIAssert(PORTCORE, getName(), !m_listening);
+        yCIAssert(PORTCORE, getName(), !m_running);
+        yCIAssert(PORTCORE, getName(), !m_closing.load());
+        yCIAssert(PORTCORE, getName(), !m_finished.load());
+        yCIAssert(PORTCORE, getName(), m_face == nullptr);
 
         // Try to put the port on the network, using the user-supplied
         // address (which may be incomplete).  You can think of
@@ -113,7 +113,7 @@ bool PortCore::listen(const Contact& address, bool shouldAnnounce)
         if (m_address.getPort() <= 0) {
             m_address = m_face->getLocalAddress();
             if (m_address.getRegName() == "...") {
-                m_address.setName(std::string("/") + m_address.getHost() + "_" + NetType::toString(m_address.getPort()));
+                m_address.setName(std::string("/") + m_address.getHost() + "_" + yarp::conf::numeric::to_string(m_address.getPort()));
                 setName(m_address.getRegName());
             }
         }
@@ -143,31 +143,31 @@ bool PortCore::listen(const Contact& address, bool shouldAnnounce)
 void PortCore::setReadHandler(PortReader& reader)
 {
     // Don't even try to do this when the port is hot, it'll burn you
-    yCAssert(PORTCORE, !m_running.load());
-    yCAssert(PORTCORE, m_reader == nullptr);
+    yCIAssert(PORTCORE, getName(), !m_running.load());
+    yCIAssert(PORTCORE, getName(), m_reader == nullptr);
     m_reader = &reader;
 }
 
 void PortCore::setAdminReadHandler(PortReader& reader)
 {
     // Don't even try to do this when the port is hot, it'll burn you
-    yCAssert(PORTCORE, !m_running.load());
-    yCAssert(PORTCORE, m_adminReader == nullptr);
+    yCIAssert(PORTCORE, getName(), !m_running.load());
+    yCIAssert(PORTCORE, getName(), m_adminReader == nullptr);
     m_adminReader = &reader;
 }
 
 void PortCore::setReadCreator(PortReaderCreator& creator)
 {
     // Don't even try to do this when the port is hot, it'll burn you
-    yCAssert(PORTCORE, !m_running.load());
-    yCAssert(PORTCORE, m_readableCreator == nullptr);
+    yCIAssert(PORTCORE, getName(), !m_running.load());
+    yCIAssert(PORTCORE, getName(), m_readableCreator == nullptr);
     m_readableCreator = &creator;
 }
 
 
 void PortCore::run()
 {
-    yCTrace(PORTCORE, "run");
+    yCITrace(PORTCORE, getName(), "run");
 
     // This is the server thread for the port.  We listen on
     // the network and handle any incoming connections.
@@ -178,11 +178,11 @@ void PortCore::run()
 
     // We assume that listen() has succeeded and that
     // start() has been called.
-    yCAssert(PORTCORE, m_listening.load());
-    yCAssert(PORTCORE, !m_running.load());
-    yCAssert(PORTCORE, !m_closing.load());
-    yCAssert(PORTCORE, !m_finished.load());
-    yCAssert(PORTCORE, m_starting.load());
+    yCIAssert(PORTCORE, getName(), m_listening.load());
+    yCIAssert(PORTCORE, getName(), !m_running.load());
+    yCIAssert(PORTCORE, getName(), !m_closing.load());
+    yCIAssert(PORTCORE, getName(), !m_finished.load());
+    yCIAssert(PORTCORE, getName(), m_starting.load());
 
     // Enter running phase
     {
@@ -195,7 +195,7 @@ void PortCore::run()
     // Notify the start() thread that the run() thread is running
     m_stateCv.notify_one();
 
-    yCTrace(PORTCORE, "run running");
+    yCITrace(PORTCORE, getName(), "run running");
 
     // Enter main loop, where we block on incoming connections.
     // The loop is exited when PortCore#closing is set.  One last
@@ -214,7 +214,7 @@ void PortCore::run()
             // Attach the connection to this port and update its timeout setting
             if (ip != nullptr) {
                 ip->attachPort(m_contactable);
-                yCDebug(PORTCORE, "received something");
+                yCIDebug(PORTCORE, getName(), "received something");
                 if (m_timeout > 0) {
                     ip->setTimeout(m_timeout);
                 }
@@ -234,7 +234,7 @@ void PortCore::run()
             if (ip != nullptr) {
                 addInput(ip);
             }
-            yCDebug(PORTCORE, "spun off a connection");
+            yCIDebug(PORTCORE, getName(), "spun off a connection");
             ip = nullptr;
         }
 
@@ -254,7 +254,7 @@ void PortCore::run()
         m_connectionChangeCv.notify_all();
     }
 
-    yCTrace(PORTCORE, "run closing");
+    yCITrace(PORTCORE, getName(), "run closing");
 
     // The server thread is shutting down.
     std::lock_guard<std::mutex> lock(m_stateMutex);
@@ -268,10 +268,6 @@ void PortCore::close()
 {
     closeMain();
 
-    if (m_prop != nullptr) {
-        delete m_prop;
-        m_prop = nullptr;
-    }
     m_modifier.releaseOutModifier();
     m_modifier.releaseInModifier();
 }
@@ -279,17 +275,17 @@ void PortCore::close()
 
 bool PortCore::start()
 {
-    yCTrace(PORTCORE, "start");
+    yCITrace(PORTCORE, getName(), "start");
 
     // This wait will, on success, be matched by a post in run()
     std::unique_lock<std::mutex> lock(m_stateMutex);
 
     // We assume that listen() has been called.
-    yCAssert(PORTCORE, m_listening.load());
-    yCAssert(PORTCORE, !m_running.load());
-    yCAssert(PORTCORE, !m_starting.load());
-    yCAssert(PORTCORE, !m_finished.load());
-    yCAssert(PORTCORE, !m_closing.load());
+    yCIAssert(PORTCORE, getName(), m_listening.load());
+    yCIAssert(PORTCORE, getName(), !m_running.load());
+    yCIAssert(PORTCORE, getName(), !m_starting.load());
+    yCIAssert(PORTCORE, getName(), !m_finished.load());
+    yCIAssert(PORTCORE, getName(), !m_closing.load());
 
     m_starting.store(true);
 
@@ -302,7 +298,7 @@ bool PortCore::start()
     } else {
         // Wait for the signal from the run thread before returning.
         m_stateCv.wait(lock, [&]{ return m_running.load(); });
-        yCAssert(PORTCORE, m_running.load());
+        yCIAssert(PORTCORE, getName(), m_running.load());
     }
     return started;
 }
@@ -310,7 +306,7 @@ bool PortCore::start()
 
 bool PortCore::manualStart(const char* sourceName)
 {
-    yCTrace(PORTCORE, "manualStart");
+    yCITrace(PORTCORE, getName(), "manualStart");
 
     // This variant of start() does not create a server thread.
     // That is appropriate if we never expect to receive incoming
@@ -333,7 +329,7 @@ void PortCore::resume()
 
 void PortCore::interrupt()
 {
-    yCTrace(PORTCORE, "interrupt");
+    yCITrace(PORTCORE, getName(), "interrupt");
 
     // This is a no-op if there is no server thread.
     if (!m_listening.load()) {
@@ -358,7 +354,7 @@ void PortCore::interrupt()
         // Critical section
         std::lock_guard<std::mutex> lock(m_stateMutex);
         if (m_reader != nullptr) {
-            yCDebug(PORTCORE, "sending update-state message to listener");
+            yCIDebug(PORTCORE, getName(), "sending update-state message to listener");
             StreamConnectionReader sbr;
             lockCallback();
             m_reader->read(sbr);
@@ -370,7 +366,7 @@ void PortCore::interrupt()
 
 void PortCore::closeMain()
 {
-    yCTrace(PORTCORE, "closeMain");
+    yCITrace(PORTCORE, getName(), "closeMain");
 
     {
         // Critical section
@@ -378,15 +374,15 @@ void PortCore::closeMain()
 
         // We may not have anything to do.
         if (m_finishing || !(m_running.load() || m_manual)) {
-            yCTrace(PORTCORE, "closeMain - nothing to do");
+            yCITrace(PORTCORE, getName(), "closeMain - nothing to do");
             return;
         }
 
-        yCTrace(PORTCORE, "closeMain - Central");
+        yCITrace(PORTCORE, getName(), "closeMain - Central");
 
         // Move into official "finishing" phase.
         m_finishing = true;
-        yCDebug(PORTCORE, "now preparing to shut down port");
+        yCIDebug(PORTCORE, getName(), "now preparing to shut down port");
     }
 
     // Start disconnecting inputs.  We ask the other side of the
@@ -416,7 +412,7 @@ void PortCore::closeMain()
             }
         }
         if (!done) {
-            yCDebug(PORTCORE, "requesting removal of connection from %s", removeName.c_str());
+            yCIDebug(PORTCORE, getName(), "requesting removal of connection from %s", removeName.c_str());
             bool result = NetworkBase::disconnect(removeName,
                                                   getName(),
                                                   true);
@@ -472,7 +468,7 @@ void PortCore::closeMain()
         }
 
         // We should be finished now.
-        yCAssert(PORTCORE, m_finished.load());
+        yCIAssert(PORTCORE, getName(), m_finished.load());
 
         // Clean up our connection list. We couldn't do this earlier,
         // because the server thread was running.
@@ -491,7 +487,7 @@ void PortCore::closeMain()
     // There should be no other threads at this point and we
     // can stop listening on the network.
     if (m_listening.load()) {
-        yCAssert(PORTCORE, m_face != nullptr);
+        yCIAssert(PORTCORE, getName(), m_face != nullptr);
         m_face->close();
         delete m_face;
         m_face = nullptr;
@@ -502,7 +498,7 @@ void PortCore::closeMain()
     // with the bad news.  An empty message signifies a request to
     // check the port state.
     if (m_reader != nullptr) {
-        yCDebug(PORTCORE, "sending end-of-port message to listener");
+        yCIDebug(PORTCORE, getName(), "sending end-of-port message to listener");
         StreamConnectionReader sbr;
         m_reader->read(sbr);
         m_reader = nullptr;
@@ -522,13 +518,13 @@ void PortCore::closeMain()
     m_finishing = false;
 
     // We are fresh as a daisy.
-    yCAssert(PORTCORE, !m_listening.load());
-    yCAssert(PORTCORE, !m_running.load());
-    yCAssert(PORTCORE, !m_starting.load());
-    yCAssert(PORTCORE, !m_closing.load());
-    yCAssert(PORTCORE, !m_finished.load());
-    yCAssert(PORTCORE, !m_finishing);
-    yCAssert(PORTCORE, m_face == nullptr);
+    yCIAssert(PORTCORE, getName(), !m_listening.load());
+    yCIAssert(PORTCORE, getName(), !m_running.load());
+    yCIAssert(PORTCORE, getName(), !m_starting.load());
+    yCIAssert(PORTCORE, getName(), !m_closing.load());
+    yCIAssert(PORTCORE, getName(), !m_finished.load());
+    yCIAssert(PORTCORE, getName(), !m_finishing);
+    yCIAssert(PORTCORE, getName(), m_face == nullptr);
 }
 
 
@@ -545,19 +541,19 @@ void PortCore::closeUnits()
 {
     // Empty the PortCore#units list. This is only possible when
     // the server thread is finished.
-    yCAssert(PORTCORE, m_finished.load());
+    yCIAssert(PORTCORE, getName(), m_finished.load());
 
     // In the "finished" phase, nobody else touches the units,
     // so we can go ahead and shut them down and delete them.
     for (auto& i : m_units) {
         PortCoreUnit* unit = i;
         if (unit != nullptr) {
-            yCDebug(PORTCORE, "closing a unit");
+            yCIDebug(PORTCORE, getName(), "closing a unit");
             unit->close();
-            yCDebug(PORTCORE, "joining a unit");
+            yCIDebug(PORTCORE, getName(), "joining a unit");
             unit->join();
             delete unit;
-            yCDebug(PORTCORE, "deleting a unit");
+            yCIDebug(PORTCORE, getName(), "deleting a unit");
             i = nullptr;
         }
     }
@@ -575,11 +571,11 @@ void PortCore::reapUnits()
         for (auto* unit : m_units) {
             if ((unit != nullptr) && unit->isDoomed() && !unit->isFinished()) {
                 std::string s = unit->getRoute().toString();
-                yCDebug(PORTCORE, "Informing connection %s that it is doomed", s.c_str());
+                yCIDebug(PORTCORE, getName(), "Informing connection %s that it is doomed", s.c_str());
                 unit->close();
-                yCDebug(PORTCORE, "Closed connection %s", s.c_str());
+                yCIDebug(PORTCORE, getName(), "Closed connection %s", s.c_str());
                 unit->join();
-                yCDebug(PORTCORE, "Joined thread of connection %s", s.c_str());
+                yCIDebug(PORTCORE, getName(), "Joined thread of connection %s", s.c_str());
             }
         }
     }
@@ -608,22 +604,22 @@ void PortCore::cleanUnits(bool blocking)
     int updatedInputCount = 0;
     int updatedOutputCount = 0;
     int updatedDataOutputCount = 0;
-    yCDebug(PORTCORE, "/ routine check of connections to this port begins");
+    yCIDebug(PORTCORE, getName(), "/ routine check of connections to this port begins");
     if (!m_finished.load()) {
 
         // First, we delete and null out any defunct entries in the list.
         for (auto& i : m_units) {
             PortCoreUnit* unit = i;
             if (unit != nullptr) {
-                yCDebug(PORTCORE, "| checking connection %s %s", unit->getRoute().toString().c_str(), unit->getMode().c_str());
+                yCIDebug(PORTCORE, getName(), "| checking connection %s %s", unit->getRoute().toString().c_str(), unit->getMode().c_str());
                 if (unit->isFinished()) {
                     std::string con = unit->getRoute().toString();
-                    yCDebug(PORTCORE, "|   removing connection %s", con.c_str());
+                    yCIDebug(PORTCORE, getName(), "|   removing connection %s", con.c_str());
                     unit->close();
                     unit->join();
                     delete unit;
                     i = nullptr;
-                    yCDebug(PORTCORE, "|   removed connection %s", con.c_str());
+                    yCIDebug(PORTCORE, getName(), "|   removed connection %s", con.c_str());
                 } else {
                     // No work to do except updating connection counts.
                     if (!unit->isDoomed()) {
@@ -671,35 +667,35 @@ void PortCore::cleanUnits(bool blocking)
     m_inputCount = updatedInputCount;
     m_outputCount = updatedOutputCount;
     m_packetMutex.unlock();
-    yCDebug(PORTCORE, "\\ routine check of connections to this port ends");
+    yCIDebug(PORTCORE, getName(), "\\ routine check of connections to this port ends");
 }
 
 
 void PortCore::addInput(InputProtocol* ip)
 {
-    yCTrace(PORTCORE, "addInput");
+    yCITrace(PORTCORE, getName(), "addInput");
 
     // This method is only called by the server thread in its running phase.
     // It wraps up a network connection as a unit and adds it to
     // PortCore#units.  The unit will have its own thread associated
     // with it.
 
-    yCAssert(PORTCORE, ip != nullptr);
+    yCIAssert(PORTCORE, getName(), ip != nullptr);
     std::lock_guard<std::mutex> lock(m_stateMutex);
     PortCoreUnit* unit = new PortCoreInputUnit(*this,
                                                getNextIndex(),
                                                ip,
                                                false);
-    yCAssert(PORTCORE, unit != nullptr);
+    yCIAssert(PORTCORE, getName(), unit != nullptr);
     unit->start();
     m_units.push_back(unit);
-    yCTrace(PORTCORE, "there are now %zu units", m_units.size());
+    yCITrace(PORTCORE, getName(), "there are now %zu units", m_units.size());
 }
 
 
 void PortCore::addOutput(OutputProtocol* op)
 {
-    yCTrace(PORTCORE, "addOutput");
+    yCITrace(PORTCORE, getName(), "addOutput");
 
     // This method is called from threads associated with input
     // connections.
@@ -708,11 +704,11 @@ void PortCore::addOutput(OutputProtocol* op)
     // associated with it, but that thread will be very short-lived
     // if the port is not configured to do background writes.
 
-    yCAssert(PORTCORE, op != nullptr);
+    yCIAssert(PORTCORE, getName(), op != nullptr);
     if (!m_finished.load()) {
         std::lock_guard<std::mutex> lock(m_stateMutex);
         PortCoreUnit* unit = new PortCoreOutputUnit(*this, getNextIndex(), op);
-        yCAssert(PORTCORE, unit != nullptr);
+        yCIAssert(PORTCORE, getName(), unit != nullptr);
         unit->start();
         m_units.push_back(unit);
     }
@@ -760,10 +756,10 @@ bool PortCore::removeUnit(const Route& route, bool synch, bool* except)
     // input thread.
 
     if (except != nullptr) {
-        yCDebug(PORTCORE, "asked to remove connection in the way of %s", route.toString().c_str());
+        yCIDebug(PORTCORE, getName(), "asked to remove connection in the way of %s", route.toString().c_str());
         *except = false;
     } else {
-        yCDebug(PORTCORE, "asked to remove connection %s", route.toString().c_str());
+        yCIDebug(PORTCORE, getName(), "asked to remove connection %s", route.toString().c_str());
     }
 
     // Scan for units that match the given route, and collect their IDs.
@@ -796,7 +792,7 @@ bool PortCore::removeUnit(const Route& route, bool synch, bool* except)
                 }
 
                 if (ok) {
-                    yCDebug(PORTCORE, "removing connection %s", alt.toString().c_str());
+                    yCIDebug(PORTCORE, getName(), "removing connection %s", alt.toString().c_str());
                     removals.push_back(unit->getIndex());
                     unit->setDoomed();
                     needReap = true;
@@ -810,7 +806,7 @@ bool PortCore::removeUnit(const Route& route, bool synch, bool* except)
     // up eventually, but we can speed this up by waking up the
     // server thread.
     if (needReap) {
-        yCDebug(PORTCORE, "one or more connections need prodding to die");
+        yCIDebug(PORTCORE, getName(), "one or more connections need prodding to die");
 
         if (m_manual) {
             // No server thread, no problems.
@@ -822,11 +818,11 @@ bool PortCore::removeUnit(const Route& route, bool synch, bool* except)
                 op->close();
                 delete op;
             }
-            yCDebug(PORTCORE, "sent message to prod connection death");
+            yCIDebug(PORTCORE, getName(), "sent message to prod connection death");
 
             if (synch) {
                 // Wait for connections to be cleaned up.
-                yCDebug(PORTCORE, "synchronizing with connection death");
+                yCIDebug(PORTCORE, getName(), "synchronizing with connection death");
                 {
                     // Critical section
                     std::unique_lock<std::mutex> lock(m_stateMutex);
@@ -848,7 +844,7 @@ bool PortCore::addOutput(const std::string& dest,
                          bool onlyIfNeeded)
 {
     YARP_UNUSED(id);
-    yCDebug(PORTCORE, "asked to add output to %s", dest.c_str());
+    yCIDebug(PORTCORE, getName(), "asked to add output to %s", dest.c_str());
 
     // Buffer to store text describing outcome (successful connection,
     // or a failure).
@@ -878,7 +874,7 @@ bool PortCore::addOutput(const std::string& dest,
         removeUnit(Route(getName(), address.getRegName(), address.getCarrier()), true, &except);
         if (except) {
             // Connection already present.
-            yCDebug(PORTCORE, "output already present to %s", dest.c_str());
+            yCIDebug(PORTCORE, getName(), "output already present to %s", dest.c_str());
             bw.appendLine(std::string("Desired connection already present from ") + getName() + " to " + dest);
             if (os != nullptr) {
                 bw.write(*os);
@@ -961,7 +957,7 @@ bool PortCore::addOutput(const std::string& dest,
 
         bool ok = op->open(r);
         if (!ok) {
-            yCDebug(PORTCORE, "open route error");
+            yCIDebug(PORTCORE, getName(), "open route error");
             delete op;
             op = nullptr;
         }
@@ -996,7 +992,7 @@ bool PortCore::addOutput(const std::string& dest,
                                                        getNextIndex(),
                                                        ip,
                                                        true);
-            yCAssert(PORTCORE, unit != nullptr);
+            yCIAssert(PORTCORE, getName(), unit != nullptr);
             unit->start();
             m_units.push_back(unit);
         }
@@ -1012,14 +1008,15 @@ bool PortCore::addOutput(const std::string& dest,
 }
 
 
-void PortCore::removeOutput(const std::string& dest, void* id, OutputStream* os)
+bool PortCore::removeOutput(const std::string& dest, void* id, OutputStream* os)
 {
     YARP_UNUSED(id);
-    yCDebug(PORTCORE, "asked to remove output to %s", dest.c_str());
+    yCIDebug(PORTCORE, getName(), "asked to remove output to %s", dest.c_str());
 
     // All the real work done by removeUnit().
     BufferedConnectionWriter bw(true);
-    if (removeUnit(Route("*", dest, "*"), true)) {
+    const bool removed = removeUnit(Route("*", dest, "*"), true);
+    if (removed) {
         bw.appendLine(std::string("Removed connection from ") + getName() + " to " + dest);
     } else {
         bw.appendLine(std::string("Could not find an outgoing connection to ") + dest);
@@ -1028,16 +1025,18 @@ void PortCore::removeOutput(const std::string& dest, void* id, OutputStream* os)
         bw.write(*os);
     }
     cleanUnits();
+    return removed;
 }
 
-void PortCore::removeInput(const std::string& src, void* id, OutputStream* os)
+bool PortCore::removeInput(const std::string& src, void* id, OutputStream* os)
 {
     YARP_UNUSED(id);
-    yCDebug(PORTCORE, "asked to remove input to %s", src.c_str());
+    yCIDebug(PORTCORE, getName(), "asked to remove input to %s", src.c_str());
 
     // All the real work done by removeUnit().
     BufferedConnectionWriter bw(true);
-    if (removeUnit(Route(src, "*", "*"), true)) {
+    const bool removed = removeUnit(Route(src, "*", "*"), true);
+    if (removed) {
         bw.appendLine(std::string("Removing connection from ") + src + " to " + getName());
     } else {
         bw.appendLine(std::string("Could not find an incoming connection from ") + src);
@@ -1046,6 +1045,7 @@ void PortCore::removeInput(const std::string& src, void* id, OutputStream* os)
         bw.write(*os);
     }
     cleanUnits();
+    return removed;
 }
 
 void PortCore::describe(void* id, OutputStream* os)
@@ -1212,9 +1212,9 @@ bool PortCore::readBlock(ConnectionReader& reader, void* id, OutputStream* os)
     // constant over the lifetime of the input threads.
 
     if (m_reader != nullptr && !m_interrupted) {
-        m_interruptable = false; // No mutexing; user of interrupt() has to be careful.
+        m_interruptable = false; // No mutex; user of interrupt() has to be careful.
 
-        bool haveOutputs = (m_outputCount != 0); // No mutexing, but failure modes are benign.
+        bool haveOutputs = (m_outputCount != 0); // No mutex, but failure modes are benign.
 
         if (m_logNeeded && haveOutputs) {
             // Normally, yarp doesn't pay attention to the content of
@@ -1240,7 +1240,7 @@ bool PortCore::readBlock(ConnectionReader& reader, void* id, OutputStream* os)
         m_interruptable = true;
     } else {
         // Read and ignore message, there is no where to send it.
-        yCDebug(PORTCORE, "data received, no reader for it");
+        yCIDebug(PORTCORE, getName(), "data received, no reader for it");
         Bottle b;
         result = b.read(reader);
     }
@@ -1294,7 +1294,7 @@ bool PortCore::sendHelper(const PortWriter& writer,
     // copied.  So for example the core image array in a yarp::sig::Image
     // is untouched by the port communications code.
 
-    yCTrace(PORTCORE, "------- send in real");
+    yCITrace(PORTCORE, getName(), "------- send in real");
 
     // Give user the chance to know that this object is about to be
     // written.
@@ -1313,12 +1313,12 @@ bool PortCore::sendHelper(const PortWriter& writer,
         return false;
     }
 
-    yCTrace(PORTCORE, "------- send in");
+    yCITrace(PORTCORE, getName(), "------- send in");
     // Prepare a "packet" for tracking a single message which
     // may travel by multiple outputs.
     m_packetMutex.lock();
     PortCorePacket* packet = m_packets.getFreePacket();
-    yCAssert(PORTCORE, packet != nullptr);
+    yCIAssert(PORTCORE, getName(), packet != nullptr);
     packet->setContent(&writer, false, callback);
     m_packetMutex.unlock();
 
@@ -1335,11 +1335,11 @@ bool PortCore::sendHelper(const PortWriter& writer,
                 continue;
             }
             bool waiter = m_waitAfterSend || (mode == PORTCORE_SEND_LOG);
-            yCTrace(PORTCORE, "------- -- inc");
+            yCITrace(PORTCORE, getName(), "------- -- inc");
             m_packetMutex.lock();
             packet->inc(); // One more connection carrying message.
             m_packetMutex.unlock();
-            yCTrace(PORTCORE, "------- -- pre-send");
+            yCITrace(PORTCORE, getName(), "------- -- pre-send");
             bool gotReplyOne = false;
             // Send the message off on this connection.
             void* out = unit->send(writer,
@@ -1351,7 +1351,7 @@ bool PortCore::sendHelper(const PortWriter& writer,
                                    m_waitBeforeSend,
                                    &gotReplyOne);
             gotReply = gotReply || gotReplyOne;
-            yCTrace(PORTCORE, "------- -- send");
+            yCITrace(PORTCORE, getName(), "------- -- send");
             if (out != nullptr) {
                 // We got back a report of a message already sent.
                 m_packetMutex.lock();
@@ -1364,10 +1364,10 @@ bool PortCore::sendHelper(const PortWriter& writer,
                     all_ok = false;
                 }
             }
-            yCTrace(PORTCORE, "------- -- dec");
+            yCITrace(PORTCORE, getName(), "------- -- dec");
         }
     }
-    yCTrace(PORTCORE, "------- pack check");
+    yCITrace(PORTCORE, getName(), "------- pack check");
     m_packetMutex.lock();
 
     // We no longer concern ourselves with the message.
@@ -1377,15 +1377,15 @@ bool PortCore::sendHelper(const PortWriter& writer,
 
     m_packets.checkPacket(packet);
     m_packetMutex.unlock();
-    yCTrace(PORTCORE, "------- packed");
-    yCTrace(PORTCORE, "------- send out");
+    yCITrace(PORTCORE, getName(), "------- packed");
+    yCITrace(PORTCORE, getName(), "------- send out");
     if (mode == PORTCORE_SEND_LOG) {
         if (logCount == 0) {
             m_logNeeded = false;
         }
     }
 
-    yCTrace(PORTCORE, "------- send out real");
+    yCITrace(PORTCORE, getName(), "------- send out real");
 
     if (m_waitAfterSend && reader != nullptr) {
         all_ok = all_ok && gotReply;
@@ -1435,14 +1435,14 @@ int PortCore::getOutputCount()
 
 void PortCore::notifyCompletion(void* tracker)
 {
-    yCTrace(PORTCORE, "starting notifyCompletion");
+    yCITrace(PORTCORE, getName(), "starting notifyCompletion");
     m_packetMutex.lock();
     if (tracker != nullptr) {
         (static_cast<PortCorePacket*>(tracker))->dec();
         m_packets.checkPacket(static_cast<PortCorePacket*>(tracker));
     }
     m_packetMutex.unlock();
-    yCTrace(PORTCORE, "stopping notifyCompletion");
+    yCITrace(PORTCORE, getName(), "stopping notifyCompletion");
 }
 
 
@@ -1468,7 +1468,7 @@ void PortCore::setEnvelope(const std::string& envelope)
             break;
         }
     }
-    yCDebug(PORTCORE, "set envelope to %s", m_envelope.c_str());
+    yCIDebug(PORTCORE, getName(), "set envelope to %s", m_envelope.c_str());
 }
 
 std::string PortCore::getEnvelope()
@@ -1527,138 +1527,6 @@ static bool __tcp_check(const Contact& c)
     return true;
 }
 
-namespace {
-enum class PortCoreCommand : yarp::conf::vocab32_t
-{
-    Unknown = 0,
-    Help = yarp::os::createVocab('h', 'e', 'l', 'p'),
-    Ver = yarp::os::createVocab('v', 'e', 'r'),
-    Pray = yarp::os::createVocab('p', 'r', 'a', 'y'),
-    Add = yarp::os::createVocab('a', 'd', 'd'),
-    Del = yarp::os::createVocab('d', 'e', 'l'),
-    Atch = yarp::os::createVocab('a', 't', 'c', 'h'),
-    Dtch = yarp::os::createVocab('d', 't', 'c', 'h'),
-    List = yarp::os::createVocab('l', 'i', 's', 't'),
-    Set = yarp::os::createVocab('s', 'e', 't'),
-    Get = yarp::os::createVocab('g', 'e', 't'),
-    Prop = yarp::os::createVocab('p', 'r', 'o', 'p'),
-    RosPublisherUpdate = yarp::os::createVocab('r', 'p', 'u', 'p'),
-    RosRequestTopic = yarp::os::createVocab('r', 't', 'o', 'p'),
-    RosGetPid = yarp::os::createVocab('p', 'i', 'd'),
-    RosGetBusInfo = yarp::os::createVocab('b', 'u', 's'),
-};
-
-enum class PortCoreConnectionDirection : yarp::conf::vocab32_t
-{
-    Error = 0,
-    Out = yarp::os::createVocab('o', 'u', 't'),
-    In = yarp::os::createVocab('i', 'n'),
-};
-
-enum class PortCorePropertyAction : yarp::conf::vocab32_t
-{
-    Error = 0,
-    Get = yarp::os::createVocab('g', 'e', 't'),
-    Set = yarp::os::createVocab('s', 'e', 't')
-};
-
-PortCoreCommand parseCommand(const yarp::os::Value& v)
-{
-    if (v.isString()) {
-        // We support ROS client API these days.  Here we recode some long ROS
-        // command names, just for convenience.
-        std::string cmd = v.asString();
-        if (cmd == "publisherUpdate") {
-            return PortCoreCommand::RosPublisherUpdate;
-        }
-        if (cmd == "requestTopic") {
-            return PortCoreCommand::RosRequestTopic;
-        }
-        if (cmd == "getPid") {
-            return PortCoreCommand::RosGetPid;
-        }
-        if (cmd == "getBusInfo") {
-            return PortCoreCommand::RosGetBusInfo;
-        }
-    }
-
-    auto cmd = static_cast<PortCoreCommand>(v.asVocab());
-    switch (cmd) {
-    case PortCoreCommand::Help:
-    case PortCoreCommand::Ver:
-    case PortCoreCommand::Pray:
-    case PortCoreCommand::Add:
-    case PortCoreCommand::Del:
-    case PortCoreCommand::Atch:
-    case PortCoreCommand::Dtch:
-    case PortCoreCommand::List:
-    case PortCoreCommand::Set:
-    case PortCoreCommand::Get:
-    case PortCoreCommand::Prop:
-    case PortCoreCommand::RosPublisherUpdate:
-    case PortCoreCommand::RosRequestTopic:
-    case PortCoreCommand::RosGetPid:
-    case PortCoreCommand::RosGetBusInfo:
-        return cmd;
-    default:
-        return PortCoreCommand::Unknown;
-    }
-}
-
-PortCoreConnectionDirection parseConnectionDirection(yarp::conf::vocab32_t v, bool errorIsOut = false)
-{
-    auto dir = static_cast<PortCoreConnectionDirection>(v);
-    switch (dir) {
-    case PortCoreConnectionDirection::In:
-    case PortCoreConnectionDirection::Out:
-        return dir;
-    default:
-        return errorIsOut ? PortCoreConnectionDirection::Out : PortCoreConnectionDirection::Error;
-    }
-}
-
-PortCorePropertyAction parsePropertyAction(yarp::conf::vocab32_t v)
-{
-    auto action = static_cast<PortCorePropertyAction>(v);
-    switch (action) {
-    case PortCorePropertyAction::Get:
-    case PortCorePropertyAction::Set:
-        return action;
-    default:
-        return PortCorePropertyAction::Error;
-    }
-}
-
-void describeRoute(const Route& route, Bottle& result)
-{
-    Bottle& bfrom = result.addList();
-    bfrom.addString("from");
-    bfrom.addString(route.getFromName());
-
-    Bottle& bto = result.addList();
-    bto.addString("to");
-    bto.addString(route.getToName());
-
-    Bottle& bcarrier = result.addList();
-    bcarrier.addString("carrier");
-    bcarrier.addString(route.getCarrierName());
-
-    Carrier* carrier = Carriers::chooseCarrier(route.getCarrierName());
-    if (carrier->isConnectionless()) {
-        Bottle& bconnectionless = result.addList();
-        bconnectionless.addString("connectionless");
-        bconnectionless.addInt32(1);
-    }
-    if (!carrier->isPush()) {
-        Bottle& breverse = result.addList();
-        breverse.addString("push");
-        breverse.addInt32(0);
-    }
-    delete carrier;
-}
-
-} // namespace
-
 bool PortCore::adminBlock(ConnectionReader& reader,
                           void* id)
 {
@@ -1671,883 +1539,315 @@ bool PortCore::adminBlock(ConnectionReader& reader,
     // it.  So let's read the message and see what we're supposed to do.
     cmd.read(reader);
 
-    yCDebug(PORTCORE, "Port %s received command %s", getName().c_str(), cmd.toString().c_str());
+    yCIDebug(PORTCORE, getName(), "Port %s received command %s", getName().c_str(), cmd.toString().c_str());
 
-    auto handleAdminHelpCmd = []() {
-        Bottle result;
-        // We give a list of the most useful administrative commands.
-        result.addVocab(yarp::os::createVocab('m', 'a', 'n', 'y'));
-        result.addString("[help]                  # give this help");
-        result.addString("[ver]                   # report protocol version information");
-        result.addString("[add] $portname         # add an output connection");
-        result.addString("[add] $portname $car    # add an output with a given protocol");
-        result.addString("[del] $portname         # remove an input or output connection");
-        result.addString("[list] [in]             # list input connections");
-        result.addString("[list] [out]            # list output connections");
-        result.addString("[list] [in]  $portname  # give details for input");
-        result.addString("[list] [out] $portname  # give details for output");
-        result.addString("[prop] [get]            # get all user-defined port properties");
-        result.addString("[prop] [get] $prop      # get a user-defined port property (prop, val)");
-        result.addString("[prop] [set] $prop $val # set a user-defined port property (prop, val)");
-        result.addString("[prop] [get] $portname  # get Qos properties of a connection to/from a port");
-        result.addString("[prop] [set] $portname  # set Qos properties of a connection to/from a port");
-        result.addString("[prop] [get] $cur_port  # get information about current process (e.g., scheduling priority, pid)");
-        result.addString("[prop] [set] $cur_port  # set properties of the current process (e.g., scheduling priority, pid)");
-        result.addString("[atch] [out] $prop      # attach a portmonitor plug-in to the port's output");
-        result.addString("[atch] [in]  $prop      # attach a portmonitor plug-in to the port's input");
-        result.addString("[dtch] [out]            # detach portmonitor plug-in from the port's output");
-        result.addString("[dtch] [in]             # detach portmonitor plug-in from the port's input");
-        //result.addString("[atch] $portname $prop  # attach a portmonitor plug-in to the connection to/from $portname");
-        //result.addString("[dtch] $portname        # detach any portmonitor plug-in from the connection to/from $portname");
-        return result;
-    };
+    // Server side of the commands defined in idl/PortCoreMsgs.thrift.
+    // NOTE: being a local class, it has the same access rights of adminBlock().
+    class PortCoreMsgsServer : public yarp::os::PortCoreMsgs
+    {
+        PortCore& m_owner;
+        void* m_id; // the id of the unit which sent the command
 
-    auto handleAdminVerCmd = []() {
-        // Gives a version number for the administrative commands.
-        // It is distinct from YARP library versioning.
-        Bottle result;
-        result.addVocab(Vocab::encode("ver"));
-        result.addInt32(1);
-        result.addInt32(2);
-        result.addInt32(3);
-        return result;
-    };
-
-    auto handleAdminPrayCmd = [this]() {
-        // Strongly inspired by nethack #pray command:
-        // https://nethackwiki.com/wiki/Prayer
-        // http://www.steelypips.org/nethack/pray.html
-
-        Bottle result;
-
-        bool found = false;
-        std::string name = yarp::conf::environment::getEnvironment("YARP_ROBOT_NAME", &found);
-        if (!found) {
-            name = getName();
-            // Remove initial "/"
-            while (name[0] == '/') {
-                name = name.substr(1);
-            }
-            // Keep only the first part of the port name
-            auto i = name.find('/');
-            if (i != std::string::npos) {
-                name = name.substr(0, i);
-            }
-        }
-
-        std::random_device rd;
-        std::mt19937 mt(rd());
-        std::uniform_int_distribution<int> dist2(0,1);
-        auto d2 = std::bind(dist2, mt);
-
-        result.addString("You begin praying to " + name + ".");
-        result.addString("You finish your prayer.");
-
-        static const char* godvoices[] = {
-            "booms out",
-            "thunders",
-            "rings out",
-            "booms",
-        };
-        std::uniform_int_distribution<int> godvoices_dist(0, (sizeof(godvoices) / sizeof(godvoices[0])) - 1);
-        auto godvoice = [&]() {
-            return std::string(godvoices[godvoices_dist(mt)]);
-        };
-
-        static const char* creatures[] = {
-            "mortal",
-            "creature",
-            "robot",
-        };
-        std::uniform_int_distribution<int> creatures_dist(0, (sizeof(creatures) / sizeof(creatures[0])) - 1);
-        auto creature = [&]() {
-            return std::string(creatures[creatures_dist(mt)]);
-        };
-
-        static const char* auras[] = {
-            "amber",
-            "light blue",
-            "golden",
-            "white",
-            "orange",
-            "black",
-        };
-        std::uniform_int_distribution<int> auras_dist(0, (sizeof(auras) / sizeof(auras[0])) - 1);
-        auto aura = [&]() {
-            return std::string(auras[auras_dist(mt)]);
-        };
-
-        static const char* items[] = {
-            "keyboard",
-            "mouse",
-            "monitor",
-            "headphones",
-            "smartphone",
-            "wallet",
-            "eyeglasses",
-            "shirt",
-        };
-        std::uniform_int_distribution<int> items_dist(0, (sizeof(items) / sizeof(items[0])) - 1);
-        auto item = [&]() {
-            return std::string(items[items_dist(mt)]);
-        };
-
-        static const char* blessings[] = {
-            "You feel more limber.",
-            "The slime disappears.",
-            "Your amulet vanishes! You can breathe again.",
-            "You can breathe again.",
-            "You are back on solid ground.",
-            "Your stomach feels content.",
-            "You feel better.",
-            "You feel much better.",
-            "Your surroundings change.",
-            "Your shape becomes uncertain.",
-            "Your chain disappears.",
-            "There's a tiger in your tank.",
-            "You feel in good health again.",
-            "Your eye feels better.",
-            "Your eyes feel better.",
-            "Looks like you are back in Kansas.",
-            "Your <ITEM> softly glows <AURA>.",
-        };
-        std::uniform_int_distribution<int> blessings_dist(0, (sizeof(blessings) / sizeof(blessings[0])) - 1);
-        auto blessing = [&](){
-            auto blessing = std::string(blessings[blessings_dist(mt)]);
-            blessing = std::regex_replace(blessing, std::regex("<ITEM>"), item());
-            blessing = std::regex_replace(blessing, std::regex("<AURA>"), aura());
-            return blessing;
-        };
-
-        std::uniform_int_distribution<int> dist13(0,12);
-        switch(dist13(mt)) {
-        case 0:
-        case 1:
-            result.addString("You feel that " + name + " is " + (d2() ? "bummed" : "displeased") + ".");
-            break;
-        case 2:
-        case 3:
-            result.addString("The voice of " + name + " " + godvoice() +
-                             ": \"Thou " + (d2() ? "hast strayed from the path" : "art arrogant") +
-                             ", " + creature() + ". Thou must relearn thy lessons!\"");
-            break;
-        case 4:
-        case 5:
-            result.addString("The voice of " + name + " " + godvoice() +
-                             ": \"Thou hast angered me.\"");
-            result.addString("A black glow surrounds you.");
-            break;
-        case 6:
-            result.addString("The voice of " + name + " " + godvoice() +
-                             ": \"Thou hast angered me.\"");
-            break;
-        case 7:
-        case 8:
-            result.addString("The voice of " + name + " " + godvoice() +
-                             ": \"Thou durst " + (d2() ? "scorn" : "call upon") +
-                             " me? Then die, " + creature() + "!\"");
-            break;
-        case 9:
-            result.addString("You feel that " + name + " is " + (d2() ? "pleased as punch" : "well-pleased") + ".");
-            result.addString(blessing());
-            break;
-        case 10:
-            result.addString("You feel that " + name + " is " + (d2() ? "ticklish" : "pleased") + ".");
-            result.addString(blessing());
-            break;
-        case 11:
-            result.addString("You feel that " + name + " is " + (d2() ? "full" : "satisfied") + ".");
-            result.addString(blessing());
-            break;
-        default:
-            result.addString("The voice of " + name + " " + godvoice() +
-                             ": \"Thou hast angered me.\"");
-            result.addString("Suddenly, a bolt of lightning strikes you!");
-            result.addString("You fry to a crisp!");
-            break;
-        }
-
-        return result;
-    };
-
-    auto handleAdminAddCmd = [this, id](std::string output,
-                                        const std::string& carrier) {
-        // Add an output to the port.
-        Bottle result;
-        StringOutputStream cache;
-        if (!carrier.empty()) {
-            output = carrier + ":/" + output;
-        }
-        addOutput(output, id, &cache, false);
-        std::string r = cache.toString();
-        int v = (r[0] == 'A') ? 0 : -1;
-        result.addInt32(v);
-        result.addString(r);
-        return result;
-    };
-
-    auto handleAdminDelCmd = [this, id](const std::string& dest) {
-        // Delete any inputs or outputs involving the named port.
-        Bottle result;
-        StringOutputStream cache;
-        removeOutput(dest, id, &cache);
-        std::string r1 = cache.toString();
-        cache.reset();
-        removeInput(dest, id, &cache);
-        std::string r2 = cache.toString();
-        int v = (r1[0] == 'R' || r2[0] == 'R') ? 0 : -1;
-        result.addInt32(v);
-        if (r1[0] == 'R' && r2[0] != 'R') {
-            result.addString(r1);
-        } else if (r1[0] != 'R' && r2[0] == 'R') {
-            result.addString(r2);
-        } else {
-            result.addString(r1 + r2);
-        }
-        return result;
-    };
-
-    auto handleAdminAtchCmd = [this](PortCoreConnectionDirection direction,
-                                     Property prop) {
-        Bottle result;
-        switch (direction) {
-        case PortCoreConnectionDirection::Out: {
+        bool attach(const std::string& portmonitor_options, bool isOutput)
+        {
             std::string errMsg;
-            if (!attachPortMonitor(prop, true, errMsg)) {
-                result.addVocab(Vocab::encode("fail"));
-                result.addString(errMsg);
-            } else {
-                result.addVocab(Vocab::encode("ok"));
+            if (!m_owner.attachPortMonitor(portmonitor_options, isOutput, errMsg)) {
+                yCIError(PORTCORE, m_owner.getName(), "%s", errMsg.c_str());
+                return false;
             }
-        } break;
-        case PortCoreConnectionDirection::In: {
-            std::string errMsg;
-            if (!attachPortMonitor(prop, false, errMsg)) {
-                result.addVocab(Vocab::encode("fail"));
-                result.addString(errMsg);
-            } else {
-                result.addVocab(Vocab::encode("ok"));
-            }
-        } break;
-        case PortCoreConnectionDirection::Error:
-            result.addVocab(Vocab::encode("fail"));
-            result.addString("attach command must be followed by [out] or [in]");
+            return true;
         }
-        return result;
-    };
 
-    auto handleAdminDtchCmd = [this](PortCoreConnectionDirection direction) {
-        Bottle result;
-        switch (direction) {
-        case PortCoreConnectionDirection::Out: {
-            if (detachPortMonitor(true)) {
-                result.addVocab(Vocab::encode("ok"));
-            } else {
-                result.addVocab(Vocab::encode("fail"));
+        return_listConnections listConnections(bool isInput)
+        {
+            return_listConnections result;
+            result.ret = true;
+            std::lock_guard<std::mutex> lock(m_owner.m_stateMutex);
+            for (auto* unit : m_owner.m_units) {
+                if ((unit != nullptr) && (isInput ? unit->isInput() : unit->isOutput()) && !unit->isFinished()) {
+                    const Route route = unit->getRoute();
+                    const std::string& name = isInput ? route.getFromName() : route.getToName();
+                    if (!name.empty()) {
+                        result.connections.push_back(name);
+                    }
+                }
             }
-        } break;
-        case PortCoreConnectionDirection::In: {
-            if (detachPortMonitor(false)) {
-                result.addVocab(Vocab::encode("ok"));
-            } else {
-                result.addVocab(Vocab::encode("fail"));
-            }
-        } break;
-        case PortCoreConnectionDirection::Error:
-            result.addVocab(Vocab::encode("fail"));
-            result.addString("detach command must be followed by [out] or [in]");
-        };
-        return result;
-    };
+            return result;
+        }
 
-    auto handleAdminListCmd = [this](const PortCoreConnectionDirection direction,
-                                     const std::string& target) {
-        Bottle result;
-        switch (direction) {
-        case PortCoreConnectionDirection::In: {
-            // Return a list of all input connections.
-            std::lock_guard<std::mutex> lock(m_stateMutex);
-            for (auto* unit : m_units) {
-                if ((unit != nullptr) && unit->isInput() && !unit->isFinished()) {
-                    Route route = unit->getRoute();
-                    if (target.empty()) {
-                        const std::string& name = route.getFromName();
-                        if (!name.empty()) {
-                            result.addString(name);
+        return_getConnectionInfo getConnectionInfo(bool isInput, const std::string& portname)
+        {
+            return_getConnectionInfo result;
+            result.ret = true;
+            std::lock_guard<std::mutex> lock(m_owner.m_stateMutex);
+            for (auto* unit : m_owner.m_units) {
+                if ((unit != nullptr) && (isInput ? unit->isInput() : unit->isOutput()) && !unit->isFinished()) {
+                    const Route route = unit->getRoute();
+                    if ((isInput ? route.getFromName() : route.getToName()) == portname) {
+                        result.found = true;
+                        result.from_port = route.getFromName();
+                        result.to_port = route.getToName();
+                        result.carrier = route.getCarrierName();
+                        Carrier* carrier = Carriers::chooseCarrier(route.getCarrierName());
+                        if (carrier != nullptr) {
+                            result.connectionless = carrier->isConnectionless();
+                            result.push = carrier->isPush();
+                            delete carrier;
                         }
-                    } else if (route.getFromName() == target) {
-                        describeRoute(route, result);
-                    }
-                }
-            }
-        } break;
-        case PortCoreConnectionDirection::Out: {
-            // Return a list of all output connections.
-            std::lock_guard<std::mutex> lock(m_stateMutex);
-            for (auto* unit : m_units) {
-                if ((unit != nullptr) && unit->isOutput() && !unit->isFinished()) {
-                    Route route = unit->getRoute();
-                    if (target.empty()) {
-                        result.addString(route.getToName());
-                    } else if (route.getToName() == target) {
-                        describeRoute(route, result);
-                    }
-                }
-            }
-        } break;
-        case PortCoreConnectionDirection::Error:
-            // Should never happen
-            yCAssert(PORTCORE, false);
-            break;
-        }
-        return result;
-    };
-
-    auto handleAdminSetInCmd = [this](const std::string& target,
-                                      const Property& property) {
-        Bottle result;
-        // Set carrier parameters on a given input connection.
-        std::lock_guard<std::mutex> lock(m_stateMutex);
-        if (target.empty()) {
-            result.addInt32(-1);
-            result.addString("target port is not specified.\r\n");
-        } else {
-            if (target == getName()) {
-                std::string errMsg;
-                if (!setParamPortMonitor(property, false, errMsg)) {
-                    result.addVocab(Vocab::encode("fail"));
-                    result.addString(errMsg);
-                } else {
-                    result.addVocab(Vocab::encode("ok"));
-                }
-            } else {
-                for (auto* unit : m_units) {
-                    if ((unit != nullptr) && unit->isInput() && !unit->isFinished()) {
-                        Route route = unit->getRoute();
-                        if (route.getFromName() == target) {
-                            unit->setCarrierParams(property);
-                            result.addInt32(0);
-                            std::string msg = "Configured connection from ";
-                            msg += route.getFromName();
-                            msg += "\r\n";
-                            result.addString(msg);
-                            break;
-                        }
-                    }
-                }
-            }
-            if (result.size() == 0) {
-                result.addInt32(-1);
-                std::string msg = "Could not find an incoming connection from ";
-                msg += target;
-                msg += "\r\n";
-                result.addString(msg);
-            }
-        }
-        return result;
-    };
-
-    auto handleAdminSetOutCmd = [this](const std::string& target,
-                                       const Property& property) {
-        Bottle result;
-        // Set carrier parameters on a given output connection.
-        std::lock_guard<std::mutex> lock(m_stateMutex);
-        if (target.empty()) {
-            result.addInt32(-1);
-            result.addString("target port is not specified.\r\n");
-        } else {
-            if (target == getName()) {
-                std::string errMsg;
-                if (!setParamPortMonitor(property, true, errMsg)) {
-                    result.addVocab(Vocab::encode("fail"));
-                    result.addString(errMsg);
-                } else {
-                    result.addVocab(Vocab::encode("ok"));
-                }
-            } else {
-                for (auto* unit : m_units) {
-                    if ((unit != nullptr) && unit->isOutput() && !unit->isFinished()) {
-                        Route route = unit->getRoute();
-                        if (route.getToName() == target) {
-                            unit->setCarrierParams(property);
-                            result.addInt32(0);
-                            std::string msg = "Configured connection to ";
-                            msg += route.getToName();
-                            msg += "\r\n";
-                            result.addString(msg);
-                            break;
-                        }
-                    }
-                }
-            }
-            if (result.size() == 0) {
-                result.addInt32(-1);
-                std::string msg = "Could not find an incoming connection to ";
-                msg += target;
-                msg += "\r\n";
-                result.addString(msg);
-            }
-        }
-        return result;
-    };
-
-    auto handleAdminGetInCmd = [this](const std::string& target) {
-        Bottle result;
-        // Get carrier parameters for a given input connection.
-        std::lock_guard<std::mutex> lock(m_stateMutex);
-        if (target.empty()) {
-            result.addInt32(-1);
-            result.addString("target port is not specified.\r\n");
-        } else if (target == getName()) {
-            yarp::os::Property property;
-            std::string errMsg;
-            if (!getParamPortMonitor(property, false, errMsg)) {
-                result.addVocab(Vocab::encode("fail"));
-                result.addString(errMsg);
-            } else {
-                result.addDict() = property;
-            }
-        } else {
-            for (auto* unit : m_units) {
-                if ((unit != nullptr) && unit->isInput() && !unit->isFinished()) {
-                    Route route = unit->getRoute();
-                    if (route.getFromName() == target) {
-                        yarp::os::Property property;
-                        unit->getCarrierParams(property);
-                        result.addDict() = property;
                         break;
                     }
                 }
             }
-            if (result.size() == 0) {
-                result.addInt32(-1);
-                std::string msg = "Could not find an incoming connection from ";
-                msg += target;
-                msg += "\r\n";
-                result.addString(msg);
-            }
+            return result;
         }
-        return result;
-    };
 
-    auto handleAdminGetOutCmd = [this](const std::string& target) {
-        Bottle result;
-        // Get carrier parameters for a given output connection.
-        std::lock_guard<std::mutex> lock(m_stateMutex);
-        if (target.empty()) {
-            result.addInt32(-1);
-            result.addString("target port is not specified.\r\n");
-        } else if (target == getName()) {
-            yarp::os::Property property;
-            std::string errMsg;
-            if (!getParamPortMonitor(property, true, errMsg)) {
-                result.addVocab(Vocab::encode("fail"));
-                result.addString(errMsg);
-            } else {
-                result.addDict() = property;
+        return_setPortmonitorParams setPortmonitorParams(const std::string& params, bool isOutput)
+        {
+            return_setPortmonitorParams result;
+            result.ret = true;
+            Property property;
+            property.fromString(params);
+            result.success = m_owner.setParamPortMonitor(property, isOutput, result.message);
+            return result;
+        }
+
+        return_getPortmonitorParams getPortmonitorParams(bool isOutput)
+        {
+            return_getPortmonitorParams result;
+            result.ret = true;
+            Property property;
+            result.success = m_owner.getParamPortMonitor(property, isOutput, result.message);
+            if (result.success) {
+                result.params = property.toString();
             }
-        } else {
-            for (auto* unit : m_units) {
-                if ((unit != nullptr) && unit->isOutput() && !unit->isFinished()) {
-                    Route route = unit->getRoute();
-                    if (route.getToName() == target) {
-                        yarp::os::Property property;
-                        unit->getCarrierParams(property);
-                        result.addDict() = property;
-                        break;
+            return result;
+        }
+
+        // Returns the unit of the (active) connection coming from (isInput) or
+        // going to (!isInput) the given port, or nullptr if there is none.
+        // NOTE: m_owner.m_stateMutex must be locked by the caller.
+        PortCoreUnit* findConnectionUnit(bool isInput, const std::string& portname)
+        {
+            for (auto* unit : m_owner.m_units) {
+                if ((unit != nullptr) && (isInput ? unit->isInput() : unit->isOutput()) && !unit->isFinished()) {
+                    const Route route = unit->getRoute();
+                    if ((isInput ? route.getFromName() : route.getToName()) == portname) {
+                        return unit;
                     }
                 }
             }
-            if (result.size() == 0) {
-                result.addInt32(-1);
-                std::string msg = "Could not find an incoming connection to ";
-                msg += target;
-                msg += "\r\n";
-                result.addString(msg);
-            }
+            return nullptr;
         }
-        return result;
-    };
 
-    auto handleAdminPropGetCmd = [this](const std::string& key) {
-        Bottle result;
-        Property* p = acquireProperties(false);
-        if (p != nullptr) {
-            if (key.empty()) {
-                result.fromString(p->toString());
-            } else {
-                // request: "prop get /portname"
-                if (key[0] == '/') {
-                    bool bFound = false;
-                    // check for their own name
-                    if (key == getName()) {
-                        bFound = true;
-                        Bottle& sched = result.addList();
-                        sched.addString("sched");
-                        Property& sched_prop = sched.addDict();
-                        sched_prop.put("tid", static_cast<int>(this->getTid()));
-                        sched_prop.put("priority", this->getPriority());
-                        sched_prop.put("policy", this->getPolicy());
-
-                        SystemInfo::ProcessInfo info = SystemInfo::getProcessInfo();
-                        Bottle& proc = result.addList();
-                        proc.addString("process");
-                        Property& proc_prop = proc.addDict();
-                        proc_prop.put("pid", info.pid);
-                        proc_prop.put("name", (info.pid != -1) ? info.name : "unknown");
-                        proc_prop.put("arguments", (info.pid != -1) ? info.arguments : "unknown");
-                        proc_prop.put("priority", info.schedPriority);
-                        proc_prop.put("policy", info.schedPolicy);
-
-                        SystemInfo::PlatformInfo pinfo = SystemInfo::getPlatformInfo();
-                        Bottle& platform = result.addList();
-                        platform.addString("platform");
-                        Property& platform_prop = platform.addDict();
-                        platform_prop.put("os", pinfo.name);
-                        platform_prop.put("hostname", m_address.getHost());
-
-                        unsigned int f = getFlags();
-                        bool is_input = (f & PORTCORE_IS_INPUT) != 0;
-                        bool is_output = (f & PORTCORE_IS_OUTPUT) != 0;
-                        bool is_rpc = (f & PORTCORE_IS_RPC) != 0;
-                        Bottle& port = result.addList();
-                        port.addString("port");
-                        Property& port_prop = port.addDict();
-                        port_prop.put("is_input", is_input);
-                        port_prop.put("is_output", is_output);
-                        port_prop.put("is_rpc", is_rpc);
-                        port_prop.put("type", getType().getName());
-                    } else {
-                        for (auto* unit : m_units) {
-                            if ((unit != nullptr) && !unit->isFinished()) {
-                                Route route = unit->getRoute();
-                                std::string coreName = (unit->isOutput()) ? route.getToName() : route.getFromName();
-                                if (key == coreName) {
-                                    bFound = true;
-                                    int priority = unit->getPriority();
-                                    int policy = unit->getPolicy();
-                                    int tos = getTypeOfService(unit);
-                                    int tid = static_cast<int>(unit->getTid());
-                                    Bottle& sched = result.addList();
-                                    sched.addString("sched");
-                                    Property& sched_prop = sched.addDict();
-                                    sched_prop.put("tid", tid);
-                                    sched_prop.put("priority", priority);
-                                    sched_prop.put("policy", policy);
-                                    Bottle& qos = result.addList();
-                                    qos.addString("qos");
-                                    Property& qos_prop = qos.addDict();
-                                    qos_prop.put("tos", tos);
-                                }
-                            } // end isFinished()
-                        }     // end for loop
-                    }         // end portName == getname()
-
-                    if (!bFound) { // cannot find any port matches the requested one
-                        result.addVocab(Vocab::encode("fail"));
-                        std::string msg = "cannot find any connection to/from ";
-                        msg = msg + key;
-                        result.addString(msg);
-                    }
-                    // end of (portName[0] == '/')
-                } else {
-                    result.add(p->find(key));
-                }
-            }
+        std::string connectionNotFoundMessage(bool isInput, const std::string& portname)
+        {
+            return isInput ? "Could not find an incoming connection from " + portname
+                           : "Could not find an outgoing connection to " + portname;
         }
-        releaseProperties(p);
-        return result;
-    };
 
-    auto handleAdminPropSetCmd = [this](const std::string& key,
-                                        const Value& value,
-                                        const Bottle& process,
-                                        const Bottle& sched,
-                                        const Bottle& qos) {
-        Bottle result;
-        Property* p = acquireProperties(false);
-        bool bOk = true;
-        if (p != nullptr) {
-            p->put(key, value);
-            // setting scheduling properties of all threads within the process
-            // scope through the admin port
-            // e.g. prop set /current_port (process ((priority 30) (policy 1)))
-            if (!process.isNull()) {
-                std::string portName = key;
-                if ((!portName.empty()) && (portName[0] == '/')) {
-                    // check for their own name
-                    if (portName == getName()) {
-                        bOk = false;
-                        Bottle* process_prop = process.find("process").asList();
-                        if (process_prop != nullptr) {
-                            int prio = -1;
-                            int policy = -1;
-                            if (process_prop->check("priority")) {
-                                prio = process_prop->find("priority").asInt32();
-                            }
-                            if (process_prop->check("policy")) {
-                                policy = process_prop->find("policy").asInt32();
-                            }
-                            bOk = setProcessSchedulingParam(prio, policy);
-                        }
-                    }
-                }
+        return_setConnectionParams setConnectionParams(bool isInput, const std::string& portname, const std::string& params)
+        {
+            return_setConnectionParams result;
+            result.ret = true;
+            std::lock_guard<std::mutex> lock(m_owner.m_stateMutex);
+            PortCoreUnit* unit = findConnectionUnit(isInput, portname);
+            if (unit == nullptr) {
+                result.success = false;
+                result.message = connectionNotFoundMessage(isInput, portname);
+                return result;
             }
-            // check if we need to set the PortCoreUnit scheduling policy
-            // e.g., "prop set /portname (sched ((priority 30) (policy 1)))"
+            Property property;
+            property.fromString(params);
+            unit->setCarrierParams(property);
+            result.success = true;
+            result.message = (isInput ? "Configured connection from " : "Configured connection to ") + portname;
+            return result;
+        }
+
+        return_getConnectionParams getConnectionParams(bool isInput, const std::string& portname)
+        {
+            return_getConnectionParams result;
+            result.ret = true;
+            std::lock_guard<std::mutex> lock(m_owner.m_stateMutex);
+            PortCoreUnit* unit = findConnectionUnit(isInput, portname);
+            if (unit == nullptr) {
+                result.success = false;
+                result.message = connectionNotFoundMessage(isInput, portname);
+                return result;
+            }
+            Property property;
+            unit->getCarrierParams(property);
+            result.success = true;
+            result.params = property.toString();
+            return result;
+        }
+
+        return_getConnectionQos getConnectionQos(bool isInput, const std::string& portname)
+        {
+            return_getConnectionQos result;
+            result.ret = true;
+            result.qos_tos = -1;
+            std::lock_guard<std::mutex> lock(m_owner.m_stateMutex);
+            PortCoreUnit* unit = findConnectionUnit(isInput, portname);
+            if (unit != nullptr) {
+                result.found = true;
+                result.thread.tid = static_cast<int>(unit->getTid());
+                result.thread.priority = unit->getPriority();
+                result.thread.policy = unit->getPolicy();
+                result.qos_tos = m_owner.getTypeOfService(unit);
+            }
+            return result;
+        }
+
+        return_setConnectionQos setConnectionQos(bool isInput, const std::string& portname, int priority, int policy, int tos)
+        {
             // The priority and policy values on Linux are:
             // SCHED_OTHER : policy=0, priority=[0 ..  0]
             // SCHED_FIFO  : policy=1, priority=[1 .. 99]
             // SCHED_RR    : policy=2, priority=[1 .. 99]
-            if (!sched.isNull()) {
-                if ((!key.empty()) && (key[0] == '/')) {
-                    bOk = false;
-                    for (auto* unit : m_units) {
-                        if ((unit != nullptr) && !unit->isFinished()) {
-                            Route route = unit->getRoute();
-                            std::string portName = (unit->isOutput()) ? route.getToName() : route.getFromName();
-
-                            if (portName == key) {
-                                Bottle* sched_prop = sched.find("sched").asList();
-                                if (sched_prop != nullptr) {
-                                    int prio = -1;
-                                    int policy = -1;
-                                    if (sched_prop->check("priority")) {
-                                        prio = sched_prop->find("priority").asInt32();
-                                    }
-                                    if (sched_prop->check("policy")) {
-                                        policy = sched_prop->find("policy").asInt32();
-                                    }
-                                    bOk = (unit->setPriority(prio, policy) != -1);
-                                } else {
-                                    bOk = false;
-                                }
-                                break;
-                            }
-                        }
-                    }
-                }
+            return_setConnectionQos result;
+            result.ret = true;
+            std::lock_guard<std::mutex> lock(m_owner.m_stateMutex);
+            PortCoreUnit* unit = findConnectionUnit(isInput, portname);
+            if (unit == nullptr) {
+                result.success = false;
+                result.message = connectionNotFoundMessage(isInput, portname);
+                return result;
             }
-            // check if we need to set the packet QOS policy
-            // e.g., "prop set /portname (qos ((priority HIGH)))"
-            // e.g., "prop set /portname (qos ((dscp AF12)))"
-            // e.g., "prop set /portname (qos ((tos 12)))"
-            if (!qos.isNull()) {
-                if ((!key.empty()) && (key[0] == '/')) {
-                    bOk = false;
-                    for (auto* unit : m_units) {
-                        if ((unit != nullptr) && !unit->isFinished()) {
-                            Route route = unit->getRoute();
-                            std::string portName = (unit->isOutput()) ? route.getToName() : route.getFromName();
-                            if (portName == key) {
-                                Bottle* qos_prop = qos.find("qos").asList();
-                                if (qos_prop != nullptr) {
-                                    int tos = -1;
-                                    if (qos_prop->check("priority")) {
-                                        // set the packet TOS value on the socket based on some predefined
-                                        // priority levels.
-                                        // the expected levels are: LOW, NORM, HIGH, CRIT
-                                        NetInt32 priority = qos_prop->find("priority").asVocab();
-                                        int dscp;
-                                        switch (priority) {
-                                        case yarp::os::createVocab('L', 'O', 'W'):
-                                            dscp = 10;
-                                            break;
-                                        case yarp::os::createVocab('N', 'O', 'R', 'M'):
-                                            dscp = 0;
-                                            break;
-                                        case yarp::os::createVocab('H', 'I', 'G', 'H'):
-                                            dscp = 36;
-                                            break;
-                                        case yarp::os::createVocab('C', 'R', 'I', 'T'):
-                                            dscp = 44;
-                                            break;
-                                        default:
-                                            dscp = -1;
-                                        }
-                                        if (dscp >= 0) {
-                                            tos = (dscp << 2);
-                                        }
-                                    } else if (qos_prop->check("dscp")) {
-                                        // Set the packet TOS value on the socket based on the DSCP level
-                                        QosStyle::PacketPriorityDSCP dscp_class = QosStyle::getDSCPByVocab(qos_prop->find("dscp").asVocab());
-                                        int dscp = -1;
-                                        if (dscp_class == QosStyle::DSCP_Invalid) {
-                                            auto dscp_val = qos_prop->find("dscp");
-                                            if (dscp_val.isInt32()) {
-                                                dscp = dscp_val.asInt32();
-                                            }
-                                        } else {
-                                            dscp = static_cast<int>(dscp_class);
-                                        }
-                                        if ((dscp >= 0) && (dscp < 64)) {
-                                            tos = (dscp << 2);
-                                        }
-                                    } else if (qos_prop->check("tos")) {
-                                        // Set the TOS value directly
-                                        auto tos_val = qos_prop->find("tos");
-                                        if (tos_val.isInt32()) {
-                                            tos = tos_val.asInt32();
-                                        }
-                                    }
-                                    if (tos >= 0) {
-                                        bOk = setTypeOfService(unit, tos);
-                                    }
-                                } else {
-                                    bOk = false;
-                                }
-                                break;
-                            }
-                        }
-                    }
-                }
+            if (unit->setPriority(priority, policy) == -1) {
+                result.success = false;
+                result.message = "Cannot set the scheduling parameters of the thread of the connection";
+                return result;
             }
+            // a negative tos means "leave unchanged"
+            if (tos >= 0 && !m_owner.setTypeOfService(unit, tos)) {
+                result.success = false;
+                result.message = "Cannot set the type of service of the connection";
+                return result;
+            }
+            result.success = true;
+            return result;
         }
-        releaseProperties(p);
-        result.addVocab((bOk) ? Vocab::encode("ok") : Vocab::encode("fail"));
-        return result;
-    };
 
-    // NOTE: YARP partially supports the ROS Slave API https://wiki.ros.org/ROS/Slave_API
+    public:
+        PortCoreMsgsServer(PortCore& owner, void* id) : m_owner(owner), m_id(id) {}
 
-    auto handleAdminRosPublisherUpdateCmd = [this](const std::string& topic, Bottle* pubs) {
-        // When running against a ROS name server, we need to
-        // support ROS-style callbacks for connecting publishers
-        // with subscribers.  Note: this should not be necessary
-        // anymore, now that a dedicated yarp::os::Node class
-        // has been implemented, but is still needed for older
-        // ways of interfacing with ROS without using dedicated
-        // node ports.
-        Bottle result;
-        if (pubs != nullptr) {
-            Property listed;
-            for (size_t i = 0; i < pubs->size(); i++) {
-                std::string pub = pubs->get(i).asString();
-                listed.put(pub, 1);
-            }
-            Property present;
-            {
-                // Critical section
-                std::lock_guard<std::mutex> lock(m_stateMutex);
-                for (auto* unit : m_units) {
-                    if ((unit != nullptr) && unit->isPupped()) {
-                        std::string me = unit->getPupString();
-                        present.put(me, 1);
-                        if (!listed.check(me)) {
-                            unit->setDoomed();
-                        }
-                    }
-                }
-            }
-            for (size_t i = 0; i < pubs->size(); i++) {
-                std::string pub = pubs->get(i).asString();
-                if (!present.check(pub)) {
-                    yCDebug(PORTCORE, "ROS ADD %s", pub.c_str());
-                    Bottle req;
-                    Bottle reply;
-                    req.addString("requestTopic");
-                    NestedContact nc(getName());
-                    req.addString(nc.getNodeName());
-                    req.addString(topic);
-                    Bottle& lst = req.addList();
-                    Bottle& sublst = lst.addList();
-                    sublst.addString("TCPROS");
-                    yCDebug(PORTCORE, "Sending [%s] to %s", req.toString().c_str(), pub.c_str());
-                    Contact c = Contact::fromString(pub);
-                    if (!__pc_rpc(c, "xmlrpc", req, reply, false)) {
-                        fprintf(stderr, "Cannot connect to ROS subscriber %s\n", pub.c_str());
-                        // show diagnosics
-                        __pc_rpc(c, "xmlrpc", req, reply, true);
-                        __tcp_check(c);
-                    } else {
-                        Bottle* pref = reply.get(2).asList();
-                        std::string hostname;
-                        std::string carrier;
-                        int portnum = 0;
-                        if (reply.get(0).asInt32() != 1) {
-                            fprintf(stderr, "Failure looking up topic %s: %s\n", topic.c_str(), reply.toString().c_str());
-                        } else if (pref == nullptr) {
-                            fprintf(stderr, "Failure looking up topic %s: expected list of protocols\n", topic.c_str());
-                        } else if (pref->get(0).asString() != "TCPROS") {
-                            fprintf(stderr, "Failure looking up topic %s: unsupported protocol %s\n", topic.c_str(), pref->get(0).asString().c_str());
-                        } else {
-                            Value hostname2 = pref->get(1);
-                            Value portnum2 = pref->get(2);
-                            hostname = hostname2.asString();
-                            portnum = portnum2.asInt32();
-                            carrier = "tcpros+role.pub+topic.";
-                            carrier += topic;
-                            yCDebug(PORTCORE, "topic %s available at %s:%d", topic.c_str(), hostname.c_str(), portnum);
-                        }
-                        if (portnum != 0) {
-                            Contact addr(hostname, portnum);
-                            OutputProtocol* op = nullptr;
-                            Route r = Route(getName(), pub, carrier);
-                            op = Carriers::connect(addr);
-                            if (op == nullptr) {
-                                fprintf(stderr, "NO CONNECTION\n");
-                                std::exit(1);
-                            } else {
-                                op->attachPort(m_contactable);
-                                op->open(r);
-                            }
-                            Route route = op->getRoute();
-                            route.swapNames();
-                            op->rename(route);
-                            InputProtocol* ip = &(op->getInput());
-                            {
-                                // Critical section
-                                std::lock_guard<std::mutex> lock(m_stateMutex);
-                                PortCoreUnit* unit = new PortCoreInputUnit(*this,
-                                                                           getNextIndex(),
-                                                                           ip,
-                                                                           true);
-                                yCAssert(PORTCORE, unit != nullptr);
-                                unit->setPupped(pub);
-                                unit->start();
-                                m_units.push_back(unit);
-                            }
-                        }
-                    }
-                }
-            }
+        return_addConnection addConnection(const std::string& portname, const std::string& carrier) override
+        {
+            // Add an output to the port.
+            return_addConnection result;
+            result.ret = true;
+            const std::string output = carrier.empty() ? portname : carrier + ":/" + portname;
+            StringOutputStream cache;
+            result.success = m_owner.addOutput(output, m_id, &cache, false);
+            result.message = cache.toString();
+            return result;
         }
-        result.addInt32(1);
-        result.addString("ok");
-        return result;
+
+        return_delConnection delConnection(const std::string& portname) override
+        {
+            // Delete any inputs or outputs involving the named port.
+            return_delConnection result;
+            result.ret = true;
+            StringOutputStream cache;
+            const bool removedOutput = m_owner.removeOutput(portname, m_id, &cache);
+            const std::string outputMessage = cache.toString();
+            cache.reset();
+            const bool removedInput = m_owner.removeInput(portname, m_id, &cache);
+            const std::string inputMessage = cache.toString();
+            // The operation succeeds if at least one connection was removed.
+            // The reply contains only the message(s) of the removal(s) which
+            // actually happened (or both failure messages, if none).
+            result.success = removedOutput || removedInput;
+            if (removedOutput && !removedInput) {
+                result.message = outputMessage;
+            } else if (!removedOutput && removedInput) {
+                result.message = inputMessage;
+            } else {
+                result.message = outputMessage + inputMessage;
+            }
+            return result;
+        }
+
+        bool attachPortmonitorOut(const std::string& prop) override { return attach(prop, true); }
+        bool attachPortmonitorIn(const std::string& prop) override { return attach(prop, false); }
+        bool detachPortmonitorOut() override { return m_owner.detachPortMonitor(true); }
+        bool detachPortmonitorIn() override { return m_owner.detachPortMonitor(false); }
+        return_setPortmonitorParams setPortmonitorParamsOut(const std::string& params) override { return setPortmonitorParams(params, true); }
+        return_setPortmonitorParams setPortmonitorParamsIn(const std::string& params) override { return setPortmonitorParams(params, false); }
+        return_getPortmonitorParams getPortmonitorParamsOut() override { return getPortmonitorParams(true); }
+        return_getPortmonitorParams getPortmonitorParamsIn() override { return getPortmonitorParams(false); }
+        return_setConnectionParams setConnectionParamsOut(const std::string& portname, const std::string& params) override { return setConnectionParams(false, portname, params); }
+        return_setConnectionParams setConnectionParamsIn(const std::string& portname, const std::string& params) override { return setConnectionParams(true, portname, params); }
+        return_getConnectionParams getConnectionParamsOut(const std::string& portname) override { return getConnectionParams(false, portname); }
+        return_getConnectionParams getConnectionParamsIn(const std::string& portname) override { return getConnectionParams(true, portname); }
+        return_listConnections listConnectionsIn() override { return listConnections(true); }
+        return_listConnections listConnectionsOut() override { return listConnections(false); }
+        return_getConnectionInfo getConnectionInfoIn(const std::string& portname) override { return getConnectionInfo(true, portname); }
+        return_getConnectionInfo getConnectionInfoOut(const std::string& portname) override { return getConnectionInfo(false, portname); }
+
+        return_getAdminProtocolVersion getAdminProtocolVersion() override
+        {
+            // Gives a version number for the administrative commands.
+            // It is distinct from YARP library versioning.
+            return_getAdminProtocolVersion result;
+            result.ret = true;
+            result.version_major = 1;
+            result.version_minor = 2;
+            result.version_patch = 4;
+            return result;
+        }
+
+        return_getPortInfo getPortInfo() override
+        {
+            return_getPortInfo result;
+            result.ret = true;
+
+            const SystemInfo::ProcessInfo processInfo = SystemInfo::getProcessInfo();
+            result.process = processInfo;
+            if (processInfo.pid == -1) {
+                result.process.name = "unknown";
+                result.process.arguments = "unknown";
+            }
+            result.platform = SystemInfo::getPlatformInfo();
+
+            result.thread.tid = static_cast<int>(m_owner.getTid());
+            result.thread.priority = m_owner.getPriority();
+            result.thread.policy = m_owner.getPolicy();
+
+            const unsigned int flags = m_owner.getFlags();
+            result.port.is_input = (flags & PORTCORE_IS_INPUT) != 0;
+            result.port.is_output = (flags & PORTCORE_IS_OUTPUT) != 0;
+            result.port.is_rpc = (flags & PORTCORE_IS_RPC) != 0;
+            result.port.type = m_owner.getType().getName();
+            result.port.hostname = m_owner.m_address.getHost();
+            return result;
+        }
+
+        return_getConnectionQos getConnectionQosIn(const std::string& portname) override { return getConnectionQos(true, portname); }
+        return_getConnectionQos getConnectionQosOut(const std::string& portname) override { return getConnectionQos(false, portname); }
+        return_setConnectionQos setConnectionQosIn(const std::string& portname, const std::int32_t scheduler_priority, const std::int32_t scheduler_policy, const std::int32_t qos_tos) override { return setConnectionQos(true, portname, scheduler_priority, scheduler_policy, qos_tos); }
+        return_setConnectionQos setConnectionQosOut(const std::string& portname, const std::int32_t scheduler_priority, const std::int32_t scheduler_policy, const std::int32_t qos_tos) override { return setConnectionQos(false, portname, scheduler_priority, scheduler_policy, qos_tos); }
+
+        bool setProcessScheduling(const std::int32_t priority, const std::int32_t policy) override
+        {
+            // set the scheduling parameters of all the threads of the process
+            return m_owner.setProcessSchedulingParam(priority, policy);
+        }
     };
 
-    auto handleAdminRosRequestTopicCmd = [this]() {
-        // ROS-style query for topics.
-        Bottle result;
-        result.addInt32(1);
-        NestedContact nc(getName());
-        result.addString(nc.getNodeName());
-        Bottle& lst = result.addList();
-        Contact addr = getAddress();
-        lst.addString("TCPROS");
-        lst.addString(addr.getHost());
-        lst.addInt32(addr.getPort());
-        return result;
-    };
-
-    auto handleAdminRosGetPidCmd = []() {
-        // ROS-style query for PID.
-        Bottle result;
-        result.addInt32(1);
-        result.addString("");
-        result.addInt32(yarp::os::impl::getpid());
-        return result;
-    };
-
-    auto handleAdminRosGetBusInfoCmd = []() {
-        // ROS-style query for bus information - we support this
-        // in yarp::os::Node but not otherwise.
-        Bottle result;
-        result.addInt32(1);
-        result.addString("");
-        result.addList().addList();
-        return result;
+    auto handleAdminThriftCmd = [this, id](const Bottle& cmd, Bottle& result) {
+        // Forward the (already read) command to the thrift service and
+        // collect its reply. Returns false if the command is not one of
+        // the commands of the service.
+        PortCoreMsgsServer server(*this, id);
+        DummyConnector con;
+        cmd.write(con.getWriter());
+        if (!server.read(con.getReader())) {
+            return false;
+        }
+        result.read(con.getReader());
+        return true;
     };
 
     auto handleAdminUnknownCmd = [this](const Bottle& cmd) {
@@ -2564,128 +1864,17 @@ bool PortCore::adminBlock(ConnectionReader& reader,
             }
         }
         if (!ok) {
-            result.addVocab(Vocab::encode("fail"));
-            result.addString("send [help] for list of valid commands");
+            result.addVocab32("fail");
+            result.addString("send help for the list of valid commands");
         }
         return result;
     };
 
-    const PortCoreCommand command = parseCommand(cmd.get(0));
-    switch (command) {
-    case PortCoreCommand::Help:
-        result = handleAdminHelpCmd();
-        break;
-    case PortCoreCommand::Ver:
-        result = handleAdminVerCmd();
-        break;
-    case PortCoreCommand::Pray:
-        result = handleAdminPrayCmd();
-        break;
-    case PortCoreCommand::Add: {
-        std::string output = cmd.get(1).asString();
-        std::string carrier = cmd.get(2).asString();
-        result = handleAdminAddCmd(std::move(output), carrier);
-    } break;
-    case PortCoreCommand::Del: {
-        const std::string dest = cmd.get(1).asString();
-        result = handleAdminDelCmd(dest);
-    } break;
-    case PortCoreCommand::Atch: {
-        const PortCoreConnectionDirection direction = parseConnectionDirection(cmd.get(1).asVocab());
-        Property prop(cmd.get(2).asString().c_str());
-        result = handleAdminAtchCmd(direction, std::move(prop));
-    } break;
-    case PortCoreCommand::Dtch: {
-        const PortCoreConnectionDirection direction = parseConnectionDirection(cmd.get(1).asVocab());
-        result = handleAdminDtchCmd(direction);
-    } break;
-    case PortCoreCommand::List: {
-        const PortCoreConnectionDirection direction = parseConnectionDirection(cmd.get(1).asVocab(), true);
-        const std::string target = cmd.get(2).asString();
-        result = handleAdminListCmd(direction, target);
-    } break;
-    case PortCoreCommand::Set: {
-        const PortCoreConnectionDirection direction = parseConnectionDirection(cmd.get(1).asVocab(), true);
-        const std::string target = cmd.get(2).asString();
-        yarp::os::Property property;
-        property.fromString(cmd.toString());
-        switch (direction) {
-        case PortCoreConnectionDirection::In:
-            result = handleAdminSetInCmd(target, property);
-            break;
-        case PortCoreConnectionDirection::Out:
-            result = handleAdminSetOutCmd(target, property);
-            break;
-        case PortCoreConnectionDirection::Error:
-            yCAssert(PORTCORE, false); // Should never happen (error is out)
-            break;
-        }
-    } break;
-    case PortCoreCommand::Get: {
-        const PortCoreConnectionDirection direction = parseConnectionDirection(cmd.get(1).asVocab(), true);
-        const std::string target = cmd.get(2).asString();
-        switch (direction) {
-        case PortCoreConnectionDirection::In:
-            result = handleAdminGetInCmd(target);
-            break;
-        case PortCoreConnectionDirection::Out:
-            result = handleAdminGetOutCmd(target);
-            break;
-        case PortCoreConnectionDirection::Error:
-            yCAssert(PORTCORE, false); // Should never happen (error is out)
-            break;
-        }
-    } break;
-    case PortCoreCommand::Prop: {
-        PortCorePropertyAction action = parsePropertyAction(cmd.get(1).asVocab());
-        const std::string key = cmd.get(2).asString();
-        // Set/get arbitrary properties on a port.
-        switch (action) {
-        case PortCorePropertyAction::Get:
-            result = handleAdminPropGetCmd(key);
-            break;
-        case PortCorePropertyAction::Set: {
-            const Value& value = cmd.get(3);
-            const Bottle& process = cmd.findGroup("process");
-            const Bottle& sched = cmd.findGroup("sched");
-            const Bottle& qos = cmd.findGroup("qos");
-            result = handleAdminPropSetCmd(key, value, process, sched, qos);
-        } break;
-        case PortCorePropertyAction::Error:
-            result.addVocab(Vocab::encode("fail"));
-            result.addString("property action not known");
-            break;
-        }
-    } break;
-    case PortCoreCommand::RosPublisherUpdate: {
-        yCDebug(PORTCORE, "publisherUpdate! --> %s", cmd.toString().c_str());
-        // std::string caller_id = cmd.get(1).asString(); // Currently unused
-        std::string topic = RosNameSpace::fromRosName(cmd.get(2).asString());
-        Bottle* pubs = cmd.get(3).asList();
-        result = handleAdminRosPublisherUpdateCmd(topic, pubs);
-        reader.requestDrop(); // ROS needs us to close down.
-    } break;
-    case PortCoreCommand::RosRequestTopic:
-        yCDebug(PORTCORE, "requestTopic! --> %s", cmd.toString().c_str());
-        // std::string caller_id = cmd.get(1).asString(); // Currently unused
-        // std::string topic = RosNameSpace::fromRosName(cmd.get(2).asString()); // Currently unused
-        // Bottle protocols = cmd.get(3).asList(); // Currently unused
-        result = handleAdminRosRequestTopicCmd();
-        reader.requestDrop(); // ROS likes to close down.
-        break;
-    case PortCoreCommand::RosGetPid:
-        // std::string caller_id = cmd.get(1).asString(); // Currently unused
-        result = handleAdminRosGetPidCmd();
-        reader.requestDrop(); // ROS likes to close down.
-        break;
-    case PortCoreCommand::RosGetBusInfo:
-        // std::string caller_id = cmd.get(1).asString(); // Currently unused
-        result = handleAdminRosGetBusInfoCmd();
-        reader.requestDrop(); // ROS likes to close down.
-        break;
-    case PortCoreCommand::Unknown:
+    // All the administrative commands (including "help") are defined in the
+    // thrift service PortCoreMsgs. Other commands are forwarded to the admin
+    // reader (if any).
+    if (!handleAdminThriftCmd(cmd, result)) {
         result = handleAdminUnknownCmd(cmd);
-        break;
     }
 
     ConnectionWriter* writer = reader.getWriter();
@@ -2703,17 +1892,17 @@ bool PortCore::setTypeOfService(PortCoreUnit* unit, int tos)
         return false;
     }
 
-    yCDebug(PORTCORE, "Trying to set TOS = %d", tos);
+    yCIDebug(PORTCORE, getName(), "Trying to set TOS = %d", tos);
 
     if (unit->isOutput()) {
         auto* outUnit = dynamic_cast<PortCoreOutputUnit*>(unit);
         if (outUnit != nullptr) {
             OutputProtocol* op = outUnit->getOutPutProtocol();
             if (op != nullptr) {
-                yCDebug(PORTCORE, "Trying to set TOS = %d on output unit", tos);
+                yCIDebug(PORTCORE, getName(), "Trying to set TOS = %d on output unit", tos);
                 bool ok = op->getOutputStream().setTypeOfService(tos);
                 if (!ok) {
-                    yCWarning(PORTCORE, "Setting TOS on output unit failed");
+                    yCIWarning(PORTCORE, getName(), "Setting TOS on output unit failed");
                 }
                 return ok;
             }
@@ -2730,10 +1919,10 @@ bool PortCore::setTypeOfService(PortCoreUnit* unit, int tos)
         if (inUnit != nullptr) {
             InputProtocol* ip = inUnit->getInPutProtocol();
             if ((ip != nullptr) && ip->getOutput().isOk()) {
-                yCDebug(PORTCORE, "Trying to set TOS = %d on input unit", tos);
+                yCIDebug(PORTCORE, getName(), "Trying to set TOS = %d on input unit", tos);
                 bool ok = ip->getOutput().getOutputStream().setTypeOfService(tos);
                 if (!ok) {
-                    yCWarning(PORTCORE, "Setting TOS on input unit failed");
+                    yCIWarning(PORTCORE, getName(), "Setting TOS on input unit failed");
                 }
                 return ok;
             }
@@ -2777,14 +1966,17 @@ int PortCore::getTypeOfService(PortCoreUnit* unit)
 }
 
 // attach a portmonitor plugin to the port or to a specific connection
-bool PortCore::attachPortMonitor(yarp::os::Property& prop, bool isOutput, std::string& errMsg)
+bool PortCore::attachPortMonitor(const std::string& portmonitor_options, bool isOutput, std::string& errMsg)
 {
     // attach to the current port
     Carrier* portmonitor = Carriers::chooseCarrier("portmonitor");
     if (portmonitor == nullptr) {
-        errMsg = "Portmonitor carrier modifier cannot be find or it is not enabled in Yarp!";
+        errMsg = "Portmonitor carrier modifier cannot be find or it is not enabled in YARP!";
         return false;
     }
+
+    yarp::os::Property prop;
+    prop.fromString(portmonitor_options);
 
     if (isOutput) {
         detachPortMonitor(true);
@@ -2944,23 +2136,6 @@ bool PortCore::setProcessSchedulingParam(int priority, int policy)
 #endif
 }
 
-Property* PortCore::acquireProperties(bool readOnly)
-{
-    m_stateMutex.lock();
-    if (!readOnly) {
-        if (m_prop == nullptr) {
-            m_prop = new Property();
-        }
-    }
-    return m_prop;
-}
-
-void PortCore::releaseProperties(Property* prop)
-{
-    YARP_UNUSED(prop);
-    m_stateMutex.unlock();
-}
-
 bool PortCore::removeIO(const Route& route, bool synch)
 {
     return removeUnit(route, synch);
@@ -3026,24 +2201,6 @@ void PortCore::setTimeout(float timeout)
     m_timeout = timeout;
 }
 
-#ifndef YARP_NO_DEPRECATED // since YARP 3.3
-YARP_WARNING_PUSH
-YARP_DISABLE_DEPRECATED_WARNING
-bool PortCore::setCallbackLock(yarp::os::Mutex* mutex)
-{
-    removeCallbackLock();
-    if (mutex != nullptr) {
-        m_old_mutex = mutex;
-        m_mutexOwned = false;
-    } else {
-        m_old_mutex = new yarp::os::Mutex();
-        m_mutexOwned = true;
-    }
-    return true;
-}
-YARP_WARNING_POP
-#endif // YARP_NO_DEPRECATED
-
 bool PortCore::setCallbackLock(std::mutex* mutex)
 {
     removeCallbackLock();
@@ -3063,9 +2220,6 @@ bool PortCore::removeCallbackLock()
         delete m_mutex;
     }
     m_mutex = nullptr;
-#ifndef YARP_NO_DEPRECATED // since YARP 3.3
-    m_old_mutex = nullptr;
-#endif // YARP_NO_DEPRECATED
     m_mutexOwned = false;
     return true;
 }
@@ -3073,15 +2227,7 @@ bool PortCore::removeCallbackLock()
 bool PortCore::lockCallback()
 {
     if (m_mutex == nullptr) {
-#ifndef YARP_NO_DEPRECATED // since YARP 3.3
-        if (m_old_mutex == nullptr) {
-            return false;
-        }
-        m_old_mutex->lock();
-        return true;
-#else // YARP_NO_DEPRECATED
         return false;
-#endif // YARP_NO_DEPRECATED
     }
     m_mutex->lock();
     return true;
@@ -3090,14 +2236,7 @@ bool PortCore::lockCallback()
 bool PortCore::tryLockCallback()
 {
     if (m_mutex == nullptr) {
-#ifndef YARP_NO_DEPRECATED // since YARP 3.3
-        if (m_old_mutex == nullptr) {
-            return true;
-        }
-        return m_old_mutex->try_lock();
-#else // YARP_NO_DEPRECATED
         return true;
-#endif // YARP_NO_DEPRECATED
     }
     return m_mutex->try_lock();
 }
@@ -3105,14 +2244,7 @@ bool PortCore::tryLockCallback()
 void PortCore::unlockCallback()
 {
     if (m_mutex == nullptr) {
-#ifndef YARP_NO_DEPRECATED // since YARP 3.3
-        if (m_old_mutex == nullptr) {
-            return;
-        }
-        return m_old_mutex->unlock();
-#else // YARP_NO_DEPRECATED
         return;
-#endif // YARP_NO_DEPRECATED
     }
     m_mutex->unlock();
 }

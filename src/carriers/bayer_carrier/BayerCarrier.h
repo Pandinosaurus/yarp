@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef BAYERCARRIER_INC
@@ -16,7 +13,7 @@
 #include <yarp/os/DummyConnector.h>
 
 /**
- *
+ * \ingroup carriers_lists
  * Decode bayer images and serve them as regular rgb.
  * Affected by carrier modifiers.  Examples:
  *   tcp+recv.bayer
@@ -77,7 +74,9 @@ public:
     {}
 
     ~BayerCarrier() {
-        if (local) delete local;
+        if (local) {
+            delete local;
+        }
     }
 
     Carrier *create() const override {
@@ -195,6 +194,10 @@ public:
 
     bool setSize(size_t len) override {
         return parent->setSize(len);
+    }
+
+    void flushWriter() override {
+        parent->flushWriter();
     }
 
     ////////////////////////////////////////////////////////////////////////

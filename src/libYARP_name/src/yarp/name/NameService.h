@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARPDB_NAMESERVICE_INC
@@ -15,21 +12,9 @@
 #include <yarp/os/Contact.h>
 #include <yarp/os/NameStore.h>
 
-namespace yarp {
-    /**
-     *
-     * Classes for constructing name servers.  While YARP comes with
-     * a standard, centralized server for mapping port names to
-     * resources, there are plenty of alternatives in how this could
-     * be done.  This namespace collects classes that are of use for
-     * creating alternative name servers (or avoiding name servers
-     * altogether).
-     *
-     */
-    namespace name {
-        class NameService;
-    }
-}
+namespace yarp::name {
+class NameService;
+} // namespace yarp::name
 
 /**
  *

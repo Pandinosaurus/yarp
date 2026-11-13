@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/impl/BufferedConnectionWriter.h>
@@ -460,11 +457,15 @@ void BufferedConnectionWriter::stopWrite() const
     applyConvertTextMode();
 }
 
-SizedWriter* BufferedConnectionWriter::getBuffer() const
+SizedWriter* BufferedConnectionWriter::getBuffer()
 {
-    return const_cast<BufferedConnectionWriter*>(this);
+    return this;
 }
 
+const SizedWriter* BufferedConnectionWriter::getBuffer() const
+{
+    return this;
+}
 
 void BufferedConnectionWriter::setInitialPoolSize(size_t size)
 {
@@ -517,6 +518,7 @@ bool BufferedConnectionWriter::applyConvertTextMode()
         }
         lst_used = 0;
         target = &lst;
+        target_used = &lst_used;
         lst.clear();
         stopPool();
         Bytes data(const_cast<char*>(replacement.c_str()), replacement.length());

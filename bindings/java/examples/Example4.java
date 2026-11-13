@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 import yarp.Network;
@@ -24,7 +21,7 @@ class Example4 {
         // set up a description of the device we want
         // in this case, a remote motor control board
         Property prop = new Property();
-        prop.put("device","remote_controlboard");
+        prop.put("device","controlBoard_nwc_yarp");
         prop.put("local", "/example/motor/client");
         prop.put("remote", "/icubSim/head");  // this is for the icubSim
         // or fake it with "yarpdev --device fakeMotionControl --name /icubSim/head"

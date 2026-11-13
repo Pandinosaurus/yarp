@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_MULTIPLEANALOGSENSORSINTERFACES_H
@@ -12,38 +9,42 @@
 #include <cassert>
 #include <string>
 
+#include <yarp/dev/ReturnValue.h>
 #include <yarp/dev/api.h>
 #include <yarp/sig/Vector.h>
+#include <yarp/dev/SensorMeasurementData.h>
+#include <yarp/dev/SensorMeasurementsData.h>
 
-namespace yarp
+namespace yarp::dev {
+class IThreeAxisGyroscopes;
+class IThreeAxisLinearAccelerometers;
+class IThreeAxisAngularAccelerometers;
+class IThreeAxisMagnetometers;
+class IPositionSensors;
+class ILinearVelocitySensors;
+class IOrientationSensors;
+class ITemperatureSensors;
+class ISixAxisForceTorqueSensors;
+class IContactLoadCellArrays;
+class IEncoderArrays;
+class ISkinPatches;
+
+typedef yarp::dev::SensorMeasurementData SensorMeasurement;
+typedef yarp::dev::SensorMeasurementsData SensorMeasurements;
+
+/**
+ * Status of a given analog sensor exposed by a multiple analog sensors interface.
+ */
+enum MAS_status
 {
-    namespace dev
-    {
-        class IThreeAxisGyroscopes;
-        class IThreeAxisLinearAccelerometers;
-        class IThreeAxisMagnetometers;
-        class IPositionSensors;
-        class IOrientationSensors;
-        class ITemperatureSensors;
-        class ISixAxisForceTorqueSensors;
-        class IContactLoadCellArrays;
-        class IEncoderArrays;
-        class ISkinPatches;
-
-        /**
-         * Status of a given analog sensor exposed by a multiple analog sensors interface.
-         */
-        enum MAS_status
-        {
-            MAS_OK=0,         ///< The sensor is working correctly.
-            MAS_ERROR=1,      ///< The sensor is in generic error state.
-            MAS_OVF=2,        ///< The sensor reached an overflow.
-            MAS_TIMEOUT=3,    ///< The sensor is read through the network, and the latest measurement was received before an implementation-define timeout period.
-            MAS_WAITING_FOR_FIRST_READ=4, ///< The sensor is read through the network, and the device is waiting to receive the first measurement.
-            MAS_UNKNOWN=5     ///< The sensor is in an unknown state.
-        };
-    }
-}
+    MAS_OK = 0,                     ///< The sensor is working correctly.
+    MAS_ERROR = 1,                  ///< The sensor is in generic error state.
+    MAS_OVF = 2,                    ///< The sensor reached an overflow.
+    MAS_TIMEOUT = 3,                ///< The sensor is read through the network, and the latest measurement was received before an implementation-define timeout period.
+    MAS_WAITING_FOR_FIRST_READ = 4, ///< The sensor is read through the network, and the device is waiting to receive the first measurement.
+    MAS_UNKNOWN = 5                 ///< The sensor is in an unknown state.
+};
+} // namespace yarp::dev
 
 /**
  * @ingroup dev_iface_multiple_analog
@@ -66,7 +67,7 @@ public:
     /**
      * Get the number of three axis gyroscopes exposed by this sensor.
      */
-    virtual size_t getNrOfThreeAxisGyroscopes() const = 0;
+    virtual yarp::dev::ReturnValue getNrOfThreeAxisGyroscopes(size_t& num) const = 0;
 
     /**
      * Get the status of the specified sensor.
@@ -81,7 +82,7 @@ public:
      * @param[in] sens_index The index of the specified sensor (should be between 0 and getNrOfThreeAxisGyroscopes()-1).
      * @return false if an error occurred, true otherwise.
      */
-    virtual bool getThreeAxisGyroscopeName(size_t sens_index, std::string &name) const = 0;
+    virtual yarp::dev::ReturnValue getThreeAxisGyroscopeName(size_t sens_index, std::string &name) const = 0;
 
     /**
      * Get the name of the frame of the specified sensor.
@@ -89,7 +90,7 @@ public:
      * @param[in] sens_index The index of the specified sensor (should be between 0 and getNrOfThreeAxisGyroscopes()-1).
      * @return false if an error occurred, true otherwise.
      */
-    virtual bool getThreeAxisGyroscopeFrameName(size_t sens_index, std::string &frameName) const = 0;
+    virtual yarp::dev::ReturnValue getThreeAxisGyroscopeFrameName(size_t sens_index, std::string &frameName) const = 0;
 
     /**
      * \brief Get the last reading of the gyroscope.
@@ -99,7 +100,7 @@ public:
      * @param[out] timestamp The timestamp of the requested measure, expressed in seconds.
      * @return false if an error occurred, true otherwise.
      */
-    virtual bool getThreeAxisGyroscopeMeasure(size_t sens_index, yarp::sig::Vector& out, double& timestamp) const = 0;
+    virtual yarp::dev::ReturnValue getThreeAxisGyroscopeMeasure(size_t sens_index, yarp::sig::Vector& out, double& timestamp) const = 0;
 
     virtual ~IThreeAxisGyroscopes(){}
 };
@@ -120,7 +121,7 @@ public:
     /**
      * \brief Get the number of three axis linear accelerometers exposed by this device.
      */
-    virtual size_t getNrOfThreeAxisLinearAccelerometers() const = 0;
+    virtual yarp::dev::ReturnValue getNrOfThreeAxisLinearAccelerometers(size_t& num) const = 0;
 
     /**
      * Get the status of the specified sensor.
@@ -131,13 +132,13 @@ public:
      * Get the name of the specified sensor.
      * @return false if an error occurred, true otherwise.
      */
-    virtual bool getThreeAxisLinearAccelerometerName(size_t sens_index, std::string &name) const = 0;
+    virtual yarp::dev::ReturnValue getThreeAxisLinearAccelerometerName(size_t sens_index, std::string &name) const = 0;
 
     /**
      * Get the name of the frame of the specified sensor.
      * @return false if an error occurred, true otherwise.
      */
-    virtual bool getThreeAxisLinearAccelerometerFrameName(size_t sens_index, std::string &frameName) const = 0;
+    virtual yarp::dev::ReturnValue getThreeAxisLinearAccelerometerFrameName(size_t sens_index, std::string &frameName) const = 0;
 
     /**
      * Get the last reading of the specified sensor.
@@ -147,9 +148,47 @@ public:
      * @param[out] timestamp The timestamp of the requested measure, expressed in seconds.
      * @return false if an error occurred, true otherwise.
      */
-    virtual bool getThreeAxisLinearAccelerometerMeasure(size_t sens_index, yarp::sig::Vector& out, double& timestamp) const = 0;
+    virtual yarp::dev::ReturnValue getThreeAxisLinearAccelerometerMeasure(size_t sens_index, yarp::sig::Vector& out, double& timestamp) const = 0;
 
     virtual ~IThreeAxisLinearAccelerometers(){}
+};
+
+class YARP_dev_API yarp::dev::IThreeAxisAngularAccelerometers
+{
+public:
+    /**
+     * \brief Get the number of three axis angular accelerometers exposed by this device.
+     */
+    virtual yarp::dev::ReturnValue getNrOfThreeAxisAngularAccelerometers(size_t& num) const = 0;
+
+    /**
+     * Get the status of the specified sensor.
+     */
+    virtual yarp::dev::MAS_status getThreeAxisAngularAccelerometerStatus(size_t sens_index) const = 0;
+
+    /**
+     * Get the name of the specified sensor.
+     * @return false if an error occurred, true otherwise.
+     */
+    virtual yarp::dev::ReturnValue getThreeAxisAngularAccelerometerName(size_t sens_index, std::string &name) const = 0;
+
+    /**
+     * Get the name of the frame of the specified sensor.
+     * @return false if an error occurred, true otherwise.
+     */
+    virtual yarp::dev::ReturnValue getThreeAxisAngularAccelerometerFrameName(size_t sens_index, std::string &frameName) const = 0;
+
+    /**
+     * Get the last reading of the specified sensor.
+     *
+     * @param[in] sens_index The index of the specified sensor (should be between 0 and getNrOfThreeAxisAngularAccelerometers()-1).
+     * @param[out] out The requested measure. The vector should be 3-dimensional. The measure is expressed in degrees^2/seconds.
+     * @param[out] timestamp The timestamp of the requested measure, expressed in seconds.
+     * @return false if an error occurred, true otherwise.
+     */
+    virtual yarp::dev::ReturnValue getThreeAxisAngularAccelerometerMeasure(size_t sens_index, yarp::sig::Vector& out, double& timestamp) const = 0;
+
+    virtual ~IThreeAxisAngularAccelerometers(){}
 };
 
 /**
@@ -167,7 +206,7 @@ public:
     /**
      * Get the number of magnetometers exposed by this device.
      */
-    virtual size_t getNrOfThreeAxisMagnetometers() const = 0;
+    virtual yarp::dev::ReturnValue getNrOfThreeAxisMagnetometers(size_t& num) const = 0;
 
     /**
      * Get the status of the specified sensor.
@@ -178,13 +217,13 @@ public:
      * Get the name of the specified sensor.
      * @return false if an error occurred, true otherwise.
      */
-    virtual bool getThreeAxisMagnetometerName(size_t sens_index, std::string &name) const = 0;
+    virtual yarp::dev::ReturnValue getThreeAxisMagnetometerName(size_t sens_index, std::string &name) const = 0;
 
     /**
      * Get the name of the frame of the specified sensor.
      * @return false if an error occurred, true otherwise.
      */
-    virtual bool getThreeAxisMagnetometerFrameName(size_t sens_index, std::string &frameName) const = 0;
+    virtual yarp::dev::ReturnValue getThreeAxisMagnetometerFrameName(size_t sens_index, std::string &frameName) const = 0;
 
     /**
      * Get the last reading of the specified sensor.
@@ -194,7 +233,7 @@ public:
      * @param[out] timestamp The timestamp of the requested measure, expressed in seconds.
      * @return false if an error occurred, true otherwise.
      */
-    virtual bool getThreeAxisMagnetometerMeasure(size_t sens_index, yarp::sig::Vector& out, double& timestamp) const = 0;
+    virtual yarp::dev::ReturnValue getThreeAxisMagnetometerMeasure(size_t sens_index, yarp::sig::Vector& out, double& timestamp) const = 0;
 
     virtual ~IThreeAxisMagnetometers(){}
 };
@@ -218,7 +257,7 @@ public:
     /**
      * Get the number of position sensors exposed by this device.
      */
-    virtual size_t getNrOfPositionSensors() const = 0;
+    virtual yarp::dev::ReturnValue getNrOfPositionSensors(size_t& num) const = 0;
 
     /**
      * Get the status of the specified sensor.
@@ -229,7 +268,7 @@ public:
      * Get the name of the specified sensor.
      * @return false if an error occurred, true otherwise.
      */
-    virtual bool getPositionSensorName(size_t sens_index, std::string& name) const = 0;
+    virtual yarp::dev::ReturnValue getPositionSensorName(size_t sens_index, std::string& name) const = 0;
 
     /**
      * Get the name of the frame of the specified sensor.
@@ -239,7 +278,7 @@ public:
      *
      * @return false if an error occurred, true otherwise.
      */
-    virtual bool getPositionSensorFrameName(size_t sens_index, std::string& frameName) const = 0;
+    virtual yarp::dev::ReturnValue getPositionSensorFrameName(size_t sens_index, std::string& frameName) const = 0;
 
     /**
      * Get the last reading of the position sensor as x y z.
@@ -249,9 +288,53 @@ public:
      * @param[out] timestamp The timestamp of the requested measure, expressed in seconds.
      * @return false if an error occurred, true otherwise.
      */
-    virtual bool getPositionSensorMeasure(size_t sens_index, yarp::sig::Vector& xyz, double& timestamp) const = 0;
+    virtual yarp::dev::ReturnValue getPositionSensorMeasure(size_t sens_index, yarp::sig::Vector& xyz, double& timestamp) const = 0;
 
     virtual ~IPositionSensors()
+    {
+    }
+};
+
+class YARP_dev_API yarp::dev::ILinearVelocitySensors
+{
+public:
+    /**
+     * Get the number of linear velocity sensors exposed by this device.
+     */
+    virtual yarp::dev::ReturnValue getNrOfLinearVelocitySensors(size_t& num) const = 0;
+
+    /**
+     * Get the status of the specified sensor.
+     */
+    virtual yarp::dev::MAS_status getLinearVelocitySensorStatus(size_t sens_index) const = 0;
+
+    /**
+     * Get the name of the specified sensor.
+     * @return false if an error occurred, true otherwise.
+     */
+    virtual yarp::dev::ReturnValue getLinearVelocitySensorName(size_t sens_index, std::string& name) const = 0;
+
+    /**
+     * Get the name of the frame of the specified sensor.
+     *
+     * @note This is an implementation specific method, that may return the name of the sensor
+     *       frame in a scenegraph
+     *
+     * @return false if an error occurred, true otherwise.
+     */
+    virtual yarp::dev::ReturnValue getLinearVelocitySensorFrameName(size_t sens_index, std::string& frameName) const = 0;
+
+    /**
+     * Get the last reading of the linear velocity sensor as x y z.
+     *
+     * @param[in] sens_index The index of the specified sensor (should be between 0 and getNrOfLinearVelocitySensors()-1).
+     * @param[out] out The requested measure. The vector should be 3-dimensional. The measure is expressed in meters/second.
+     * @param[out] timestamp The timestamp of the requested measure, expressed in seconds.
+     * @return false if an error occurred, true otherwise.
+     */
+    virtual yarp::dev::ReturnValue getLinearVelocitySensorMeasure(size_t sens_index, yarp::sig::Vector& xyz, double& timestamp) const = 0;
+
+    virtual ~ILinearVelocitySensors()
     {
     }
 };
@@ -276,7 +359,7 @@ public:
     /**
      * Get the number of orientation sensors exposed by this device.
      */
-    virtual size_t getNrOfOrientationSensors() const = 0;
+    virtual yarp::dev::ReturnValue getNrOfOrientationSensors(size_t& num) const = 0;
 
     /**
      * Get the status of the specified sensor.
@@ -287,7 +370,7 @@ public:
      * Get the name of the specified sensor.
      * @return false if an error occurred, true otherwise.
      */
-    virtual bool getOrientationSensorName(size_t sens_index, std::string &name) const = 0;
+    virtual yarp::dev::ReturnValue getOrientationSensorName(size_t sens_index, std::string &name) const = 0;
 
     /**
      * Get the name of the frame of the specified sensor.
@@ -297,7 +380,7 @@ public:
      *
      * @return false if an error occurred, true otherwise.
      */
-    virtual bool getOrientationSensorFrameName(size_t sens_index, std::string &frameName) const = 0;
+    virtual yarp::dev::ReturnValue getOrientationSensorFrameName(size_t sens_index, std::string &frameName) const = 0;
 
     /**
      * Get the last reading of the orientation sensor as roll pitch yaw.
@@ -346,7 +429,7 @@ public:
      * @param[out] timestamp The timestamp of the requested measure, expressed in seconds.
      * @return false if an error occurred, true otherwise.
      */
-    virtual bool getOrientationSensorMeasureAsRollPitchYaw(size_t sens_index, yarp::sig::Vector& rpy, double& timestamp) const = 0;
+    virtual yarp::dev::ReturnValue getOrientationSensorMeasureAsRollPitchYaw(size_t sens_index, yarp::sig::Vector& rpy, double& timestamp) const = 0;
 
     virtual ~IOrientationSensors(){}
 };
@@ -367,7 +450,7 @@ public:
     /**
      * Get the number of temperature sensors exposed by this device.
      */
-    virtual size_t getNrOfTemperatureSensors() const = 0;
+    virtual yarp::dev::ReturnValue getNrOfTemperatureSensors(size_t& num) const = 0;
 
     /**
      * Get the status of the specified sensor.
@@ -377,18 +460,18 @@ public:
     /**
      * Get the name of the specified sensor.
      */
-    virtual bool getTemperatureSensorName(size_t sens_index, std::string &name) const = 0;
+    virtual yarp::dev::ReturnValue getTemperatureSensorName(size_t sens_index, std::string &name) const = 0;
 
     /**
      * Get the name of the frame of the specified sensor.
      */
-    virtual bool getTemperatureSensorFrameName(size_t sens_index, std::string &frameName) const = 0;
+    virtual yarp::dev::ReturnValue getTemperatureSensorFrameName(size_t sens_index, std::string &frameName) const = 0;
 
     /**
      * Get the last reading of the specified sensor.
      * TODO(traversaro) : make the method swig-friendly
      */
-    virtual bool getTemperatureSensorMeasure(size_t sens_index, double& out, double& timestamp) const = 0;
+    virtual yarp::dev::ReturnValue getTemperatureSensorMeasure(size_t sens_index, double& out, double& timestamp) const = 0;
 
     /**
      * Get the last reading of the specified sensor.
@@ -398,7 +481,7 @@ public:
      * @param[out] timestamp The timestamp of the requested measure, expressed in seconds.
      * @return false if an error occurred, true otherwise.
      */
-    virtual bool getTemperatureSensorMeasure(size_t sens_index, yarp::sig::Vector& out, double& timestamp) const = 0;
+    virtual yarp::dev::ReturnValue getTemperatureSensorMeasure(size_t sens_index, yarp::sig::Vector& out, double& timestamp) const = 0;
 
 
     virtual ~ITemperatureSensors(){}
@@ -421,7 +504,7 @@ public:
     /**
      * Get the number of six axis force torque sensors exposed by this device.
      */
-    virtual size_t getNrOfSixAxisForceTorqueSensors() const = 0;
+    virtual yarp::dev::ReturnValue getNrOfSixAxisForceTorqueSensors(size_t& num) const = 0;
 
     /**
      * Get the status of the specified sensor.
@@ -431,12 +514,12 @@ public:
     /**
      * Get the name of the specified sensor.
      */
-    virtual bool getSixAxisForceTorqueSensorName(size_t sens_index, std::string &name) const = 0;
+    virtual yarp::dev::ReturnValue getSixAxisForceTorqueSensorName(size_t sens_index, std::string &name) const = 0;
 
     /**
      * Get the name of the frame of the specified sensor.
      */
-    virtual bool getSixAxisForceTorqueSensorFrameName(size_t sens_index, std::string &frameName) const = 0;
+    virtual yarp::dev::ReturnValue getSixAxisForceTorqueSensorFrameName(size_t sens_index, std::string &frameName) const = 0;
 
     /**
      * Get the last reading of the specified sensor.
@@ -446,7 +529,7 @@ public:
      *                 The measure is expressed in Newton for the first three elements, Newton Meters for the last three elements.
      * @param[out] timestamp The timestamp of the requested measure, expressed in seconds.
      */
-    virtual bool getSixAxisForceTorqueSensorMeasure(size_t sens_index, yarp::sig::Vector& out, double& timestamp) const = 0;
+    virtual yarp::dev::ReturnValue getSixAxisForceTorqueSensorMeasure(size_t sens_index, yarp::sig::Vector& out, double& timestamp) const = 0;
 
     virtual ~ISixAxisForceTorqueSensors(){}
 };
@@ -469,7 +552,7 @@ public:
     /**
      * Get the number of contact load cell array exposed by this device.
      */
-    virtual size_t getNrOfContactLoadCellArrays() const = 0;
+    virtual yarp::dev::ReturnValue getNrOfContactLoadCellArrays(size_t& num) const = 0;
 
     /**
      * Get the status of the specified sensor.
@@ -480,7 +563,7 @@ public:
      * Get the name of the specified sensor.
      * @return false if an error occurred, true otherwise.
      */
-    virtual bool getContactLoadCellArrayName(size_t sens_index, std::string &name) const = 0;
+    virtual yarp::dev::ReturnValue getContactLoadCellArrayName(size_t sens_index, std::string &name) const = 0;
 
     /**
      * Get the last reading of the specified sensor.
@@ -491,7 +574,7 @@ public:
      * @param[out] timestamp The timestamp of the requested measure, expressed in seconds.
      * @return false if an error occurred, true otherwise.
      */
-    virtual bool getContactLoadCellArrayMeasure(size_t sens_index, yarp::sig::Vector& out, double& timestamp) const = 0;
+    virtual yarp::dev::ReturnValue getContactLoadCellArrayMeasure(size_t sens_index, yarp::sig::Vector& out, double& timestamp) const = 0;
 
     /**
      * Get the size of the specified contact load cell array
@@ -522,7 +605,7 @@ public:
     /**
      * Get the number of encoder arrays exposed by this device.
      */
-    virtual size_t getNrOfEncoderArrays() const = 0;
+    virtual yarp::dev::ReturnValue getNrOfEncoderArrays(size_t& num) const = 0;
 
     /**
      * Get the status of the specified sensor.
@@ -532,7 +615,7 @@ public:
     /**
      * Get the name of the specified sensor.
      */
-    virtual bool getEncoderArrayName(size_t sens_index, std::string &name) const = 0;
+    virtual yarp::dev::ReturnValue getEncoderArrayName(size_t sens_index, std::string &name) const = 0;
 
     /**
      * Get the last reading of the specified sensor.
@@ -542,7 +625,7 @@ public:
      *                 The measure is expressed in Newton.
      * @param[out] timestamp The timestamp of the requested measure, expressed in seconds.
      */
-    virtual bool getEncoderArrayMeasure(size_t sens_index, yarp::sig::Vector& out, double& timestamp) const = 0;
+    virtual yarp::dev::ReturnValue getEncoderArrayMeasure(size_t sens_index, yarp::sig::Vector& out, double& timestamp) const = 0;
 
     /**
      * Get the size of the specified encoder array
@@ -571,7 +654,7 @@ public:
     /**
      * Get the number of skin patches exposed by this device.
      */
-    virtual size_t getNrOfSkinPatches() const = 0;
+    virtual yarp::dev::ReturnValue getNrOfSkinPatches(size_t& num) const = 0;
 
     /**
      * Get the status of the specified sensor.
@@ -581,17 +664,17 @@ public:
     /**
      * Get the name of the specified sensor.
      */
-    virtual bool getSkinPatchName(size_t sens_index, std::string &name) const = 0;
+    virtual yarp::dev::ReturnValue getSkinPatchName(size_t sens_index, std::string &name) const = 0;
 
     /**
      * Get the last reading of the specified sensor.
      *
      * @param[in] sens_index The index of the specified sensor (should be between 0 and getNrOfSkinPatches()-1).
-     * @param[out] out The requested measure. The vector should be getNrOfSkinPatches(sens_index)-dimensional.
+     * @param[out] out The requested measure. The vector should be getSkinPatchSize(sens_index)-dimensional.
      *                 The measure is expressed in implementation-specific unit of measure.
      * @param[out] timestamp The timestamp of the requested measure, expressed in seconds.
      */
-    virtual bool getSkinPatchMeasure(size_t sens_index, yarp::sig::Vector& out, double& timestamp) const = 0;
+    virtual yarp::dev::ReturnValue getSkinPatchMeasure(size_t sens_index, yarp::sig::Vector& out, double& timestamp) const = 0;
 
     /**
      * Get the size of the specified skin patch

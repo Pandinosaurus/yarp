@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/companion/impl/Companion.h>
@@ -38,14 +35,6 @@ int yarp::companion::main(int argc, char *argv[])
     while (more && argc>0) {
         more = false;
         std::string s = std::string(argv[0]);
-
-        // "pray" command requires the full command line, therefore it is
-        // handled before anything else
-        if (s == std::string("pray")) {
-            argc++;
-            argv--;
-            return instance.cmdPray(argc, argv);
-        }
 
         if (s == std::string("verbose") || s == std::string("quiet")) {
             yCWarning(COMPANION, "The %s argument is deprecated.", s.c_str());

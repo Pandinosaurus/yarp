@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_ICONTROLCALIBRATION_H
@@ -13,20 +10,13 @@
 #include <yarp/os/Vocab.h>
 #include <yarp/dev/api.h>
 #include <yarp/dev/CalibratorInterfaces.h> // ICalibrator
+#include <yarp/dev/ReturnValue.h>
 
-namespace yarp {
-    namespace dev {
-        class IControlCalibrationRaw;
-#ifndef YARP_NO_DEPRECATED // Since YARP 3.0.0
-YARP_DEPRECATED_TYPEDEF_MSG("Use yarp::dev::IControlCalibrationRaw instead") IControlCalibrationRaw IControlCalibration2Raw;
-#endif
-        class IControlCalibration;
-#ifndef YARP_NO_DEPRECATED // Since YARP 3.0.0
-YARP_DEPRECATED_TYPEDEF_MSG("Use yarp::dev::IControlCalibration instead") IControlCalibration IControlCalibration2;
-#endif
-        struct CalibrationParameters;
-    }
-}
+namespace yarp::dev {
+class IControlCalibrationRaw;
+class IControlCalibration;
+struct CalibrationParameters;
+} // namespace yarp::dev
 
 struct YARP_dev_API yarp::dev::CalibrationParameters
 {
@@ -41,6 +31,7 @@ struct YARP_dev_API yarp::dev::CalibrationParameters
 };
 
 /**
+ * @ingroup dev_iface_motor_raw
  *
  * Interface for control devices, calibration commands.
  */
@@ -58,21 +49,21 @@ public:
      * Non blocking.
      * @return true/false
      */
-    virtual bool calibrationDoneRaw(int j)=0;
+    virtual yarp::dev::ReturnValue calibrationDoneRaw(int j)=0;
 
     /**
      *  Start calibration, this method is very often platform
      * specific.
      * @return true/false on success failure
      */
-    virtual bool calibrateAxisWithParamsRaw(int axis, unsigned int type, double p1, double p2, double p3)=0;
+    virtual yarp::dev::ReturnValue calibrateAxisWithParamsRaw(int axis, unsigned int type, double p1, double p2, double p3)=0;
 
     /**
      *  Start calibration, this method is very often platform
      * specific.
      * @return true/false on success failure
     */
-    virtual bool setCalibrationParametersRaw(int axis, const CalibrationParameters& params) { return false; }
+    virtual yarp::dev::ReturnValue setCalibrationParametersRaw(int axis, const CalibrationParameters& params) =0;
 
 };
 
@@ -98,28 +89,28 @@ public:
      * specific.
      * @return true/false on success failure
      */
-    virtual bool calibrateAxisWithParams(int axis, unsigned int type, double p1, double p2, double p3)=0;
+    virtual yarp::dev::ReturnValue calibrateAxisWithParams(int axis, unsigned int type, double p1, double p2, double p3)=0;
 
     /**
      *  Start calibration, this method is very often platform
      * specific.
      * @return true/false on success failure
      */
-    virtual bool setCalibrationParameters(int axis, const CalibrationParameters& params) { return false; }
+    virtual yarp::dev::ReturnValue setCalibrationParameters(int axis, const CalibrationParameters& params) =0;
 
     /**
      *  Check if the calibration is terminated, on a particular joint.
      * Non blocking.
      * @return true/false
      */
-    virtual bool calibrationDone(int j)=0;
+    virtual yarp::dev::ReturnValue calibrationDone(int j)=0;
 
     /**
      * Set the calibrator object to be used to calibrate the robot.
      * @param c pointer to the calibrator object
      * @return true/false on success failure
      */
-    virtual bool setCalibrator(ICalibrator *c);
+    virtual yarp::dev::ReturnValue setCalibrator(ICalibrator *c);
 
     /**
      * Calibrate robot by using an external calibrator. The external
@@ -127,27 +118,25 @@ public:
      * method.
      * @return true/false on success failure
      */
-    virtual bool calibrateRobot();
+    virtual yarp::dev::ReturnValue calibrateRobot();
 
-    virtual bool park(bool wait=true);
+    virtual yarp::dev::ReturnValue park(bool wait=true);
 
     /* Abort calibration, force the function calibrate() to return.*/
-    virtual bool abortCalibration();
+    virtual yarp::dev::ReturnValue abortCalibration();
 
     /* Abort parking, force the function park() to return.*/
-    virtual bool abortPark();
+    virtual yarp::dev::ReturnValue abortPark();
 };
 
 
 /* Vocabs representing the above interfaces */
 
-constexpr yarp::conf::vocab32_t VOCAB_CALIBRATE_JOINT        = yarp::os::createVocab('c','a','l','j');
-constexpr yarp::conf::vocab32_t VOCAB_CALIBRATE_JOINT_PARAMS = yarp::os::createVocab('c','l','j','p');
-constexpr yarp::conf::vocab32_t VOCAB_CALIBRATE              = yarp::os::createVocab('c','a','l');
-constexpr yarp::conf::vocab32_t VOCAB_CALIBRATE_CHANNEL      = yarp::os::createVocab('c','a','l','c');
-constexpr yarp::conf::vocab32_t VOCAB_ABORTCALIB             = yarp::os::createVocab('a','b','c','a');
-constexpr yarp::conf::vocab32_t VOCAB_ABORTPARK              = yarp::os::createVocab('a','b','p','a');
-constexpr yarp::conf::vocab32_t VOCAB_CALIBRATE_DONE         = yarp::os::createVocab('c','a','l','d');
-constexpr yarp::conf::vocab32_t VOCAB_PARK                   = yarp::os::createVocab('p','a','r','k');
+constexpr yarp::conf::vocab32_t VOCAB_CALIBRATE              = yarp::os::createVocab32('c','a','l');
+constexpr yarp::conf::vocab32_t VOCAB_CALIBRATE_CHANNEL      = yarp::os::createVocab32('c','a','l','c');
+constexpr yarp::conf::vocab32_t VOCAB_ABORTCALIB             = yarp::os::createVocab32('a','b','c','a');
+constexpr yarp::conf::vocab32_t VOCAB_ABORTPARK              = yarp::os::createVocab32('a','b','p','a');
+constexpr yarp::conf::vocab32_t VOCAB_CALIBRATE_DONE         = yarp::os::createVocab32('c','a','l','d');
+constexpr yarp::conf::vocab32_t VOCAB_PARK                   = yarp::os::createVocab32('p','a','r','k');
 
 #endif // YARP_DEV_ICONTROLCALIBRATION_H

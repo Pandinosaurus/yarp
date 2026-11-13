@@ -1,26 +1,24 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include "yarp/dev/ControlBoardInterfacesImpl.h"
 #include <yarp/dev/ControlBoardHelper.h>
+#include <yarp/dev/ControlBoardHelpers.h>
 #include <yarp/dev/impl/FixedSizeBuffersManager.h>
 
 #include <cstdio>
 using namespace yarp::dev;
 using namespace yarp::os;
 
-#define JOINTIDCHECK if (j >= castToMapper(helper)->axes()){yError("joint id out of bound"); return false;}
+namespace {
+YARP_LOG_COMPONENT(IMPLEMENT_LAYER_COMPONENT, "yarp.ImplementTorqueControl")
+}
 
 ImplementTorqueControl::ImplementTorqueControl(ITorqueControlRaw *tq):
-    iTorqueRaw(tq),
-    helper(nullptr),
-    intBuffManager(nullptr),
-    doubleBuffManager(nullptr)
+    m_iraw(tq),
+    m_helper(nullptr)
 {;}
 
 ImplementTorqueControl::~ImplementTorqueControl()
@@ -30,176 +28,196 @@ ImplementTorqueControl::~ImplementTorqueControl()
 
 bool ImplementTorqueControl::initialize(int size, const int *amap, const double *enc, const double *zos, const double *nw, const double* amps, const double* dutys, const double* bemfs, const double* ktaus)
 {
-    if (helper!=nullptr)
+    if (m_helper != nullptr) {
         return false;
+    }
 
-    helper=(void *)(new ControlBoardHelper(size, amap, enc, zos, nw, amps, nullptr, dutys,bemfs,ktaus));
-    yAssert (helper != nullptr);
+    m_helper=(void *)(new ControlBoardHelper(size, amap, enc, zos, nw, amps, nullptr, dutys,bemfs,ktaus));
+    yAssert (m_helper != nullptr);
 
-    intBuffManager = new yarp::dev::impl::FixedSizeBuffersManager<int> (size);
-    yAssert (intBuffManager != nullptr);
-
-    doubleBuffManager = new yarp::dev::impl::FixedSizeBuffersManager<double> (size);
-    yAssert (doubleBuffManager != nullptr);
+    m_buffer_doubles.resize(size);
+    m_buffer_doubles2.resize(size);
+    m_buffer_ints.resize(size);
 
     return true;
 }
 
 bool ImplementTorqueControl::uninitialize ()
 {
-    if (helper!=nullptr)
+    if (m_helper!=nullptr)
     {
-        delete castToMapper(helper);
-        helper=nullptr;
-    }
-
-    if(intBuffManager)
-    {
-        delete intBuffManager;
-        intBuffManager=nullptr;
-    }
-
-    if(doubleBuffManager)
-    {
-        delete doubleBuffManager;
-        doubleBuffManager=nullptr;
+        delete castToMapper(m_helper);
+        m_helper=nullptr;
     }
 
     return true;
 }
 
-bool ImplementTorqueControl::getAxes(int *axes)
+ReturnValue ImplementTorqueControl::getAxes(size_t& axes)
 {
-    return iTorqueRaw->getAxes(axes);
+    std::lock_guard lock(m_imp_mutex);
+
+    return m_iraw->getAxes(axes);
 }
 
-bool ImplementTorqueControl::getRefTorque(int j, double *r)
+ReturnValue ImplementTorqueControl::getRefTorque(int j, double *r)
 {
-    JOINTIDCHECK
+    std::lock_guard lock(m_imp_mutex);
+    JOINTIDCHECK(IMPLEMENT_LAYER_COMPONENT,j)
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,r);
+
     int k;
-    bool ret;
+    ReturnValue ret;
     double torque;
-    k=castToMapper(helper)->toHw(j);
-    ret = iTorqueRaw->getRefTorqueRaw(k, &torque);
-    *r=castToMapper(helper)->trqS2N(torque, k);
+    k=castToMapper(m_helper)->toHw(j);
+    ret = m_iraw->getRefTorqueRaw(k, &torque);
+    *r=castToMapper(m_helper)->trqS2N(torque, k);
     return ret;
 }
 
-bool ImplementTorqueControl::setMotorTorqueParams(int j,  const yarp::dev::MotorTorqueParameters params)
+ReturnValue ImplementTorqueControl::setMotorTorqueParams(int j,  const yarp::dev::MotorTorqueParameters params)
 {
-    JOINTIDCHECK
+    std::lock_guard lock(m_imp_mutex);
+    JOINTIDCHECK(IMPLEMENT_LAYER_COMPONENT,j)
+
     int k;
 
     yarp::dev::MotorTorqueParameters params_raw;
-    castToMapper(helper)->bemf_user2raw(params.bemf, j, params_raw.bemf, k);
-    castToMapper(helper)->ktau_user2raw(params.ktau, j, params_raw.ktau, k);
+    castToMapper(m_helper)->bemf_user2raw(params.bemf, j, params_raw.bemf, k);
+    castToMapper(m_helper)->ktau_user2raw(params.ktau, j, params_raw.ktau, k);
     params_raw.bemf_scale = params.bemf_scale;
     params_raw.ktau_scale = params.ktau_scale;
 
-    return iTorqueRaw->setMotorTorqueParamsRaw(k, params_raw);
+    castToMapper(m_helper)->viscousPos_user2raw(params.viscousPos, j, params_raw.viscousPos, k);
+    castToMapper(m_helper)->viscousNeg_user2raw(params.viscousNeg, j, params_raw.viscousNeg, k);
+    castToMapper(m_helper)->coulombPos_user2raw(params.coulombPos, j, params_raw.coulombPos, k);
+    castToMapper(m_helper)->coulombNeg_user2raw(params.coulombNeg, j, params_raw.coulombNeg, k);
+    castToMapper(m_helper)->velocityThres_user2raw(params.velocityThres, j, params_raw.velocityThres, k);
+
+    return m_iraw->setMotorTorqueParamsRaw(k, params_raw);
 }
 
-bool ImplementTorqueControl::getMotorTorqueParams(int j,  yarp::dev::MotorTorqueParameters *params)
+ReturnValue ImplementTorqueControl::getMotorTorqueParams(int j,  yarp::dev::MotorTorqueParameters *params)
 {
-    JOINTIDCHECK
-    int k=castToMapper(helper)->toHw(j);
+    std::lock_guard lock(m_imp_mutex);
+    JOINTIDCHECK(IMPLEMENT_LAYER_COMPONENT,j)
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,params);
+
+    int k=castToMapper(m_helper)->toHw(j);
 
     yarp::dev::MotorTorqueParameters params_raw;
-    bool b = iTorqueRaw->getMotorTorqueParamsRaw(k, &params_raw);
+    ReturnValue b = m_iraw->getMotorTorqueParamsRaw(k, &params_raw);
     int tmp_j;
 
     if (b)
     {
         *params = params_raw;
-        castToMapper(helper)->bemf_raw2user(params_raw.bemf, k, (*params).bemf, tmp_j);
-        castToMapper(helper)->ktau_raw2user(params_raw.ktau, k, (*params).ktau, tmp_j);
+        castToMapper(m_helper)->bemf_raw2user(params_raw.bemf, k, (*params).bemf, tmp_j);
+        castToMapper(m_helper)->ktau_raw2user(params_raw.ktau, k, (*params).ktau, tmp_j);
         (*params).bemf_scale = params_raw.bemf_scale;
         (*params).ktau_scale = params_raw.ktau_scale;
+        castToMapper(m_helper)->viscousPos_raw2user(params_raw.viscousPos, k, (*params).viscousPos, tmp_j);
+        castToMapper(m_helper)->viscousNeg_raw2user(params_raw.viscousNeg, k, (*params).viscousNeg, tmp_j);
+        castToMapper(m_helper)->coulombPos_raw2user(params_raw.coulombPos, k, (*params).coulombPos, tmp_j);
+        castToMapper(m_helper)->coulombNeg_raw2user(params_raw.coulombNeg, k, (*params).coulombNeg, tmp_j);
+        castToMapper(m_helper)->velocityThres_raw2user(params_raw.velocityThres, k, (*params).velocityThres, tmp_j);
     }
     return b;
 }
 
-bool ImplementTorqueControl::getRefTorques(double *t)
+ReturnValue ImplementTorqueControl::getRefTorques(double *t)
 {
-    yarp::dev::impl::Buffer<double> buffValues = doubleBuffManager->getBuffer();
-    bool ret = iTorqueRaw->getRefTorquesRaw(buffValues.getData());
-    castToMapper(helper)->trqS2N(buffValues.getData(),t);
-    doubleBuffManager->releaseBuffer(buffValues);
+    std::lock_guard lock(m_imp_mutex);
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,t);
+
+    ReturnValue ret = m_iraw->getRefTorquesRaw(m_buffer_doubles.data());
+    castToMapper(m_helper)->trqS2N(m_buffer_doubles.data(),t);
+
     return ret;
 }
 
-bool ImplementTorqueControl::setRefTorques(const double *t)
+ReturnValue ImplementTorqueControl::setRefTorques(const double *t)
 {
-    yarp::dev::impl::Buffer<double> buffValues = doubleBuffManager->getBuffer();
-    castToMapper(helper)->trqN2S(t, buffValues.getData());
-    bool ret = iTorqueRaw->setRefTorquesRaw(buffValues.getData());
-    doubleBuffManager->releaseBuffer(buffValues);
+    std::lock_guard lock(m_imp_mutex);
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,t);
+
+    castToMapper(m_helper)->trqN2S(t, m_buffer_doubles.data());
+    ReturnValue ret = m_iraw->setRefTorquesRaw(m_buffer_doubles.data());
+
     return ret;
 }
 
-bool ImplementTorqueControl::setRefTorque(int j, double t)
+ReturnValue ImplementTorqueControl::setRefTorque(int j, double t)
 {
-    JOINTIDCHECK
+    std::lock_guard lock(m_imp_mutex);
+    JOINTIDCHECK(IMPLEMENT_LAYER_COMPONENT,j)
+
     int k;
     double sens;
-    castToMapper(helper)->trqN2S(t,j,sens,k);
-    return iTorqueRaw->setRefTorqueRaw(k, sens);
+    castToMapper(m_helper)->trqN2S(t,j,sens,k);
+    return m_iraw->setRefTorqueRaw(k, sens);
 }
 
-bool ImplementTorqueControl::getTorques(double *t)
+ReturnValue ImplementTorqueControl::getTorques(double *t)
 {
-    yarp::dev::impl::Buffer<double> buffValues = doubleBuffManager->getBuffer();
-    bool ret = iTorqueRaw->getTorquesRaw(buffValues.getData());
-    castToMapper(helper)->toUser(buffValues.getData(), t);
-    doubleBuffManager->releaseBuffer(buffValues);
+    std::lock_guard lock(m_imp_mutex);
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,t);
+
+    ReturnValue ret = m_iraw->getTorquesRaw(m_buffer_doubles.data());
+    castToMapper(m_helper)->toUser(m_buffer_doubles.data(), t);
+
     return ret;
 }
 
-bool ImplementTorqueControl::setRefTorques(const int n_joint, const int *joints, const double *t)
+ReturnValue ImplementTorqueControl::setRefTorques(const int n_joints, const int *joints, const double *t)
 {
-    if(!castToMapper(helper)->checkAxesIds(n_joint, joints))
-        return false;
+    std::lock_guard lock(m_imp_mutex);
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,joints);
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,t);
+    JOINTSIDCHECK(IMPLEMENT_LAYER_COMPONENT,n_joints,joints);
 
-    yarp::dev::impl::Buffer<int> buffJoints =  intBuffManager->getBuffer();
-    yarp::dev::impl::Buffer<double> buffValues = doubleBuffManager->getBuffer();
-
-    for(int idx=0; idx<n_joint; idx++)
+    for(int idx=0; idx<n_joints; idx++)
     {
-        buffValues[idx] =  castToMapper(helper)->trqN2S(t[idx], joints[idx]);
-        buffJoints[idx] = castToMapper(helper)->toHw(joints[idx]);
+        m_buffer_doubles[idx] =  castToMapper(m_helper)->trqN2S(t[idx], joints[idx]);
+        m_buffer_ints[idx] = castToMapper(m_helper)->toHw(joints[idx]);
     }
-    bool ret = iTorqueRaw->setRefTorquesRaw(n_joint, buffJoints.getData(), buffValues.getData());
+    ReturnValue ret = m_iraw->setRefTorquesRaw(n_joints, m_buffer_ints.data(), m_buffer_doubles.data());
 
-    doubleBuffManager->releaseBuffer(buffValues);
-    intBuffManager->releaseBuffer(buffJoints);
     return ret;
 }
 
-bool ImplementTorqueControl::getTorque(int j, double *t)
+ReturnValue ImplementTorqueControl::getTorque(int j, double *t)
 {
-    JOINTIDCHECK
+    std::lock_guard lock(m_imp_mutex);
+    JOINTIDCHECK(IMPLEMENT_LAYER_COMPONENT,j)
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,t);
+
     int k;
-    k=castToMapper(helper)->toHw(j);
-    return iTorqueRaw->getTorqueRaw(k, t);
+    k=castToMapper(m_helper)->toHw(j);
+    return m_iraw->getTorqueRaw(k, t);
 }
 
-bool ImplementTorqueControl::getTorqueRanges(double *min, double *max)
+ReturnValue ImplementTorqueControl::getTorqueRanges(double *min, double *max)
 {
-    yarp::dev::impl::Buffer<double> buffMin = doubleBuffManager->getBuffer();
-    yarp::dev::impl::Buffer<double> buffMax = doubleBuffManager->getBuffer();
+    std::lock_guard lock(m_imp_mutex);
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,min);
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,max);
 
-    bool ret = iTorqueRaw->getTorqueRangesRaw(buffMin.getData(),buffMax.getData());
-    castToMapper(helper)->toUser(buffMin.getData(), min);
-    castToMapper(helper)->toUser(buffMax.getData(), max);
-    doubleBuffManager->releaseBuffer(buffMin);
-    doubleBuffManager->releaseBuffer(buffMax);
+    ReturnValue ret = m_iraw->getTorqueRangesRaw(m_buffer_doubles.data(),m_buffer_doubles2.data());
+    castToMapper(m_helper)->toUser(m_buffer_doubles.data(), min);
+    castToMapper(m_helper)->toUser(m_buffer_doubles2.data(), max);
+
     return ret;
 }
 
-bool ImplementTorqueControl::getTorqueRange(int j, double *min, double *max)
+ReturnValue ImplementTorqueControl::getTorqueRange(int j, double *min, double *max)
 {
-    JOINTIDCHECK
+    std::lock_guard lock(m_imp_mutex);
+    JOINTIDCHECK(IMPLEMENT_LAYER_COMPONENT,j)
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,min);
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,max);
+
     int k;
-    k=castToMapper(helper)->toHw(j);
-    return iTorqueRaw->getTorqueRangeRaw(k, min, max);
+    k=castToMapper(m_helper)->toHw(j);
+    return m_iraw->getTorqueRangeRaw(k, min, max);
 }

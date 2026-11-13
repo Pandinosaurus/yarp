@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_OS_IDL_WIREREADER_H
@@ -17,13 +14,10 @@
 #include <yarp/os/Vocab.h>
 #include <yarp/os/idl/WirePortable.h>
 #include <yarp/os/idl/WireState.h>
-#include <yarp/os/idl/WireVocab.h>
 
 #include <string>
 
-namespace yarp {
-namespace os {
-namespace idl {
+namespace yarp::os::idl {
 
 /**
  * IDL-friendly connection reader.  Used by YARP IDL tools, not intended
@@ -68,21 +62,19 @@ public:
 
     bool readFloat64(yarp::conf::float64_t& x);
 
-    bool readVocab(std::int32_t& x);
+    bool readUI8(std::uint8_t& x);
 
-#ifndef YARP_NO_DEPRECATED // Since YARP 3.0.0
-    YARP_DEPRECATED_MSG("Use readI8 instead")
-    bool readByte(std::int8_t& x)
-    {
-        return readI8(x);
-    }
+    bool readUI16(std::uint16_t& x);
 
-    YARP_DEPRECATED_MSG("Use readFloat64 instead")
-    bool readDouble(double& x)
-    {
-        return readFloat64(x);
-    }
-#endif // YARP_NO_DEPRECATED
+    bool readUI32(std::uint32_t& x);
+
+    bool readUI64(std::uint64_t& x);
+
+    bool readVocab32(yarp::conf::vocab32_t& x);
+
+    bool readVocab64(yarp::conf::vocab64_t& x);
+
+    bool readSizeT(std::size_t& x);
 
     std::int8_t expectInt8()
     {
@@ -124,25 +116,62 @@ public:
         return x;
     }
 
-#ifndef YARP_NO_DEPRECATED // Since YARP 3.0.0
-    YARP_DEPRECATED_MSG("Use expectInt32 instead")
-    int expectInt()
-    {
-        return static_cast<int>(expectInt32());
-    }
-
-    YARP_DEPRECATED_MSG("Use expectFloat64 instead")
-    double expectDouble()
-    {
-        return static_cast<double>(expectFloat64());
-    }
-#endif // YARP_NO_DEPRECATED
-
     bool readString(std::string& str, bool* is_vocab = nullptr);
+
+    bool readBlock(char* const data, size_t len);
 
     bool readBinary(std::string& str);
 
-    bool readEnum(std::int32_t& x, yarp::os::idl::WireVocab& converter);
+    template <typename EnumBase, typename ConverterType>
+    bool readEnum(EnumBase& x)
+    {
+        std::int32_t tag = state->code;
+        if (tag < 0) {
+            if (noMore()) {
+                return false;
+            }
+            tag = reader.expectInt32();
+        }
+        if (noMore()) {
+            return false;
+        }
+        switch(tag) {
+        case BOTTLE_TAG_INT8:
+            x = static_cast<EnumBase>(reader.expectInt8());
+            state->len--;
+            return !reader.isError();
+        case BOTTLE_TAG_INT16:
+            x = static_cast<EnumBase>(reader.expectInt16());
+            state->len--;
+            return !reader.isError();
+        case BOTTLE_TAG_INT32: [[fallthrough]];
+        case BOTTLE_TAG_VOCAB32:
+            x = static_cast<EnumBase>(reader.expectInt32());
+            state->len--;
+            return !reader.isError();
+        case BOTTLE_TAG_INT64: [[fallthrough]];
+        case BOTTLE_TAG_VOCAB64:
+            x = static_cast<EnumBase>(reader.expectInt64());
+            state->len--;
+            return !reader.isError();
+        case BOTTLE_TAG_STRING: {
+            std::int32_t len = reader.expectInt32();
+            if (reader.isError() || len < 1 || noMore()) {
+                return false;
+            }
+            std::string str;
+            str.resize(len);
+            reader.expectBlock(const_cast<char*>(str.data()), len);
+            str.resize(len - 1);
+            state->len--;
+            if (reader.isError()) {
+                return false;
+            }
+            x = ConverterType::fromString(str);
+            return (x >= 0);
+        }}
+        return false;
+    }
 
     bool readListHeader();
 
@@ -155,19 +184,21 @@ public:
         return state->len;
     }
 
+    ConnectionReader& getReader();
+
     ConnectionWriter& getWriter();
 
     bool isValid();
 
     bool isError();
 
-    std::string readTag();
+    std::string readTag(size_t len = static_cast<size_t>(-1));
 
-    void readListBegin(yarp::os::idl::WireState& nstate, std::uint32_t& len);
+    void readListBegin(yarp::os::idl::WireState& nstate, size_t& len);
 
-    void readSetBegin(yarp::os::idl::WireState& nstate, std::uint32_t& len);
+    void readSetBegin(yarp::os::idl::WireState& nstate, size_t& len);
 
-    void readMapBegin(yarp::os::idl::WireState& nstate, yarp::os::idl::WireState& nstate2, std::uint32_t& len);
+    void readMapBegin(yarp::os::idl::WireState& nstate, yarp::os::idl::WireState& nstate2, size_t& len);
 
     void readListEnd();
 
@@ -179,7 +210,7 @@ public:
 
     bool getMode() const;
 
-    bool getIsVocab() const;
+    bool getIsVocab32() const;
 
     const std::string& getString() const;
 
@@ -187,21 +218,19 @@ private:
     NullConnectionWriter null_writer;
     ConnectionReader& reader;
     WireState baseState;
-    WireState* state;
-    bool flush_if_needed;
-    bool support_get_mode;
-    bool expecting;
-    bool get_is_vocab;
+    WireState* state {&baseState};
+    bool flush_if_needed {false};
+    bool support_get_mode {false};
+    bool expecting {false};
+    bool get_is_vocab32 {false};
     YARP_SUPPRESS_DLL_INTERFACE_WARNING_ARG(std::string) get_string;
-    bool get_mode;
+    bool get_mode {false};
 
 
     void scanString(std::string& str, bool is_vocab);
 };
 
-} // namespace idl
-} // namespace os
-} // namespace yarp
+} // namespace yarp::os::idl
 
 
 #endif // YARP_OS_IDL_WIREREADER_H

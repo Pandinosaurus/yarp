@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/companion/impl/Companion.h>
@@ -98,7 +95,7 @@ int Companion::cmdName(int argc, char* argv[])
     }
     if (reply.size() == 1 && reply.get(0).isString()) {
         yCInfo(COMPANION) << reply.get(0).asString().c_str();
-    } else if (reply.get(0).isVocab() && reply.get(0).asVocab() == yarp::os::createVocab('m', 'a', 'n', 'y')) {
+    } else if (reply.get(0).isVocab32() && reply.get(0).asVocab32() == yarp::os::createVocab32('m', 'a', 'n', 'y')) {
         for (size_t i = 1; i < reply.size(); i++) {
             Value& v = reply.get(i);
             if (v.isString()) {

@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_IMPLEMENTCURRENTCONTROL_H
@@ -12,31 +9,26 @@
 #include <yarp/dev/ICurrentControl.h>
 #include <yarp/dev/api.h>
 
-namespace yarp {
-    namespace dev {
-        class ImplementCurrentControl;
-    }
+namespace yarp::dev {
+class ImplementCurrentControl;
 }
 
-namespace yarp {
-namespace dev {
-namespace impl {
+namespace yarp::dev::impl {
 
 template <typename T>
 class FixedSizeBuffersManager;
 
-} // namespace impl
-} // namespace dev
-} // namespace yarp
+} // namespace yarp::dev::impl
 
 class YARP_dev_API yarp::dev::ImplementCurrentControl: public ICurrentControl
 {
 protected:
-    yarp::dev::ICurrentControlRaw *iCurrentRaw;
-    void *helper;
-    yarp::dev::impl::FixedSizeBuffersManager<int> *intBuffManager;
-    yarp::dev::impl::FixedSizeBuffersManager<double> *doubleBuffManager;
-
+    yarp::dev::ICurrentControlRaw* m_iraw=nullptr;
+    void*                          m_helper=nullptr;
+    std::vector<int>               m_buffer_ints;
+    std::vector<double>            m_buffer_doubles;
+    std::vector<double>            m_buffer_doubles2;
+    std::mutex                     m_imp_mutex;
     /**
      * Initialize the internal data and alloc memory.
      * @param size is the number of controlled axes the driver deals with.
@@ -63,16 +55,16 @@ public:
      */
     virtual ~ImplementCurrentControl();
 
-    bool getNumberOfMotors(int *ax) override;
-    bool getRefCurrent(int j, double *) override;
-    bool getRefCurrents(double *t) override;
-    bool setRefCurrents(const double *t) override;
-    bool setRefCurrent(int j, double t) override;
-    bool setRefCurrents(const int n_joint, const int *joints, const double *t) override;
-    bool getCurrents(double *t) override;
-    bool getCurrent(int j, double *t) override;
-    bool getCurrentRange(int j, double *min, double *max) override;
-    bool getCurrentRanges(double *min, double *max) override;
+    yarp::dev::ReturnValue getNumberOfMotors(int *ax) override;
+    yarp::dev::ReturnValue getRefCurrent(int j, double *) override;
+    yarp::dev::ReturnValue getRefCurrents(double *t) override;
+    yarp::dev::ReturnValue setRefCurrents(const double *t) override;
+    yarp::dev::ReturnValue setRefCurrent(int j, double t) override;
+    yarp::dev::ReturnValue setRefCurrents(const int n_joint, const int *joints, const double *t) override;
+    yarp::dev::ReturnValue getCurrents(double *t) override;
+    yarp::dev::ReturnValue getCurrent(int j, double *t) override;
+    yarp::dev::ReturnValue getCurrentRange(int j, double *min, double *max) override;
+    yarp::dev::ReturnValue getCurrentRanges(double *min, double *max) override;
 };
 
 #endif // YARP_DEV_IMPLEMENTCURRENTCONTROL_H

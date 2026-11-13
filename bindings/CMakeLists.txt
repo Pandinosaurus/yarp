@@ -1,12 +1,9 @@
-# Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
-# Copyright (C) 2006-2010 RobotCub Consortium
-# All rights reserved.
-#
-# This software may be modified and distributed under the terms of the
-# BSD-3-Clause license. See the accompanying LICENSE file for details.
+# SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+# SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+# SPDX-License-Identifier: BSD-3-Clause
 
 if(NOT DEFINED CMAKE_MINIMUM_REQUIRED_VERSION)
-  cmake_minimum_required(VERSION 3.12)
+  cmake_minimum_required(VERSION 3.19)
 
   # UseSWIG generates now standard target names.
   if(${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.13)
@@ -36,7 +33,8 @@ if(NOT DEFINED CMAKE_MINIMUM_REQUIRED_VERSION)
   set(YCM_REQUIRED_VERSION 0.11.0)
   find_package(YCM ${YCM_REQUIRED_VERSION} REQUIRED)
   find_package(YARP COMPONENTS ${_components} REQUIRED)
-  find_package(SWIG 3.0.12 REQUIRED)
+  set(SWIG_REQUIRED_VERSION 4)
+  find_package(SWIG ${SWIG_REQUIRED_VERSION} REQUIRED)
 
   set(_nested_build 0)
   set(YARP_COMPILE_BINDINGS_DEFAULT TRUE)
@@ -84,22 +82,25 @@ yarp_print_feature(YARP_COMPILE_BINDINGS 0 "Bindings")
 #############################################################################
 ## Options for compiling supported languages.  There's nothing magical
 ## about this list, any SWIG-supported language should work - take a
-## look at e.g. ruby code below for how to do it.
+## look at e.g. Python code below for how to do it.
 
-set(SUPPORTED_LANGUAGES "Java"
-                        "Python"
-                        "Perl"
-                        "CSharp"
-                        "TCL"
-                        "Ruby"
-                        "Lua"
-                        "Octave")
+set(SUPPORTED_LANGUAGES
+  "Java"
+  "Python"
+  "Perl"
+  "CSharp"
+  "TCL"
+  "Lua"
+  "Octave"
+)
 
 foreach(Lang ${SUPPORTED_LANGUAGES})
   string(TOUPPER "${Lang}" LANG)
   string(REGEX REPLACE " .+" "" LANG "${LANG}")
-  cmake_dependent_option(CREATE_${LANG} "Do you want to create the ${Lang} interface" OFF
-                         YARP_COMPILE_BINDINGS OFF)
+  cmake_dependent_option(
+    CREATE_${LANG} "Do you want to create the ${Lang} interface" OFF
+    YARP_COMPILE_BINDINGS OFF
+  )
   yarp_print_feature(CREATE_${LANG} 1 "${Lang} bindings")
 endforeach()
 
@@ -114,20 +115,34 @@ if (_nested_build)
   # bindings for other languages to be compiled from the build material.
 
   # Install main CMakeLists and Swig input file
-  foreach(f CMakeLists.txt yarp.i macrosForMultipleAnalogSensors.i matlab/vectors_fromTo_matlab.i README.md)
-      install(FILES ${CMAKE_SOURCE_DIR}/bindings/${f}
-              COMPONENT development
-              DESTINATION ${CMAKE_INSTALL_DATADIR}/yarp/bindings)
-  endforeach(f)
+  foreach(f
+    CMakeLists.txt
+    yarp.i
+    yarp_os.i
+    yarp_sig.i
+    yarp_sig_vector.i
+    yarp_dev.i
+    macrosForMultipleAnalogSensors.i
+    matlab/vectors_fromTo_matlab.i
+    README.md
+  )
+    install(
+      FILES ${CMAKE_SOURCE_DIR}/bindings/${f}
+      COMPONENT development
+      DESTINATION ${CMAKE_INSTALL_DATADIR}/yarp/bindings
+    )
+  endforeach()
 
   # Install supported languages data
   foreach(Lang ${SUPPORTED_LANGUAGES})
     string(TOLOWER "${Lang}" lang)
     string(REGEX REPLACE " .+" "" lang "${lang}")
 
-    install(DIRECTORY ${CMAKE_SOURCE_DIR}/bindings/${lang}
-            COMPONENT development
-            DESTINATION ${CMAKE_INSTALL_DATADIR}/yarp/bindings)
+    install(
+      DIRECTORY ${CMAKE_SOURCE_DIR}/bindings/${lang}
+      COMPONENT development
+      DESTINATION ${CMAKE_INSTALL_DATADIR}/yarp/bindings
+    )
   endforeach()
 
 endif()
@@ -144,10 +159,27 @@ if(YARP_COMPILE_BINDINGS)
   unset(SWIG_COMMON_FLAGS)
 
   #############################################################################
+  ## Pass a macro to permit to code in yarp.i to distinguish between when is
+  ## swig is processing yarp.i because it is generated yarp bindings, or if
+  ## it is processing yarp.i as it was included in some downstream bindings
+  ## (such as icub-main bindings)
+  ## If you mantain a project downstream of YARP that is including yarp.i,
+  ## make sure that you DO NOT define this macro
+  list(APPEND SWIG_COMMON_FLAGS "-DSWIG_GENERATING_YARP_BINDINGS")
+
+
+  #############################################################################
   ## Do not build deprecated functions when disabled
 
   if(YARP_NO_DEPRECATED)
     list(APPEND SWIG_COMMON_FLAGS "-DYARP_NO_DEPRECATED")
+  endif()
+
+  #############################################################################
+  ## Do not build libYARP_math dependent bindings when YARP_NO_MATH is enabled
+
+  if(NOT YARP_COMPILE_libYARP_math)
+    list(APPEND SWIG_COMMON_FLAGS "-DYARP_NO_MATH")
   endif()
 
   # Append user flags
@@ -157,10 +189,12 @@ if(YARP_COMPILE_BINDINGS)
   # Include SWIG use file
   include(${SWIG_USE_FILE})
 
-  set(SWIG_YARP_LIBRARIES YARP::YARP_os
-                          YARP::YARP_sig
-                          YARP::YARP_dev
-                          YARP::YARP_init)
+  set(SWIG_YARP_LIBRARIES
+    YARP::YARP_os
+    YARP::YARP_sig
+    YARP::YARP_dev
+    YARP::YARP_init
+  )
 
   set(SWIG_BINDINGS_SOURCE_FILE "${CMAKE_CURRENT_SOURCE_DIR}/yarp.i")
 

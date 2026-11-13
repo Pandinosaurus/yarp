@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_IMPLEMENTAXISINFO_H
@@ -11,19 +8,19 @@
 
 #include <yarp/dev/ControlBoardInterfaces.h>
 
-namespace yarp {
-    namespace dev {
-        class ImplementAxisInfo;
-    }
+namespace yarp::dev {
+class ImplementAxisInfo;
 }
 
 class YARP_dev_API yarp::dev::ImplementAxisInfo: public IAxisInfo
 {
 protected:
-    IAxisInfoRaw *iinfo;
-    void *helper;
-    double *temp1;
-    double *temp2;
+    IAxisInfoRaw*            m_iraw=nullptr;
+    void*                    m_helper =nullptr;
+    std::vector<int>         m_buffer_ints;
+    std::vector<double>      m_buffer_doubles;
+    std::vector<double>      m_buffer_doubles2;
+    std::mutex               m_imp_mutex;
 
 
     /**
@@ -49,8 +46,9 @@ public:
 
     virtual ~ImplementAxisInfo();
 
-    bool getAxisName(int axis, std::string& name) override;
-    bool getJointType(int axis, yarp::dev::JointTypeEnum& type) override;
+    yarp::dev::ReturnValue getAxes(size_t& ax) override;
+    yarp::dev::ReturnValue getAxisName(int axis, std::string& name) override;
+    yarp::dev::ReturnValue getJointType(int axis, yarp::dev::JointTypeEnum& type) override;
 };
 
 #endif // YARP_DEV_IMPLEMENTAXISINFO_H

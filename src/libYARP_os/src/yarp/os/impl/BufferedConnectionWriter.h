@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_OS_IMPL_BUFFEREDCONNECTIONWRITER_H
@@ -17,13 +14,14 @@
 #include <vector>
 
 
-namespace yarp {
-namespace os {
+namespace yarp::os {
 
 class Bytes;
 class ManagedBytes;
 
-namespace impl {
+} // namespace yarp::os
+
+namespace yarp::os::impl {
 
 /*
  * When allocating space to store serialized data, we start off with
@@ -215,7 +213,8 @@ public:
     void stopWrite() const override;
 
     // defined by yarp::os::ConnectionWriter
-    SizedWriter* getBuffer() const override;
+    SizedWriter* getBuffer() override;
+    const SizedWriter* getBuffer() const override;
 
     /**
      * Set a custom initial pool size, which affects the size of buffers
@@ -270,8 +269,6 @@ private:
 };
 
 
-} // namespace impl
-} // namespace os
-} // namespace yarp
+} // namespace yarp::os::impl
 
 #endif // YARP_OS_IMPL_BUFFEREDCONNECTIONWRITER_H

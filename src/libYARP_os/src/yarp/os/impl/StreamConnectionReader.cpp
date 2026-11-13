@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/Bottle.h>
@@ -102,28 +99,6 @@ bool StreamConnectionReader::expectBlock(Bytes& b)
     err = true;
     return false;
 }
-
-#ifndef YARP_NO_DEPRECATED // Since YARP 3.2
-std::string StreamConnectionReader::expectString(int len)
-{
-    if (!isGood()) {
-        return {};
-    }
-    char* buf = new char[len];
-    yarp::os::Bytes b(buf, len);
-    yAssert(in != nullptr);
-    yarp::conf::ssize_t r = in->read(b);
-    if (r < 0 || static_cast<size_t>(r) < b.length()) {
-        err = true;
-        delete[] buf;
-        return {};
-    }
-    messageLen -= b.length();
-    std::string s = buf;
-    delete[] buf;
-    return s;
-}
-#endif // YARP_NO_DEPRECATED
 
 std::string StreamConnectionReader::expectLine()
 {
@@ -294,6 +269,9 @@ bool StreamConnectionReader::convertTextMode()
             std::string s = writer.toString();
             altStream.reset(s);
             in = &altStream;
+            // From now on, the message is the binary version of the text
+            // just read, therefore its size is known.
+            messageLen = s.length();
             convertedTextMode = true;
         }
     }

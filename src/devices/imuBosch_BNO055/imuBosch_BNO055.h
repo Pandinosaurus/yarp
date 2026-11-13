@@ -1,19 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #ifndef BOSCH_IMU_DEVICE
@@ -30,6 +17,7 @@
 #include <yarp/math/Quaternion.h>
 #include <mutex>
 
+#include "BoschIMU_ParamsParser.h"
 
 /* Serial protocol description
  *
@@ -132,18 +120,8 @@ constexpr int MAX_MSG_LENGTH = 128;
 * application. It also made available some function to check and control the
 * state of the remote sensor.
 *
-* \section imuBosch_BNO055_device_parameters Description of input parameters
+* Parameters required by this device are shown in class: BoschIMU_ParamsParser
 *
-*
-* Parameters accepted in the config argument of the open method:
-* | Parameter name | Type   | Units | Default Value | Required  | Description   | Notes |
-* |:--------------:|:------:|:-----:|:-------------:|:--------: |:-------------:|:-----:|
-* | comport        | string |       |               | Yes if i2c not specified | full name of device file  | ex '/dev/ttyUSB0', it is mutually exclusive with 'i2c' parameter|
-* | baudrate       | int    | Hz    |               | Yes if i2c not specified | baudrate setting of COM port | ex 115200, used only with serial configuration |
-* | i2c            | string |       |               | Yes if comport not specified | full name of device file  | ex '/dev/i2c-5', it is mutually exclusive with 'comport' parameter, necessary for i2c configuration|
-* | period         | int    | ms    |       10      | No       | period of the thread | |
-* | sensor_name    | string |       | sensor_imu_bosch_bno055 | No | full name of the device | |
-* | frame_name     | string |       | set same as `sensor_name` | No | full name of the sensor frame in which the measurements are expressed | |
 **/
 
 class BoschIMU:
@@ -153,12 +131,12 @@ class BoschIMU:
         public yarp::dev::IThreeAxisGyroscopes,
         public yarp::dev::IThreeAxisLinearAccelerometers,
         public yarp::dev::IThreeAxisMagnetometers,
-        public yarp::dev::IOrientationSensors
+        public yarp::dev::IOrientationSensors,
+        public BoschIMU_ParamsParser
 {
 protected:
     bool                        verbose;              ///< Flag to get verbose output
     short                       status;               ///< device status - UNUSED
-    int                         nChannels;            ///< number of channels in the output port. Default 12. If 16, also includes quaternion data
     yarp::sig::Vector           data;                 ///< sensor data buffer
     yarp::sig::Vector           data_tmp;             ///< sensor data temporary buffer
     yarp::math::Quaternion      quaternion;           ///< orientation in quaternion representation
@@ -167,7 +145,7 @@ protected:
     double                      m_timeStamp;          ///< device timestamp
     double                      timeLastReport;       ///< timestamp of last reported data
     mutable std::mutex             mutex;        ///< mutex to avoid resource clash
-    bool                        i2c_flag;             ///< flag to check if device connected through i2c commununication
+    bool                        m_i2c_flag=false;     ///< flag to check if device connected through i2c commununication
 
     bool                        checkError;           ///< flag to check read error of sensor data
 
@@ -250,7 +228,7 @@ public:
      * Get the  number of three axis gyroscopes in the device
      * @return 1
      */
-    size_t getNrOfThreeAxisGyroscopes() const override;
+    yarp::dev::ReturnValue getNrOfThreeAxisGyroscopes(size_t& num) const override;
 
     /**
      * Get the status of three axis gyroscope
@@ -265,7 +243,7 @@ public:
      * @param[out] name name of the sensor
      * @return true/false success/failure
      */
-    bool getThreeAxisGyroscopeName(size_t sens_index, std::string &name) const override;
+    yarp::dev::ReturnValue getThreeAxisGyroscopeName(size_t sens_index, std::string &name) const override;
 
     /**
      * Get the name of the frame in which three axis gyroscope measurements are expressed
@@ -273,7 +251,7 @@ public:
      * @param[out] frameName name of the sensor frame
      * @return true/false success/failure
      */
-    bool getThreeAxisGyroscopeFrameName(size_t sens_index, std::string &frameName) const override;
+    yarp::dev::ReturnValue getThreeAxisGyroscopeFrameName(size_t sens_index, std::string &frameName) const override;
 
     /**
      * Get three axis gyroscope measurements
@@ -282,14 +260,14 @@ public:
      * @param[out] timestamp timestamp of measurement
      * @return true/false success/failure
      */
-    bool getThreeAxisGyroscopeMeasure(size_t sens_index, yarp::sig::Vector& out, double& timestamp) const override;
+    yarp::dev::ReturnValue getThreeAxisGyroscopeMeasure(size_t sens_index, yarp::sig::Vector& out, double& timestamp) const override;
 
     /* IThreeAxisLinearAccelerometers methods */
     /**
      * Get the  number of three axis linear accelerometers in the device
      * @return 1
      */
-    size_t getNrOfThreeAxisLinearAccelerometers() const override;
+    yarp::dev::ReturnValue getNrOfThreeAxisLinearAccelerometers(size_t& num) const override;
 
     /**
      * Get the status of three axis linear accelerometer
@@ -304,7 +282,7 @@ public:
      * @param[out] name name of the sensor
      * @return true/false success/failure
      */
-    bool getThreeAxisLinearAccelerometerName(size_t sens_index, std::string &name) const override;
+    yarp::dev::ReturnValue getThreeAxisLinearAccelerometerName(size_t sens_index, std::string &name) const override;
 
     /**
      * Get the name of the frame in which three axis linear accelerometer measurements are expressed
@@ -312,7 +290,7 @@ public:
      * @param[out] frameName name of the sensor frame
      * @return true/false success/failure
      */
-    bool getThreeAxisLinearAccelerometerFrameName(size_t sens_index, std::string &frameName) const override;
+    yarp::dev::ReturnValue getThreeAxisLinearAccelerometerFrameName(size_t sens_index, std::string &frameName) const override;
 
     /**
      * Get three axis linear accelerometer measurements
@@ -321,14 +299,14 @@ public:
      * @param[out] timestamp timestamp of measurement
      * @return true/false success/failure
      */
-    bool getThreeAxisLinearAccelerometerMeasure(size_t sens_index, yarp::sig::Vector& out, double& timestamp) const override;
+    yarp::dev::ReturnValue getThreeAxisLinearAccelerometerMeasure(size_t sens_index, yarp::sig::Vector& out, double& timestamp) const override;
 
     /* IThreeAxisMagnetometers methods */
     /**
      * Get the  number of three axis magnetometers in the device
      * @return 1
      */
-    size_t getNrOfThreeAxisMagnetometers() const override;
+    yarp::dev::ReturnValue getNrOfThreeAxisMagnetometers(size_t& num) const override;
 
     /**
      * Get the status of three axis magnetometer
@@ -343,7 +321,7 @@ public:
      * @param[out] name name of the sensor
      * @return true/false success/failure
      */
-    bool getThreeAxisMagnetometerName(size_t sens_index, std::string &name) const override;
+    yarp::dev::ReturnValue getThreeAxisMagnetometerName(size_t sens_index, std::string &name) const override;
 
     /**
      * Get the name of the frame in which three axis magnetometer measurements are expressed
@@ -351,7 +329,7 @@ public:
      * @param[out] frameName name of the sensor frame
      * @return true/false success/failure
      */
-    bool getThreeAxisMagnetometerFrameName(size_t sens_index, std::string &frameName) const override;
+    yarp::dev::ReturnValue getThreeAxisMagnetometerFrameName(size_t sens_index, std::string &frameName) const override;
 
     /**
      * Get three axis magnetometer measurements
@@ -360,14 +338,14 @@ public:
      * @param[out] timestamp timestamp of measurement
      * @return true/false success/failure
      */
-    bool getThreeAxisMagnetometerMeasure(size_t sens_index, yarp::sig::Vector& out, double& timestamp) const override;
+    yarp::dev::ReturnValue getThreeAxisMagnetometerMeasure(size_t sens_index, yarp::sig::Vector& out, double& timestamp) const override;
 
     /* IOrientationSensors methods */
     /**
      * Get the  number of orientation sensors in the device
      * @return 1
      */
-    size_t getNrOfOrientationSensors() const override;
+    yarp::dev::ReturnValue getNrOfOrientationSensors(size_t& num) const override;
 
     /**
      * Get the status of orientation sensor
@@ -382,7 +360,7 @@ public:
      * @param[out] name name of the sensor
      * @return true/false success/failure
      */
-    bool getOrientationSensorName(size_t sens_index, std::string &name) const override;
+    yarp::dev::ReturnValue getOrientationSensorName(size_t sens_index, std::string &name) const override;
 
     /**
      * Get the name of the frame in which orientation sensor measurements are expressed
@@ -390,7 +368,7 @@ public:
      * @param[out] frameName name of the sensor frame
      * @return true/false success/failure
      */
-    bool getOrientationSensorFrameName(size_t sens_index, std::string &frameName) const override;
+    yarp::dev::ReturnValue getOrientationSensorFrameName(size_t sens_index, std::string &frameName) const override;
 
     /**
      * Get orientation sensor measurements
@@ -399,7 +377,7 @@ public:
      * @param[out] timestamp timestamp of measurement
      * @return true/false success/failure
      */
-    bool getOrientationSensorMeasureAsRollPitchYaw(size_t sens_index, yarp::sig::Vector& rpy, double& timestamp) const override;
+    yarp::dev::ReturnValue getOrientationSensorMeasureAsRollPitchYaw(size_t sens_index, yarp::sig::Vector& rpy, double& timestamp) const override;
 
     /**
      * Initialize process with desired device configurations
@@ -420,11 +398,9 @@ public:
 
 private:
     yarp::dev::MAS_status genericGetStatus(size_t sens_index) const;
-    bool genericGetSensorName(size_t sens_index, std::string &name) const;
-    bool genericGetFrameName(size_t sens_index, std::string &frameName) const;
+    yarp::dev::ReturnValue genericGetSensorName(size_t sens_index, std::string &name) const;
+    yarp::dev::ReturnValue genericGetFrameName(size_t sens_index, std::string &frameName) const;
 
-    std::string m_sensorName;     ///< name of the device
-    std::string m_frameName;      ///< name of the frame in which the measurements will be expressed
 };
 
 

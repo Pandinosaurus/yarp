@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_OS_IMPL_PORTCORE_H
@@ -25,20 +22,12 @@
 #include <yarp/os/impl/PortCorePackets.h>
 #include <yarp/os/impl/ThreadImpl.h>
 
-#ifndef YARP_NO_DEPRECATED // since YARP 3.3
-#define YARP_INCLUDING_DEPRECATED_HEADER_ON_PURPOSE
-#include <yarp/os/Mutex.h>
-#undef YARP_INCLUDING_DEPRECATED_HEADER_ON_PURPOSE
-#endif
-
 #include <atomic>
 #include <condition_variable>
 #include <mutex>
 #include <vector>
 
-namespace yarp {
-namespace os {
-namespace impl {
+namespace yarp::os::impl {
 
 class PortCoreUnit;
 
@@ -188,8 +177,9 @@ public:
      * @param src the name of the source port
      * @param id an opaque tracker for the connection
      * @param os the output stream for messages about this operation
+     * @return true if at least one input connection has been removed
      */
-    void removeInput(const std::string& src,
+    bool removeInput(const std::string& src,
                      void* id,
                      yarp::os::OutputStream* os);
 
@@ -198,8 +188,9 @@ public:
      * @param dest the name of the target port
      * @param id an opaque tracker for the connection
      * @param os the output stream for messages about this operation
+     * @return true if at least one output connection has been removed
      */
-    void removeOutput(const std::string& dest,
+    bool removeOutput(const std::string& dest,
                       void* id,
                       yarp::os::OutputStream* os);
 
@@ -482,24 +473,6 @@ public:
 
     void setTimeout(float timeout);
 
-    /**
-     * @warning Must be called in the same thread as releaseProperties
-     */
-    Property* acquireProperties(bool readOnly);
-
-    /**
-     * @warning Must be called in the same thread as acquireProperties
-     */
-    void releaseProperties(Property* prop);
-
-#ifndef YARP_NO_DEPRECATED // since YARP 3.3
-YARP_WARNING_PUSH
-YARP_DISABLE_DEPRECATED_WARNING
-    YARP_DEPRECATED
-    bool setCallbackLock(yarp::os::Mutex* mutex);
-YARP_WARNING_POP
-#endif // YARP_NO_DEPRECATED
-
     bool setCallbackLock(std::mutex* mutex = nullptr);
 
     bool removeCallbackLock();
@@ -555,15 +528,8 @@ private:
     std::string m_envelope;///< user-defined wrapping data
     float m_timeout {-1};  ///< a timeout to apply to all network operations
     int m_counter {1};    ///< port-unique ids for connections
-    yarp::os::Property *m_prop {nullptr};  ///< optional unstructured properties associated with port
     yarp::os::Contactable *m_contactable {nullptr}; ///< user-facing object that contains this PortCore
     std::mutex* m_mutex {nullptr}; ///< callback optional access control lock
-#ifndef YARP_NO_DEPRECATED // since YARP 3.3
-YARP_WARNING_PUSH
-YARP_DISABLE_DEPRECATED_WARNING
-    yarp::os::Mutex* m_old_mutex {nullptr};
-YARP_WARNING_POP
-#endif // YARP_NO_DEPRECATED
     bool m_mutexOwned {false}; ///< do we own the optional callback lock
     BufferedConnectionWriter m_envelopeWriter {true}; ///< storage area for envelope, if present
 
@@ -585,7 +551,7 @@ YARP_WARNING_POP
     bool setProcessSchedulingParam(int priority = -1, int policy = -1);
 
     // attach a portmonitor plugin to the port or to a specific connection
-    bool attachPortMonitor(yarp::os::Property& prop, bool isOutput, std::string& errMsg);
+    bool attachPortMonitor(const std::string& portmonitor_options, bool isOutput, std::string& errMsg);
 
     // detach the portmonitor from the port or specific connection
     bool detachPortMonitor(bool isOutput);
@@ -617,8 +583,6 @@ YARP_WARNING_POP
     int getNextIndex();
 };
 
-} // namespace impl
-} // namespace os
-} // namespace yarp
+} // namespace yarp::os::impl
 
 #endif // YARP_OS_IMPL_PORTCORE_H

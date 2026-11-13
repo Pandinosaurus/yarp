@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2008 Giacomo Spigler
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2008 Giacomo Spigler
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/dev/ControlBoardInterfaces.h>
@@ -57,31 +54,34 @@ public:
     double* positions;
     double* speeds;
 
-    bool getAxes(int* ax) override;
-    bool positionMove(int j, double ref) override;
-    bool positionMove(const double* refs) override;
-    bool relativeMove(int j, double delta) override;
-    bool relativeMove(const double* deltas) override;
-    bool checkMotionDone(int j, bool* flag) override;
-    bool checkMotionDone(bool* flag) override;
-    bool setRefSpeed(int j, double sp) override;
-    bool setRefSpeeds(const double* spds) override;
-    bool setRefAcceleration(int j, double acc) override;
-    bool setRefAccelerations(const double* accs) override;
-    bool getRefSpeed(int j, double* ref) override;
-    bool getRefSpeeds(double* spds) override;
-    bool getRefAcceleration(int j, double* acc) override;
-    bool getRefAccelerations(double* accs) override;
-    bool stop(int j) override;
-    bool stop() override;
-    bool positionMove(const int n_joint, const int* joints, const double* refs) override;
-    bool relativeMove(const int n_joint, const int* joints, const double* deltas) override;
-    bool checkMotionDone(const int n_joint, const int* joints, bool* flags) override;
-    bool setRefSpeeds(const int n_joint, const int* joints, const double* spds) override;
-    bool setRefAccelerations(const int n_joint, const int* joints, const double* accs) override;
-    bool getRefSpeeds(const int n_joint, const int* joints, double* spds) override;
-    bool getRefAccelerations(const int n_joint, const int* joints, double* accs) override;
-    bool stop(const int n_joint, const int* joints) override;
+    yarp::dev::ReturnValue getAxes(size_t& ax) override;
+    yarp::dev::ReturnValue positionMove(int j, double ref) override;
+    yarp::dev::ReturnValue positionMove(const double* refs) override;
+    yarp::dev::ReturnValue relativeMove(int j, double delta) override;
+    yarp::dev::ReturnValue relativeMove(const double* deltas) override;
+    yarp::dev::ReturnValue checkMotionDone(int j, bool& flag) override;
+    yarp::dev::ReturnValue checkMotionDone(bool& flag) override;
+    yarp::dev::ReturnValue setTrajSpeed(int j, double sp) override;
+    yarp::dev::ReturnValue setTrajSpeeds(const double* spds) override;
+    yarp::dev::ReturnValue setTrajAcceleration(int j, double acc) override;
+    yarp::dev::ReturnValue setTrajAccelerations(const double* accs) override;
+    yarp::dev::ReturnValue getTrajSpeed(int j, double* ref) override;
+    yarp::dev::ReturnValue getTrajSpeeds(double* spds) override;
+    yarp::dev::ReturnValue getTrajAcceleration(int j, double* acc) override;
+    yarp::dev::ReturnValue getTrajAccelerations(double* accs) override;
+    yarp::dev::ReturnValue stop(int j) override;
+    yarp::dev::ReturnValue stop() override;
+    yarp::dev::ReturnValue positionMove(const int n_joint, const int* joints, const double* refs) override;
+    yarp::dev::ReturnValue relativeMove(const int n_joint, const int* joints, const double* deltas) override;
+    yarp::dev::ReturnValue checkMotionDone(const std::vector<int>& joints, bool& flag) override;
+    yarp::dev::ReturnValue setTrajSpeeds(const int n_joint, const int* joints, const double* spds) override;
+    yarp::dev::ReturnValue setTrajAccelerations(const int n_joint, const int* joints, const double* accs) override;
+    yarp::dev::ReturnValue getTrajSpeeds(const int n_joint, const int* joints, double* spds) override;
+    yarp::dev::ReturnValue getTrajAccelerations(const int n_joint, const int* joints, double* accs) override;
+    yarp::dev::ReturnValue stop(const int n_joint, const int* joints) override;
+    yarp::dev::ReturnValue getTargetPosition(const int,double *);
+    yarp::dev::ReturnValue getTargetPositions(double *);
+    yarp::dev::ReturnValue getTargetPositions(const int,const int *,double *);
 
     bool open(Searchable& config) override;
     bool close() override;

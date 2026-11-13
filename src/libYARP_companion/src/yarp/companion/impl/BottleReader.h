@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_COMPANION_IMPL_BOTTLEREADER_H
@@ -20,6 +17,9 @@
 #include <yarp/os/Semaphore.h>
 #include <yarp/os/impl/BottleImpl.h>
 
+#include <sstream>
+#include <iomanip>
+
 using yarp::os::Bottle;
 using yarp::os::Contact;
 using yarp::os::ConnectionReader;
@@ -28,9 +28,7 @@ using yarp::os::PortReader;
 using yarp::os::Semaphore;
 using yarp::os::impl::BottleImpl;
 
-namespace yarp {
-namespace companion {
-namespace impl {
+namespace yarp::companion::impl {
 
 // used by Companion::cmdRead and Companion::cmdReadWrite
 
@@ -41,22 +39,25 @@ class BottleReader :
 private:
     yarp::os::Semaphore done;
     bool raw;
-    bool env;
+    Companion::showEnvelopeEnum eShowEnvelope;
     std::string::size_type trim;
+    bool justOnce;
     Contact address;
 public:
     Port core;
 
     BottleReader() : done(0) {
         raw = false;
-        env = false;
+        eShowEnvelope = Companion::showEnvelopeEnum::do_not_show;
         trim = std::string::npos;
+        justOnce = false;
         core.setReader(*this);
         core.setReadOnly();
     }
 
-    void open(const char *name, bool showEnvelope, int trim_at = -1) {
-        env = showEnvelope;
+    void open(const char *name, Companion::showEnvelopeEnum _showEnvelope, bool _justonce, int trim_at = -1) {
+        eShowEnvelope = _showEnvelope;
+        justOnce = _justonce;
         trim = (trim_at > 0 ? static_cast<std::string::size_type>(trim_at) : std::string::npos);
         if (core.open(name)) {
             Companion::setActivePort(&core);
@@ -72,14 +73,28 @@ public:
         Companion::setActivePort(nullptr);
     }
 
-    void showEnvelope() {
-        if (env) {
+    std::string showEnvelope() {
+        if (eShowEnvelope != Companion::showEnvelopeEnum::do_not_show) {
             Bottle envelope;
             core.getEnvelope(envelope);
-            if (envelope.size()>0) {
-                yCInfo(COMPANION, "%s ", envelope.toString().c_str());
+            if (envelope.size()>0)
+            {
+                //this check is bad way to test if the envelope is a actually a timestamp (yarp::os::Stamp)
+                if (envelope.size() == 2 && envelope.get(0).isInt32() && envelope.get(1).isFloat64())
+                {
+                    std::ostringstream stream;
+                    stream << std::fixed << std::setprecision(4) << envelope.get(1).asFloat64();
+                    std::string formattedValue = stream.str();
+                    return envelope.get(0).toString() + " " + formattedValue;
+                }
+                //or just a generic bottle
+                else
+                {
+                    return envelope.toString();
+                }
             }
         }
+        return "";
     }
 
     bool read(ConnectionReader& reader) override {
@@ -92,8 +107,21 @@ public:
             if (bot.size()==2 && bot.isInt32(0) && bot.isString(1) && !raw) {
                 int code = bot.get(0).asInt32();
                 if (code!=1) {
-                    showEnvelope();
-                    yCInfo(COMPANION, "%s", bot.get(1).asString().substr(0, trim).c_str());
+                    if (eShowEnvelope == Companion::showEnvelopeEnum::do_not_show)
+                    {
+                        yCInfo(COMPANION, "%s", bot.get(1).asString().substr(0, trim).c_str());
+                    }
+                    else if (eShowEnvelope == Companion::showEnvelopeEnum::show_inline)
+                    {
+                        std::string envstring = showEnvelope();
+                        yCInfo(COMPANION, "%s     %s", envstring.c_str(), bot.get(1).asString().substr(0, trim).c_str());
+                    }
+                    else if (eShowEnvelope == Companion::showEnvelopeEnum::show_two_lines)
+                    {
+                        std::string envstring = showEnvelope();
+                        yCInfo(COMPANION, "%s", envstring.c_str());
+                        yCInfo(COMPANION, "%s", bot.get(1).asString().substr(0, trim).c_str());
+                    }
                     fflush(stdout);
                 }
                 if (code==1) {
@@ -101,9 +129,26 @@ public:
                 }
             } else {
                 // raw = true; // don't make raw mode "sticky"
-                showEnvelope();
-                yCInfo(COMPANION, "%s", bot.toString().substr(0, trim).c_str());
+                if (eShowEnvelope == Companion::showEnvelopeEnum::do_not_show)
+                {
+                    yCInfo(COMPANION, "%s", bot.toString().substr(0, trim).c_str());
+                }
+                if (eShowEnvelope == Companion::showEnvelopeEnum::show_inline)
+                {
+                    std::string envstring = showEnvelope();
+                    yCInfo(COMPANION, "%s     %s", envstring.c_str(), bot.toString().substr(0, trim).c_str());
+                }
+                else if (eShowEnvelope == Companion::showEnvelopeEnum::show_two_lines)
+                {
+                    std::string envstring = showEnvelope();
+                    yCInfo(COMPANION, "%s", envstring.c_str());
+                    yCInfo(COMPANION, "%s", bot.toString().substr(0, trim).c_str());
+                }
                 fflush(stdout);
+            }
+            if (justOnce) {
+                //this will close everything and terminate the execution after the first received data
+                done.post();
             }
             return true;
         }
@@ -119,8 +164,6 @@ public:
     }
 };
 
-} // namespace impl
-} // namespace companion
-} // namespace yarp
+} // namespace yarp::companion::impl
 
 #endif // YARP_COMPANION_IMPL_BOTTLEREADER_H

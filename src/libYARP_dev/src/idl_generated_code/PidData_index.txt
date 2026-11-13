@@ -1,0 +1,8 @@
+yarp/dev/PidUnitsData.h
+yarp/dev/PidUnitsData.cpp
+yarp/dev/PidDescriptionData.h
+yarp/dev/PidDescriptionData.cpp
+yarp/dev/PidExtraInfoData.h
+yarp/dev/PidExtraInfoData.cpp
+yarp/dev/PidGainsData.h
+yarp/dev/PidGainsData.cpp

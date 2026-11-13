@@ -1,11 +1,8 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * Copyright (C) 2006 Anne van Rossum <anne@almende.com>
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-FileCopyrightText: 2006 Anne van Rossum <anne@almende.com>
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/impl/SocketTwoWayStream.h>
@@ -23,7 +20,7 @@
 #    ifdef main
 #        undef main
 #    endif
-#elif (__unix__)
+#elif defined(__unix__) || defined(__APPLE__)
 #    include <netinet/tcp.h>
 #endif
 
@@ -153,8 +150,20 @@ bool SocketTwoWayStream::setTypeOfService(int tos)
 
 int SocketTwoWayStream::getTypeOfService()
 {
+    // tos is the "Type Of Service" byte of the IP header of the packets sent
+    // through this socket. Its upper 6 bits are the DSCP (Differentiated
+    // Services Code Point) used by the network to prioritize the traffic,
+    // thus tos = DSCP * 4 (e.g. NORMAL = 0, LOW = 40, HIGH = 144, CRITICAL = 176).
+    // -1 is returned if the value cannot be read.
     int tos = -1;
-    int optlen;
-    stream.get_option(IPPROTO_IP, IP_TOS, &tos, &optlen);
+    // optlen is both an input and an output parameter of getsockopt():
+    // on input it must contain the size of the buffer pointed by &tos,
+    // on output it contains the number of bytes actually written.
+    // If it is not initialized, getsockopt() may write nothing (optlen == 0)
+    // or fail with EINVAL (optlen < 0), leaving tos to -1.
+    int optlen = static_cast<int>(sizeof(tos));
+    if (stream.get_option(IPPROTO_IP, IP_TOS, &tos, &optlen) != 0) {
+        return -1;
+    }
     return tos;
 }

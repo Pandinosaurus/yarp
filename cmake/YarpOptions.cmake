@@ -1,9 +1,6 @@
-# Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
-# Copyright (C) 2006-2010 RobotCub Consortium
-# All rights reserved.
-#
-# This software may be modified and distributed under the terms of the
-# BSD-3-Clause license. See the accompanying LICENSE file for details.
+# SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+# SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+# SPDX-License-Identifier: BSD-3-Clause
 
 include(GNUInstallDirs)
 include(CMakeDependentOption)
@@ -35,12 +32,14 @@ if(CMAKE_COMPILER_IS_GNUCXX)
   set(CMAKE_SHARED_LINKER_FLAGS_DEBUGFULL "" CACHE STRING "Flags used by the linker during debugfull builds.")
   set(CMAKE_STATIC_LINKER_FLAGS_DEBUGFULL "" CACHE STRING "Flags used by the linker during debugfull builds.")
 
-  mark_as_advanced(CMAKE_C_FLAGS_DEBUGFULL
-                   CMAKE_CXX_FLAGS_DEBUGFULL
-                   CMAKE_EXE_LINKER_FLAGS_DEBUGFULL
-                   CMAKE_MODULE_LINKER_FLAGS_DEBUGFULL
-                   CMAKE_SHARED_LINKER_FLAGS_DEBUGFULL
-                   CMAKE_STATIC_LINKER_FLAGS_DEBUGFULL)
+  mark_as_advanced(
+    CMAKE_C_FLAGS_DEBUGFULL
+    CMAKE_CXX_FLAGS_DEBUGFULL
+    CMAKE_EXE_LINKER_FLAGS_DEBUGFULL
+    CMAKE_MODULE_LINKER_FLAGS_DEBUGFULL
+    CMAKE_SHARED_LINKER_FLAGS_DEBUGFULL
+    CMAKE_STATIC_LINKER_FLAGS_DEBUGFULL
+  )
 
   list(APPEND YARP_DEBUG_CONFIGURATIONS "DebugFull")
 endif()
@@ -56,12 +55,14 @@ if(CMAKE_COMPILER_IS_GNUCXX)
   set(CMAKE_SHARED_LINKER_FLAGS_PROFILE "" CACHE STRING "Flags used by the linker during profile builds.")
   set(CMAKE_STATIC_LINKER_FLAGS_PROFILE "" CACHE STRING "Flags used by the linker during profile builds.")
 
-  mark_as_advanced(CMAKE_C_FLAGS_PROFILE
-                   CMAKE_CXX_FLAGS_PROFILE
-                   CMAKE_EXE_LINKER_FLAGS_PROFILE
-                   CMAKE_MODULE_LINKER_FLAGS_PROFILE
-                   CMAKE_SHARED_LINKER_FLAGS_PROFILE
-                   CMAKE_STATIC_LINKER_FLAGS_PROFILE)
+  mark_as_advanced(
+    CMAKE_C_FLAGS_PROFILE
+    CMAKE_CXX_FLAGS_PROFILE
+    CMAKE_EXE_LINKER_FLAGS_PROFILE
+    CMAKE_MODULE_LINKER_FLAGS_PROFILE
+    CMAKE_SHARED_LINKER_FLAGS_PROFILE
+    CMAKE_STATIC_LINKER_FLAGS_PROFILE
+  )
 
   list(APPEND YARP_DEBUG_CONFIGURATIONS "Profile")
 endif()
@@ -117,11 +118,12 @@ endif()
 
 option(BUILD_SHARED_LIBS "Compile shared libraries rather than linking statically" ON)
 mark_as_advanced(BUILD_SHARED_LIBS)
-yarp_renamed_option(CREATE_SHARED_LIBRARY BUILD_SHARED_LIBS) # Since YARP 2.3.68.1
 
 set(YARP_DLL OFF)
 if(BUILD_SHARED_LIBS)
   set(YARP_DLL ON)
+else()
+  add_definitions("-DYARP_IS_STATIC")
 endif()
 
 set (YARP_LINK_PLUGINS TRUE)
@@ -145,9 +147,11 @@ option(YARP_COMPILE_UNMAINTAINED "Enable unmaintained components" OFF)
 #########################################################################
 # Enable/Disable examples
 
-cmake_dependent_option(YARP_COMPILE_EXAMPLES
-                       "Enable YARP examples" OFF
-                       "YARP_COMPILE_EXECUTABLES" OFF)
+cmake_dependent_option(
+  YARP_COMPILE_EXAMPLES
+  "Enable YARP examples" OFF
+  "YARP_COMPILE_EXECUTABLES" OFF
+)
 
 
 #########################################################################
@@ -160,13 +164,24 @@ endif()
 
 cmake_dependent_option(YARP_DISABLE_FAILING_TESTS OFF "Disable tests that fail randomly due to race conditions" YARP_COMPILE_TESTS OFF)
 mark_as_advanced(YARP_DISABLE_FAILING_TESTS)
+if(YARP_DISABLE_FAILING_TESTS)
+  add_definitions(-DDISABLE_FAILING_TESTS)
+endif()
+
+cmake_dependent_option(YARP_DISABLE_FAILING_VALGRIND_TESTS OFF "Disable tests on which valgrind detects issues" YARP_COMPILE_TESTS OFF)
+mark_as_advanced(YARP_DISABLE_FAILING_VALGRIND_TESTS)
+if(YARP_DISABLE_FAILING_VALGRIND_TESTS)
+  add_definitions(-DDISABLE_FAILING_VALGRIND_TESTS)
+endif()
 
 cmake_dependent_option(YARP_ENABLE_BROKEN_TESTS OFF "Enable broken tests" YARP_COMPILE_TESTS OFF)
 mark_as_advanced(YARP_ENABLE_BROKEN_TESTS)
+if(YARP_ENABLE_BROKEN_TESTS)
+  add_definitions(-DENABLE_BROKEN_TESTS)
+endif()
 
 cmake_dependent_option(YARP_ENABLE_INTEGRATION_TESTS OFF "Run integration tests" "YARP_COMPILE_TESTS;UNIX" OFF)
 mark_as_advanced(YARP_ENABLE_INTEGRATION_TESTS)
-yarp_renamed_option(YARP_TEST_INTEGRATION YARP_ENABLE_INTEGRATION_TESTS) # since YARP 3.2.0
 
 cmake_dependent_option(YARP_ENABLE_EXAMPLES_AS_TESTS OFF "Compile examples as unit tests" YARP_COMPILE_TESTS OFF)
 mark_as_advanced(YARP_ENABLE_EXAMPLES_AS_TESTS)
@@ -174,7 +189,10 @@ mark_as_advanced(YARP_ENABLE_EXAMPLES_AS_TESTS)
 
 #########################################################################
 # Test timeout.
-set(YARP_TEST_TIMEOUT_DEFAULT 120)
+set(YARP_TEST_TIMEOUT_DEFAULT 180)
+if (APPLE)
+  set(YARP_TEST_TIMEOUT_DEFAULT 300)
+endif()
 set(YARP_TEST_TIMEOUT ${YARP_TEST_TIMEOUT_DEFAULT} CACHE STRING "Timeout for unit tests")
 mark_as_advanced(YARP_TEST_TIMEOUT)
 
@@ -182,10 +200,15 @@ mark_as_advanced(YARP_TEST_TIMEOUT)
 #########################################################################
 # Run tests under Valgrind
 
-cmake_dependent_option(YARP_VALGRIND_TESTS
-                       "Run YARP tests under Valgrind" OFF
-                       "YARP_COMPILE_TESTS" OFF)
+cmake_dependent_option(
+  YARP_VALGRIND_TESTS
+  "Run YARP tests under Valgrind" OFF
+  "YARP_COMPILE_TESTS" OFF
+)
 mark_as_advanced(YARP_VALGRIND_TESTS)
+if(YARP_VALGRIND_TESTS)
+  add_definitions(-DWITH_VALGRIND)
+endif()
 
 if(YARP_VALGRIND_TESTS)
   find_program(VALGRIND_EXECUTABLE NAMES valgrind)
@@ -196,14 +219,24 @@ if(YARP_VALGRIND_TESTS)
       CACHE STRING "Valgrind options (--error-exitcode=1 will be appended)")
     mark_as_advanced(VALGRIND_OPTIONS)
     separate_arguments(VALGRIND_OPTIONS UNIX_COMMAND "${VALGRIND_OPTIONS}")
-    set(VALGRIND_COMMAND "${VALGRIND_EXECUTABLE}" ${VALGRIND_OPTIONS} --error-exitcode=1 --fullpath-after=${CMAKE_SOURCE_DIR}/)
+
+    # Automatically add suppressions file if present in the source tree
+    set(_yarp_valgrind_supp "${CMAKE_SOURCE_DIR}/.ci/valgrind_suppressions.supp")
+    if(EXISTS "${_yarp_valgrind_supp}")
+      list(APPEND VALGRIND_OPTIONS "--suppressions=${_yarp_valgrind_supp}")
+      message(STATUS "valgrind using suppression file: valgrind_suppressions.supp")
+    endif()
+    unset(_yarp_valgrind_supp)
+
+    #num-callers can be overridden by VALGRIND_OPTIONS (the last value takes precedence)
+    set(VALGRIND_COMMAND "${VALGRIND_EXECUTABLE}" --num-callers=32 ${VALGRIND_OPTIONS} --error-exitcode=1 --fullpath-after=${CMAKE_SOURCE_DIR}/)
   else()
     message(SEND_ERROR "Valgrind executable not found")
   endif()
 endif()
 
 unset(YARP_TEST_LAUNCHER)
-set(YARP_TEST_TIMEOUT_DEFAULT_VALGRIND 300)
+set(YARP_TEST_TIMEOUT_DEFAULT_VALGRIND 600)
 if(DEFINED VALGRIND_COMMAND)
   set(YARP_TEST_LAUNCHER ${VALGRIND_COMMAND})
   # The default timeout is not enough when running under valgrind
@@ -224,10 +257,6 @@ endif()
 #message(STATUS "UNWANTED_WARNING_FLAGS = ${UNWANTED_WARNING_FLAGS}")
 #message(STATUS "DEPRECATED_DECLARATIONS_FLAGS = ${DEPRECATED_DECLARATIONS_FLAGS}")
 #message(STATUS "HARDENING_FLAGS = ${HARDENING_FLAGS}")
-#message(STATUS "CXX98_FLAGS = ${CXX98_FLAGS}")
-#message(STATUS "CXX11_FLAGS = ${CXX11_FLAGS}")
-#message(STATUS "CXX14_FLAGS = ${CXX14_FLAGS}")
-#message(STATUS "CXX17_FLAGS = ${CXX17_FLAGS}")
 
 
 #########################################################################
@@ -271,9 +300,11 @@ if(YARP_NO_DEPRECATED)
   add_definitions("-DYARP_NO_DEPRECATED")
 endif()
 
-cmake_dependent_option(YARP_NO_DEPRECATED_WARNINGS
-                       "Do not warn when using YARP deprecated declarations" OFF
-                       "NOT YARP_NO_DEPRECATED" OFF)
+cmake_dependent_option(
+  YARP_NO_DEPRECATED_WARNINGS
+  "Do not warn when using YARP deprecated declarations" OFF
+  "NOT YARP_NO_DEPRECATED" OFF
+)
 mark_as_advanced(YARP_NO_DEPRECATED_WARNINGS)
 if(YARP_NO_DEPRECATED_WARNINGS)
   add_definitions("-DYARP_NO_DEPRECATED_WARNINGS")
@@ -296,11 +327,14 @@ endif()
 #########################################################################
 # Control setting an rpath
 
-add_install_rpath_support(LIB_DIRS "${CMAKE_INSTALL_FULL_LIBDIR}"       # Libraries
-                          BIN_DIRS "${CMAKE_INSTALL_FULL_BINDIR}"       # Binaries
-                                   "${CMAKE_INSTALL_FULL_LIBDIR}/yarp"  # Plugins
-                          INSTALL_NAME_DIR "${CMAKE_INSTALL_FULL_LIBDIR}"
-                          USE_LINK_PATH)
+add_install_rpath_support(
+  LIB_DIRS "${CMAKE_INSTALL_FULL_LIBDIR}" # Libraries
+  BIN_DIRS
+    "${CMAKE_INSTALL_FULL_BINDIR}"        # Binaries
+    "${CMAKE_INSTALL_FULL_LIBDIR}/yarp"   # Plugins
+  INSTALL_NAME_DIR "${CMAKE_INSTALL_FULL_LIBDIR}"
+  USE_LINK_PATH
+)
 
 
 #########################################################################

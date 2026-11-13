@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006, 2011 Anne van Rossum <anne@almende.com>
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006, 2011 Anne van Rossum <anne@almende.com>
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/Time.h>
@@ -130,13 +127,6 @@ double Time::now()
     Clock* clk = getClock();
     return clk->now();
 }
-
-#ifndef YARP_NO_DEPRECATED // Since YARP 3.0.0
-void Time::turboBoost()
-{
-    return yarp::os::impl::Time::startTurboBoost();
-}
-#endif // YARP_NO_DEPRECATED
 
 void Time::yield()
 {

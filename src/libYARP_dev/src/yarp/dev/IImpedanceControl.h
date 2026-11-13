@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_IIMPEDANCECONTROL_H
@@ -11,12 +8,11 @@
 
 #include <yarp/dev/api.h>
 #include <yarp/os/Vocab.h>
+#include <yarp/dev/ReturnValue.h>
 
-namespace yarp{
-    namespace dev {
-        class IImpedanceControlRaw;
-        class IImpedanceControl;
-    }
+namespace yarp::dev {
+class IImpedanceControlRaw;
+class IImpedanceControl;
 }
 
 /**
@@ -37,32 +33,32 @@ public:
      * axes for the current physical interface.
      * @return the number of controlled axes.
      */
-    virtual bool getAxes(int *ax) = 0;
+    virtual yarp::dev::ReturnValue getAxes(size_t& ax) = 0;
 
     /** Get current impedance parameters (stiffness,damping,offset) for a specific joint.
      * @return success/failure
      */
-    virtual bool getImpedanceRaw(int j, double *stiffness, double *damping)=0;
+    virtual yarp::dev::ReturnValue getImpedanceRaw(int j, double *stiffness, double *damping)=0;
 
     /** Set current impedance parameters (stiffness,damping) for a specific joint.
      * @return success/failure
      */
-    virtual bool setImpedanceRaw(int j, double stiffness, double damping)=0;
+    virtual yarp::dev::ReturnValue setImpedanceRaw(int j, double stiffness, double damping)=0;
 
     /** Set current force Offset for a specific joint.
      * @return success/failure
      */
-    virtual bool setImpedanceOffsetRaw(int j, double offset)=0;
+    virtual yarp::dev::ReturnValue setImpedanceOffsetRaw(int j, double offset)=0;
 
     /** Get current force Offset for a specific joint.
      * @return success/failure
      */
-    virtual bool getImpedanceOffsetRaw(int j, double* offset)=0;
+    virtual yarp::dev::ReturnValue getImpedanceOffsetRaw(int j, double* offset)=0;
 
-    /** Get the current impedandance limits for a specific joint.
+    /** Get the current impedance limits for a specific joint.
      * @return success/failure
      */
-    virtual bool getCurrentImpedanceLimitRaw(int j, double *min_stiff, double *max_stiff, double *min_damp, double *max_damp)=0;
+    virtual yarp::dev::ReturnValue getCurrentImpedanceLimitRaw(int j, double *min_stiff, double *max_stiff, double *min_damp, double *max_damp)=0;
 };
 
 
@@ -84,39 +80,37 @@ public:
      * axes for the current physical interface.
      * @return the number of controlled axes.
      */
-    virtual bool getAxes(int *ax) = 0;
+    virtual yarp::dev::ReturnValue getAxes(size_t& ax) = 0;
 
     /** Get current impedance gains (stiffness,damping,offset) for a specific joint.
      * @return success/failure
      */
-    virtual bool getImpedance(int j, double *stiffness, double *damping)=0;
+    virtual yarp::dev::ReturnValue getImpedance(int j, double *stiffness, double *damping)=0;
 
     /** Set current impedance gains (stiffness,damping) for a specific joint.
      * @return success/failure
      */
-    virtual bool setImpedance(int j, double stiffness, double damping)=0;
+    virtual yarp::dev::ReturnValue setImpedance(int j, double stiffness, double damping)=0;
 
     /** Set current force Offset for a specific joint.
      * @return success/failure
      */
-    virtual bool setImpedanceOffset(int j, double offset)=0;
+    virtual yarp::dev::ReturnValue setImpedanceOffset(int j, double offset)=0;
 
     /** Get current force Offset for a specific joint.
      * @return success/failure
      */
-    virtual bool getImpedanceOffset(int j, double* offset)=0;
+    virtual yarp::dev::ReturnValue getImpedanceOffset(int j, double* offset)=0;
 
-    /** Get the current impedandance limits for a specific joint.
+    /** Get the current impedance limits for a specific joint.
      * @return success/failure
      */
-    virtual bool getCurrentImpedanceLimit(int j, double *min_stiff, double *max_stiff, double *min_damp, double *max_damp)=0;
+    virtual yarp::dev::ReturnValue getCurrentImpedanceLimit(int j, double *min_stiff, double *max_stiff, double *min_damp, double *max_damp)=0;
 
 };
 
 //interface
-constexpr yarp::conf::vocab32_t VOCAB_IMPEDANCE    = yarp::os::createVocab('i','i','m','p');
-
-constexpr yarp::conf::vocab32_t VOCAB_POSITION     = yarp::os::createVocab('p','o','s');
-constexpr yarp::conf::vocab32_t VOCAB_VELOCITY     = yarp::os::createVocab('v','e','l');
+constexpr yarp::conf::vocab32_t VOCAB_POSITION     = yarp::os::createVocab32('p','o','s');
+constexpr yarp::conf::vocab32_t VOCAB_VELOCITY     = yarp::os::createVocab32('v','e','l');
 
 #endif // YARP_DEV_IIMPEDANCECONTROL_H

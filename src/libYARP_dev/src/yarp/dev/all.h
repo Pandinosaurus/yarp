@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_ALL_H
@@ -22,12 +19,12 @@
 #include <yarp/dev/IControlLimits.h>
 #include <yarp/dev/ControlBoardPid.h>
 #include <yarp/dev/DeviceDriver.h>
-#include <yarp/dev/DriverLinkCreator.h>
 #include <yarp/dev/Drivers.h>
-#include <yarp/dev/FrameGrabberInterfaces.h>
-#include <yarp/dev/FrameGrabberControl2.h>
+#include <yarp/dev/IFrameGrabberImage.h>
+#include <yarp/dev/IFrameGrabberControls.h>
+#include <yarp/dev/IFrameGrabberControlsDC1394.h>
+#include <yarp/dev/IFrameWriterImage.h>
 #include <yarp/dev/GazeControl.h>
-#include <yarp/dev/IGenericSensor.h>
 #include <yarp/dev/GPUInterface.h>
 #include <yarp/dev/IAnalogSensor.h>
 #include <yarp/dev/IRGBDSensor.h>
@@ -40,11 +37,20 @@
 #include <yarp/dev/ServiceInterfaces.h>
 #include <yarp/dev/IWrapper.h>
 #include <yarp/dev/IMultipleWrapper.h>
+#include <yarp/dev/ISpeechSynthesizer.h>
+#include <yarp/dev/ISpeechTranscription.h>
+#include <yarp/dev/ILLM.h>
+#include <yarp/dev/IChatBot.h>
+#include <yarp/dev/IBattery.h>
+#include <yarp/dev/ISimulatedWorld.h>
 
-#ifndef YARP_NO_DEPRECATED // since YARP 3.3
-#define YARP_INCLUDING_DEPRECATED_HEADER_ON_PURPOSE
-#include <yarp/dev/DataSource.h>
-#undef YARP_INCLUDING_DEPRECATED_HEADER_ON_PURPOSE
-#endif // YARP_NO_DEPRECATED
+#ifndef YARP_NO_MATH
+#include <yarp/dev/IFrameTransform.h>
+#include <yarp/dev/IMap2D.h>
+#include <yarp/dev/ILocalization2D.h>
+#include <yarp/dev/INavigation2D.h>
+#include <yarp/dev/IOdometry2D.h>
+#endif // YARP_NO_MATH
+
 
 #endif // YARP_DEV_ALL_H

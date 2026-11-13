@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_OS_IMPL_LOGFORWARDER_H
@@ -15,10 +12,32 @@
 
 #include <mutex>
 #include <string>
+#include <yarp/os/PeriodicThread.h>
 
-namespace yarp {
-namespace os {
-namespace impl {
+#include <yarp/os/BufferedPort.h>
+#include <list>
+
+namespace yarp::os::impl {
+
+class ThreadedPort : public yarp::os::PeriodicThread
+{
+    std::mutex mut;
+    yarp::os::BufferedPort<yarp::os::Bottle>* m_port = nullptr;
+    std::list<yarp::os::Bottle> messages;
+
+    void process();
+
+public:
+    void run() override;
+    void attach(yarp::os::BufferedPort<yarp::os::Bottle>* port);
+    void insert(const yarp::os::Bottle& bot);
+    void terminate();
+public:
+    ThreadedPort();
+    ~ThreadedPort() override;
+};
+
+//----------------------------------------------------------------
 
 class YARP_os_impl_API LogForwarder
 {
@@ -27,6 +46,7 @@ public:
     static LogForwarder& getInstance();
 
     void forward(const std::string& message);
+    std::string getLogPortName();
     static void shutdown();
 
 private:
@@ -34,13 +54,11 @@ private:
     LogForwarder(LogForwarder const&) = delete;
     LogForwarder& operator=(LogForwarder const&) = delete;
 
-    std::mutex mutex;
-    yarp::os::Port outputPort;
+    ThreadedPort   tport;
+    yarp::os::BufferedPort<yarp::os::Bottle> outputPort;
     static bool started;
 };
 
-} // namespace impl
-} // namespace os
-} // namespace yarp
+} // namespace yarp::os::impl
 
 #endif // YARP_OS_IMPL_LOGFORWARDER_H

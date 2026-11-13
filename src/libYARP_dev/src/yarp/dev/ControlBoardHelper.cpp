@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/dev/ControlBoardHelper.h>
@@ -15,6 +12,10 @@
 #include <map>
 
 using namespace yarp::dev;
+
+namespace {
+YARP_LOG_COMPONENT(CB_HELPER, "yarp.ControlBoardHelper")
+}
 
 struct PidUnits
 {
@@ -43,11 +44,19 @@ public:
     double *dutycycleToPWMs;
     double *bemfToRaws;
     double *ktauToRaws;
+    double *viscousPosToRaws;
+    double *viscousNegToRaws;
+    double *coulombPosToRaws;
+    double *coulombNegToRaws;
+    double *velocityThresToRaws;
 
-    PidUnits* PosPid_units;
-    PidUnits* VelPid_units;
-    PidUnits* CurPid_units;
-    PidUnits* TrqPid_units;
+    PidUnits* PosPid_units = nullptr;
+    PidUnits* PosDirPid_units = nullptr;
+    PidUnits* VelPid_units = nullptr;
+    PidUnits* VelDirPid_units = nullptr;
+    PidUnits* CurPid_units = nullptr;
+    PidUnits* TrqPid_units = nullptr;
+    PidUnits* MixPid_units = nullptr;
     std::map<PidControlTypeEnum, PidUnits*>   pid_units;
 
     explicit PrivateUnitsHandler(int size) :
@@ -63,10 +72,11 @@ public:
         dutycycleToPWMs(nullptr),
         bemfToRaws(nullptr),
         ktauToRaws(nullptr),
-        PosPid_units(nullptr),
-        VelPid_units(nullptr),
-        CurPid_units(nullptr),
-        TrqPid_units(nullptr)
+        viscousPosToRaws(nullptr),
+        viscousNegToRaws(nullptr),
+        coulombPosToRaws(nullptr),
+        coulombNegToRaws(nullptr),
+        velocityThresToRaws(nullptr)
     {
         alloc(size);
         std::fill_n(helper_ones, size, 1.0);
@@ -78,6 +88,11 @@ public:
         std::fill_n(dutycycleToPWMs, size, 1.0);
         std::fill_n(bemfToRaws, size, 1.0);
         std::fill_n(ktauToRaws, size, 1.0);
+        std::fill_n(viscousPosToRaws, size, 1.0);
+        std::fill_n(viscousNegToRaws, size, 1.0);
+        std::fill_n(coulombPosToRaws, size, 1.0);
+        std::fill_n(coulombNegToRaws, size, 1.0);
+        std::fill_n(velocityThresToRaws, size, 1.0);
     }
 
     ~PrivateUnitsHandler()
@@ -86,6 +101,9 @@ public:
         checkAndDestroy(VelPid_units);
         checkAndDestroy(TrqPid_units);
         checkAndDestroy(CurPid_units);
+        checkAndDestroy(PosDirPid_units);
+        checkAndDestroy(VelDirPid_units);
+        checkAndDestroy(MixPid_units);
         checkAndDestroy<double>(position_zeros);
         checkAndDestroy<double>(helper_ones);
         checkAndDestroy<int>(axisMap);
@@ -97,6 +115,11 @@ public:
         checkAndDestroy<double>(dutycycleToPWMs);
         checkAndDestroy<double>(bemfToRaws);
         checkAndDestroy<double>(ktauToRaws);
+        checkAndDestroy<double>(viscousPosToRaws);
+        checkAndDestroy<double>(viscousNegToRaws);
+        checkAndDestroy<double>(coulombPosToRaws);
+        checkAndDestroy<double>(coulombNegToRaws);
+        checkAndDestroy<double>(velocityThresToRaws);
     }
 
     void alloc(int n)
@@ -115,8 +138,16 @@ public:
         VelPid_units = new PidUnits[nj];
         TrqPid_units = new PidUnits[nj];
         CurPid_units = new PidUnits[nj];
+        PosDirPid_units = new PidUnits[nj];
+        VelDirPid_units = new PidUnits[nj];
+        MixPid_units = new PidUnits[nj];
         bemfToRaws = new double[nj];
         ktauToRaws = new double[nj];
+        viscousPosToRaws = new double[nj];
+        viscousNegToRaws = new double[nj];
+        coulombPosToRaws = new double[nj];
+        coulombNegToRaws = new double[nj];
+        velocityThresToRaws = new double[nj];
 
         yAssert(position_zeros != nullptr);
         yAssert(helper_ones != nullptr);
@@ -131,13 +162,38 @@ public:
         yAssert(VelPid_units != nullptr);
         yAssert(TrqPid_units != nullptr);
         yAssert(CurPid_units != nullptr);
+        yAssert(PosDirPid_units != nullptr);
+        yAssert(VelDirPid_units != nullptr);
+        yAssert(MixPid_units != nullptr);
         yAssert(bemfToRaws != nullptr);
         yAssert(ktauToRaws != nullptr);
+        yAssert(viscousPosToRaws != nullptr);
+        yAssert(viscousNegToRaws != nullptr);
+        yAssert(coulombPosToRaws != nullptr);
+        yAssert(coulombNegToRaws != nullptr);
+        yAssert(velocityThresToRaws != nullptr);
 
-        pid_units[VOCAB_PIDTYPE_POSITION] = PosPid_units;
-        pid_units[VOCAB_PIDTYPE_VELOCITY] = VelPid_units;
-        pid_units[VOCAB_PIDTYPE_CURRENT] = CurPid_units;
-        pid_units[VOCAB_PIDTYPE_TORQUE] = TrqPid_units;
+        pid_units[PidControlTypeEnum::VOCAB_PIDTYPE_POSITION_1] = PosPid_units;
+        pid_units[PidControlTypeEnum::VOCAB_PIDTYPE_POSITION_2] = PosPid_units;
+        pid_units[PidControlTypeEnum::VOCAB_PIDTYPE_POSITION_3] = PosPid_units;
+        pid_units[PidControlTypeEnum::VOCAB_PIDTYPE_VELOCITY_1] = VelPid_units;
+        pid_units[PidControlTypeEnum::VOCAB_PIDTYPE_VELOCITY_2] = VelPid_units;
+        pid_units[PidControlTypeEnum::VOCAB_PIDTYPE_VELOCITY_3] = VelPid_units;
+        pid_units[PidControlTypeEnum::VOCAB_PIDTYPE_CURRENT_1] = CurPid_units;
+        pid_units[PidControlTypeEnum::VOCAB_PIDTYPE_CURRENT_2] = CurPid_units;
+        pid_units[PidControlTypeEnum::VOCAB_PIDTYPE_CURRENT_3] = CurPid_units;
+        pid_units[PidControlTypeEnum::VOCAB_PIDTYPE_TORQUE_1] = TrqPid_units;
+        pid_units[PidControlTypeEnum::VOCAB_PIDTYPE_TORQUE_2] = TrqPid_units;
+        pid_units[PidControlTypeEnum::VOCAB_PIDTYPE_TORQUE_3] = TrqPid_units;
+        pid_units[PidControlTypeEnum::VOCAB_PIDTYPE_POSITION_DIRECT_1] = PosDirPid_units;
+        pid_units[PidControlTypeEnum::VOCAB_PIDTYPE_POSITION_DIRECT_2] = PosDirPid_units;
+        pid_units[PidControlTypeEnum::VOCAB_PIDTYPE_POSITION_DIRECT_3] = PosDirPid_units;
+        pid_units[PidControlTypeEnum::VOCAB_PIDTYPE_VELOCITY_DIRECT_1] = VelDirPid_units;
+        pid_units[PidControlTypeEnum::VOCAB_PIDTYPE_VELOCITY_DIRECT_2] = VelDirPid_units;
+        pid_units[PidControlTypeEnum::VOCAB_PIDTYPE_VELOCITY_DIRECT_3] = VelDirPid_units;
+        pid_units[PidControlTypeEnum::VOCAB_PIDTYPE_MIXED_1] = MixPid_units;
+        pid_units[PidControlTypeEnum::VOCAB_PIDTYPE_MIXED_2] = MixPid_units;
+        pid_units[PidControlTypeEnum::VOCAB_PIDTYPE_MIXED_3] = MixPid_units;
     }
 
     PrivateUnitsHandler(const PrivateUnitsHandler& other)
@@ -156,8 +212,16 @@ public:
         memcpy(this->VelPid_units, other.VelPid_units, sizeof(*other.VelPid_units)*nj);
         memcpy(this->TrqPid_units, other.TrqPid_units, sizeof(*other.TrqPid_units)*nj);
         memcpy(this->CurPid_units, other.CurPid_units, sizeof(*other.CurPid_units)*nj);
+        memcpy(this->PosDirPid_units, other.PosDirPid_units, sizeof(*other.PosDirPid_units)*nj);
+        memcpy(this->VelDirPid_units, other.VelDirPid_units, sizeof(*other.VelDirPid_units)*nj);
+        memcpy(this->MixPid_units, other.MixPid_units, sizeof(*other.MixPid_units)*nj);
         memcpy(this->bemfToRaws, other.bemfToRaws, sizeof(*other.bemfToRaws)*nj);
         memcpy(this->ktauToRaws, other.ktauToRaws, sizeof(*other.ktauToRaws)*nj);
+        memcpy(this->viscousPosToRaws, other.viscousPosToRaws, sizeof(*other.viscousPosToRaws)*nj);
+        memcpy(this->viscousNegToRaws, other.viscousNegToRaws, sizeof(*other.viscousNegToRaws)*nj);
+        memcpy(this->coulombPosToRaws, other.coulombPosToRaws, sizeof(*other.coulombPosToRaws)*nj);
+        memcpy(this->coulombNegToRaws, other.coulombNegToRaws, sizeof(*other.coulombNegToRaws)*nj);
+        memcpy(this->velocityThresToRaws, other.velocityThresToRaws, sizeof(*other.velocityThresToRaws)*nj);
     }
 };
 
@@ -169,14 +233,30 @@ ControlBoardHelper::ControlBoardHelper(int n, const int *aMap, const double *ang
 
     memcpy(mPriv->axisMap, aMap, sizeof(int)*n);
 
-    if (zs!=nullptr)           memcpy(mPriv->position_zeros, zs, sizeof(double)*n);
-    if (angToEncs!=nullptr)    memcpy(mPriv->angleToEncoders, angToEncs, sizeof(double)*n);
-    if (newtons!=nullptr)      memcpy(mPriv->newtonsToSensors, newtons, sizeof(double)*n);
-    if (amps!=nullptr)         memcpy(mPriv->ampereToSensors, amps, sizeof(double)*n);
-    if (volts!=nullptr)        memcpy(mPriv->voltToSensors, volts, sizeof(double)*n);
-    if (dutycycles != nullptr) memcpy(mPriv->dutycycleToPWMs, dutycycles, sizeof(double)*n);
-    if (kbemf != nullptr)      memcpy(mPriv->bemfToRaws, kbemf, sizeof(double)*n);
-    if (ktau != nullptr)       memcpy(mPriv->ktauToRaws, ktau, sizeof(double)*n);
+    if (zs != nullptr) {
+        memcpy(mPriv->position_zeros, zs, sizeof(double) * n);
+    }
+    if (angToEncs != nullptr) {
+        memcpy(mPriv->angleToEncoders, angToEncs, sizeof(double) * n);
+    }
+    if (newtons != nullptr) {
+        memcpy(mPriv->newtonsToSensors, newtons, sizeof(double) * n);
+    }
+    if (amps != nullptr) {
+        memcpy(mPriv->ampereToSensors, amps, sizeof(double) * n);
+    }
+    if (volts != nullptr) {
+        memcpy(mPriv->voltToSensors, volts, sizeof(double) * n);
+    }
+    if (dutycycles != nullptr) {
+        memcpy(mPriv->dutycycleToPWMs, dutycycles, sizeof(double) * n);
+    }
+    if (kbemf != nullptr) {
+        memcpy(mPriv->bemfToRaws, kbemf, sizeof(double) * n);
+    }
+    if (ktau != nullptr) {
+        memcpy(mPriv->ktauToRaws, ktau, sizeof(double) * n);
+    }
 
     // invert the axis map
     memset (mPriv->invAxisMap, 0, sizeof(int) * n);
@@ -220,21 +300,34 @@ bool ControlBoardHelper::checkAxisId(int id)
     return true;
 }
 
+bool ControlBoardHelper::checkAxesIds(const std::vector<int>& axesList)
+{
+    return checkAxesIds(axesList.size(), axesList.data());
+}
 
 bool ControlBoardHelper::checkAxesIds(const int n_axes, const int* axesList)
 {
     if(n_axes > mPriv->nj)
     {
-        if(mPriv->verbose)
-            yError("checkAxesIds: num of axes is too big");
+        if (mPriv->verbose) {
+            yCError(CB_HELPER,"checkAxesIds: num of axes is too big");
+        }
+        return false;
+    }
+    if(axesList==nullptr)
+    {
+        if (mPriv->verbose) {
+            yCError(CB_HELPER, "checkAxesIds: axesList is nullptr");
+        }
         return false;
     }
     for(int idx = 0; idx<n_axes; idx++)
     {
         if( (axesList[idx]<0) || (axesList[idx]>= mPriv->nj) )
         {
-            if(mPriv->verbose)
-                yError("checkAxesIds: joint id out of bound");
+            if (mPriv->verbose) {
+                yCError(CB_HELPER, "checkAxesIds: joint id out of bound");
+            }
 
             return false;
         }
@@ -251,29 +344,33 @@ int ControlBoardHelper::toUser(int axis)
 //map a vector, no conversion
     void ControlBoardHelper::toUser(const double *hwData, double *user)
 {
-    for (int k=0;k<mPriv->nj;k++)
-        user[toUser(k)]=hwData[k];
+    for (int k = 0; k < mPriv->nj; k++) {
+        user[toUser(k)] = hwData[k];
+    }
 }
 
 //map a vector, no conversion
 void ControlBoardHelper::ControlBoardHelper::toUser(const int *hwData, int *user)
 {
-    for (int k=0;k<mPriv->nj;k++)
-        user[toUser(k)]=hwData[k];
+    for (int k = 0; k < mPriv->nj; k++) {
+        user[toUser(k)] = hwData[k];
+    }
 }
 
 //map a vector, no conversion
     void ControlBoardHelper::toHw(const double *usr, double *hwData)
 {
-    for (int k=0;k<mPriv->nj;k++)
-        hwData[toHw(k)]=usr[k];
+    for (int k = 0; k < mPriv->nj; k++) {
+        hwData[toHw(k)] = usr[k];
+    }
 }
 
 //map a vector, no conversion
 void ControlBoardHelper::toHw(const int *usr, int *hwData)
 {
-    for (int k=0;k<mPriv->nj;k++)
-        hwData[toHw(k)]=usr[k];
+    for (int k = 0; k < mPriv->nj; k++) {
+        hwData[toHw(k)] = usr[k];
+    }
 }
 
 void ControlBoardHelper::posA2E(double ang, int j, double &enc, int &k)
@@ -735,6 +832,36 @@ void ControlBoardHelper::ktau_user2raw(double ktau_user, int j, double &ktau_raw
     k = toHw(j);
 }
 
+void ControlBoardHelper::viscousPos_user2raw(double viscousPos_user, int j, double &viscousPos_raw, int &k)
+{
+    viscousPos_raw = viscousPos_user * mPriv->viscousPosToRaws[j];
+    k = toHw(j);
+}
+
+void ControlBoardHelper::viscousNeg_user2raw(double viscousNeg_user, int j, double &viscousNeg_raw, int &k)
+{
+    viscousNeg_raw = viscousNeg_user * mPriv->viscousNegToRaws[j];
+    k = toHw(j);
+}
+
+void ControlBoardHelper::coulombPos_user2raw(double coulombPos_user, int j, double &coulombPos_raw, int &k)
+{
+    coulombPos_raw = coulombPos_user * mPriv->coulombPosToRaws[j];
+    k = toHw(j);
+}
+
+void ControlBoardHelper::coulombNeg_user2raw(double coulombNeg_user, int j, double &coulombNeg_raw, int &k)
+{
+    coulombNeg_raw = coulombNeg_user * mPriv->coulombNegToRaws[j];
+    k = toHw(j);
+}
+
+void ControlBoardHelper::velocityThres_user2raw(double velocityThres_user, int j, double &velocityThres_raw, int &k)
+{
+    velocityThres_raw = velocityThres_user * mPriv->velocityThresToRaws[j];
+    k = toHw(j);
+}
+
 void ControlBoardHelper::bemf_raw2user(double bemf_raw, int k_raw, double &bemf_user, int &j_user)
 {
     j_user = toUser(k_raw);
@@ -757,6 +884,62 @@ double  ControlBoardHelper::ktau_user2raw(double ktau_user, int j)
     return ktau_user * mPriv->ktauToRaws[j];
 }
 
+double  ControlBoardHelper::viscousPos_user2raw(double viscousPos_user, int j)
+{
+    return viscousPos_user * mPriv->viscousPosToRaws[j];
+}
+
+double ControlBoardHelper::viscousNeg_user2raw(double viscousNeg_user, int j)
+{
+    return viscousNeg_user * mPriv->viscousNegToRaws[j];
+}
+
+double ControlBoardHelper::coulombPos_user2raw(double coulombPos_user, int j)
+{
+    return coulombPos_user * mPriv->coulombPosToRaws[j];
+}
+
+double ControlBoardHelper::coulombNeg_user2raw(double coulombNeg_user, int j)
+{
+    return coulombNeg_user * mPriv->coulombNegToRaws[j];
+}
+
+double ControlBoardHelper::velocityThres_user2raw(double velocityThres_user, int j)
+{
+    return velocityThres_user * mPriv->velocityThresToRaws[j];
+}
+
+void ControlBoardHelper::viscousPos_raw2user(double viscousPos_raw, int k_raw, double &viscousPos_user, int &j_user)
+{
+    j_user = toUser(k_raw);
+    viscousPos_user = viscousPos_raw / mPriv->viscousPosToRaws[j_user];
+}
+
+void ControlBoardHelper::viscousNeg_raw2user(double viscousNeg_raw, int k_raw, double &viscousNeg_user, int &j_user)
+{
+    j_user = toUser(k_raw);
+    viscousNeg_user = viscousNeg_raw / mPriv->viscousNegToRaws[j_user];
+}
+
+void ControlBoardHelper::coulombPos_raw2user(double coulombPos_raw, int k_raw, double &coulombPos_user, int &j_user)
+{
+    j_user = toUser(k_raw);
+    coulombPos_user = coulombPos_raw / mPriv->coulombPosToRaws[j_user];
+}
+
+void ControlBoardHelper::coulombNeg_raw2user(double coulombNeg_raw, int k_raw, double &coulombNeg_user, int &j_user)
+{
+    j_user = toUser(k_raw);
+    coulombNeg_user = coulombNeg_raw / mPriv->coulombNegToRaws[j_user];
+}
+
+void ControlBoardHelper::velocityThres_raw2user(double velocityThres_raw, int k_raw, double &velocityThres_user, int &j_user)
+{
+    j_user = toUser(k_raw);
+    velocityThres_user = velocityThres_raw / mPriv->velocityThresToRaws[j_user];
+}
+
+
 // *******************************************//
 
 int ControlBoardHelper::axes()
@@ -767,7 +950,7 @@ int ControlBoardHelper::axes()
 double ControlBoardHelper::get_pidoutput_conversion_factor_user2raw(const yarp::dev::PidControlTypeEnum& pidtype, int j)
 {
     double output_conversion_factor;
-    switch (mPriv->pid_units[pidtype][j].out_units)
+    switch ((mPriv->pid_units[pidtype])[j].out_units)
     {
         case  PidOutputUnitsEnum::DUTYCYCLE_PWM_PERCENT:  output_conversion_factor = mPriv->dutycycleToPWMs[j]; break;
         case  PidOutputUnitsEnum::CURRENT_METRIC:  output_conversion_factor = mPriv->ampereToSensors[j]; break;
@@ -783,15 +966,38 @@ double ControlBoardHelper::get_pidoutput_conversion_factor_user2raw(const yarp::
 double ControlBoardHelper::get_pidfeedback_conversion_factor_user2raw(const yarp::dev::PidControlTypeEnum& pidtype, int j)
 {
     double feedback_conversion_factor = 0.0;
-    switch (mPriv->pid_units[pidtype][j].fbk_units)
+    switch (( mPriv->pid_units[pidtype])[j].fbk_units)
     {
         case PidFeedbackUnitsEnum::METRIC:
             switch (pidtype)
             {
-                case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_POSITION: feedback_conversion_factor = mPriv->angleToEncoders[j];  break;
-                case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_VELOCITY: feedback_conversion_factor = mPriv->angleToEncoders[j];  break;
-                case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_TORQUE: feedback_conversion_factor = mPriv->newtonsToSensors[j];  break;
-                case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_CURRENT: feedback_conversion_factor = mPriv->ampereToSensors[j];  break;
+                case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_POSITION_1:
+                case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_POSITION_2:
+                case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_POSITION_3:
+                case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_POSITION_DIRECT_1:
+                case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_POSITION_DIRECT_2:
+                case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_POSITION_DIRECT_3:
+                case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_MIXED_1:
+                case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_MIXED_2:
+                case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_MIXED_3:
+                case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_VELOCITY_1:
+                case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_VELOCITY_2:
+                case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_VELOCITY_3:
+                case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_VELOCITY_DIRECT_1:
+                case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_VELOCITY_DIRECT_2:
+                case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_VELOCITY_DIRECT_3:
+                    feedback_conversion_factor = mPriv->angleToEncoders[j];
+                    break;
+                case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_TORQUE_1:
+                case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_TORQUE_2:
+                case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_TORQUE_3:
+                    feedback_conversion_factor = mPriv->newtonsToSensors[j];
+                    break;
+                case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_CURRENT_1:
+                case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_CURRENT_2:
+                case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_CURRENT_3:
+                    feedback_conversion_factor = mPriv->ampereToSensors[j];
+                    break;
             }
         break;
         case PidFeedbackUnitsEnum::RAW_MACHINE_UNITS:
@@ -860,18 +1066,26 @@ void ControlBoardHelper::convert_pidunits_to_machine(const yarp::dev::PidControl
     ControlBoardHelper* cb_helper = this;
     switch (pidtype)
     {
-    case yarp::dev::VOCAB_PIDTYPE_POSITION:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_POSITION_1:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_POSITION_2:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_POSITION_3:
         //Beware:posA2E employs zeros, not only angleToEncoders
         //This is fine if convert_pidunits_to_machine() is called by methods that are aware of this feature, that is intentional.
         cb_helper->posA2E(userval, j, machineval, k);
         break;
-    case yarp::dev::VOCAB_PIDTYPE_VELOCITY:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_VELOCITY_1:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_VELOCITY_2:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_VELOCITY_3:
         cb_helper->velA2E(userval, j, machineval, k);
         break;
-    case yarp::dev::VOCAB_PIDTYPE_TORQUE:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_TORQUE_1:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_TORQUE_2:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_TORQUE_3:
         cb_helper->trqN2S(userval, j, machineval, k);
         break;
-    case yarp::dev::VOCAB_PIDTYPE_CURRENT:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_CURRENT_1:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_CURRENT_2:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_CURRENT_3:
         cb_helper->ampereA2S(userval, j, machineval, k);
         break;
     default:
@@ -885,18 +1099,26 @@ void ControlBoardHelper::convert_pidunits_to_machine(const yarp::dev::PidControl
     ControlBoardHelper* cb_helper = this;
     switch (pidtype)
     {
-    case yarp::dev::VOCAB_PIDTYPE_POSITION:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_POSITION_1:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_POSITION_2:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_POSITION_3:
         //Beware:posA2E employs zeros, not only angleToEncoders
         //This is fine if convert_pidunits_to_machine() is called by methods that are aware of this feature, that is intentional.
         cb_helper->posA2E(userval, machineval);
         break;
-    case yarp::dev::VOCAB_PIDTYPE_VELOCITY:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_VELOCITY_1:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_VELOCITY_2:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_VELOCITY_3:
         cb_helper->velA2E(userval, machineval);
         break;
-    case yarp::dev::VOCAB_PIDTYPE_TORQUE:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_TORQUE_1:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_TORQUE_2:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_TORQUE_3:
         cb_helper->trqN2S(userval, machineval);
         break;
-    case yarp::dev::VOCAB_PIDTYPE_CURRENT:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_CURRENT_1:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_CURRENT_2:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_CURRENT_3:
         cb_helper->ampereA2S(userval, machineval);
         break;
     default:
@@ -910,18 +1132,26 @@ void ControlBoardHelper::convert_pidunits_to_user(const yarp::dev::PidControlTyp
     ControlBoardHelper* cb_helper = this;
     switch (pidtype)
     {
-    case yarp::dev::VOCAB_PIDTYPE_POSITION:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_POSITION_1:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_POSITION_2:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_POSITION_3:
         //Beware:posE2A employs zeros, not only angleToEncoders.
         //This is fine if convert_pidunits_to_user() is called by methods that are aware of this feature, that is intentional.
         *userval = cb_helper->posE2A(machineval, k);
         break;
-    case yarp::dev::VOCAB_PIDTYPE_VELOCITY:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_VELOCITY_1:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_VELOCITY_2:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_VELOCITY_3:
         *userval = cb_helper->velE2A(machineval, k);
         break;
-    case yarp::dev::VOCAB_PIDTYPE_TORQUE:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_TORQUE_1:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_TORQUE_2:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_TORQUE_3:
         *userval = cb_helper->trqS2N(machineval, k);
         break;
-    case yarp::dev::VOCAB_PIDTYPE_CURRENT:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_CURRENT_1:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_CURRENT_2:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_CURRENT_3:
         *userval = cb_helper->ampereS2A(machineval, k);
         break;
     default:
@@ -935,18 +1165,26 @@ void ControlBoardHelper::convert_pidunits_to_user(const yarp::dev::PidControlTyp
     ControlBoardHelper* cb_helper = this;
     switch (pidtype)
     {
-    case yarp::dev::VOCAB_PIDTYPE_POSITION:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_POSITION_1:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_POSITION_2:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_POSITION_3:
         //Beware:posE2A employs zeros, not only angleToEncoders.
         //This is fine if convert_pidunits_to_user() is called by methods that are aware of this feature, that is intentional.
         cb_helper->posE2A(machineval, userval);
         break;
-    case yarp::dev::VOCAB_PIDTYPE_VELOCITY:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_VELOCITY_1:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_VELOCITY_2:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_VELOCITY_3:
         cb_helper->velE2A(machineval, userval);
         break;
-    case yarp::dev::VOCAB_PIDTYPE_TORQUE:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_TORQUE_1:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_TORQUE_2:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_TORQUE_3:
         cb_helper->trqS2N(machineval, userval);
         break;
-    case yarp::dev::VOCAB_PIDTYPE_CURRENT:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_CURRENT_1:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_CURRENT_2:
+    case yarp::dev::PidControlTypeEnum::VOCAB_PIDTYPE_CURRENT_3:
         cb_helper->ampereS2A(machineval, userval);
         break;
     default:

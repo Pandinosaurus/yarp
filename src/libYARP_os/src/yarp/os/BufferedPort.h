@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_OS_BUFFEREDPORT_H
@@ -12,12 +9,11 @@
 
 #include <yarp/os/Contactable.h>
 #include <yarp/os/Port.h>
-#include <yarp/os/PortReaderBuffer.h>
-#include <yarp/os/PortWriterBuffer.h>
+#include <yarp/os/impl/PortReaderBuffer.h>
+#include <yarp/os/impl/PortWriterBuffer.h>
 
 
-namespace yarp {
-namespace os {
+namespace yarp::os {
 
 /**
  * @ingroup comm_class
@@ -274,24 +270,6 @@ public:
     void setRpcMode(bool expectRpc) override;
 
     // documented in Contactable
-    Property* acquireProperties(bool readOnly) override;
-
-    // documented in Contactable
-    void releaseProperties(Property* prop) override;
-
-    // documented in Contactable
-    void includeNodeInName(bool flag) override;
-
-#ifndef YARP_NO_DEPRECATED // Since YARP 3.3
-YARP_WARNING_PUSH
-YARP_DISABLE_DEPRECATED_WARNING
-    // documented in Contactable
-    YARP_DEPRECATED_MSG("Use setCallbackLock with std::mutex instead")
-    bool setCallbackLock(yarp::os::Mutex* mutex) override;
-YARP_WARNING_POP
-#endif
-
-    // documented in Contactable
     bool setCallbackLock(std::mutex* mutex) override;
 
     // documented in Contactable
@@ -307,9 +285,9 @@ YARP_WARNING_POP
     void unlockCallback() override;
 
 private:
-    PortWriterBuffer<T> writer;
+    yarp::os::impl::PortWriterBuffer<T> writer;
     Port port;
-    PortReaderBuffer<T> reader;
+    yarp::os::impl::PortReaderBuffer<T> reader;
     bool interrupted;
     bool attached;
 
@@ -321,8 +299,7 @@ private:
     bool sharedOpen(Port& port);
 };
 
-} // namespace os
-} // namespace yarp
+} // namespace yarp::os
 
 #include <yarp/os/BufferedPort-inl.h>
 

@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/impl/DgramTwoWayStream.h>
@@ -189,18 +186,18 @@ void DgramTwoWayStream::allocate(int readSize, int writeSize)
     int _read_size = -1;
     int _write_size = -1;
 
-    std::string _env_dgram = yarp::conf::environment::getEnvironment("YARP_DGRAM_SIZE");
+    std::string _env_dgram = yarp::conf::environment::get_string("YARP_DGRAM_SIZE");
     std::string _env_mode;
     if (multiMode) {
-        _env_mode = yarp::conf::environment::getEnvironment("YARP_MCAST_SIZE");
+        _env_mode = yarp::conf::environment::get_string("YARP_MCAST_SIZE");
     } else {
-        _env_mode = yarp::conf::environment::getEnvironment("YARP_UDP_SIZE");
+        _env_mode = yarp::conf::environment::get_string("YARP_UDP_SIZE");
     }
     if (!_env_mode.empty()) {
         _env_dgram = _env_mode;
     }
     if (!_env_dgram.empty()) {
-        int sz = NetType::toInt(_env_dgram);
+        int sz = yarp::conf::numeric::from_string<int>(_env_dgram);
         if (sz != 0) {
             _read_size = _write_size = sz;
         }
@@ -259,24 +256,24 @@ void DgramTwoWayStream::configureSystemBuffers()
     //By default the buffers are forced to the datagram size limit.
     //These can be overwritten by environment variables
     //Generic variable
-    std::string socketBufferSize = yarp::conf::environment::getEnvironment("YARP_DGRAM_BUFFER_SIZE");
+    std::string socketBufferSize = yarp::conf::environment::get_string("YARP_DGRAM_BUFFER_SIZE");
     //Specific read
-    std::string socketReadBufferSize = yarp::conf::environment::getEnvironment("YARP_DGRAM_RECV_BUFFER_SIZE");
+    std::string socketReadBufferSize = yarp::conf::environment::get_string("YARP_DGRAM_RECV_BUFFER_SIZE");
     //Specific write
-    std::string socketSendBufferSize = yarp::conf::environment::getEnvironment("YARP_DGRAM_SND_BUFFER_SIZE");
+    std::string socketSendBufferSize = yarp::conf::environment::get_string("YARP_DGRAM_SND_BUFFER_SIZE");
 
     int readBufferSize = -1;
     if (!socketReadBufferSize.empty()) {
-        readBufferSize = NetType::toInt(socketReadBufferSize);
+        readBufferSize = yarp::conf::numeric::from_string<int>(socketReadBufferSize);
     } else if (!socketBufferSize.empty()) {
-        readBufferSize = NetType::toInt(socketBufferSize);
+        readBufferSize = yarp::conf::numeric::from_string<int>(socketBufferSize);
     }
 
     int writeBufferSize = -1;
     if (!socketSendBufferSize.empty()) {
-        writeBufferSize = NetType::toInt(socketSendBufferSize);
+        writeBufferSize = yarp::conf::numeric::from_string<int>(socketSendBufferSize);
     } else if (!socketBufferSize.empty()) {
-        writeBufferSize = NetType::toInt(socketBufferSize);
+        writeBufferSize = yarp::conf::numeric::from_string<int>(socketBufferSize);
     }
     // The writeBufferSize can't be set greater than udp datagram
     // maximum size
@@ -680,7 +677,11 @@ void DgramTwoWayStream::closeMain()
         if (dgram != nullptr) {
 #if defined(YARP_HAS_ACE)
             dgram->close();
-            delete dgram;
+            if (mgram != nullptr) {
+                delete mgram;   // delete via the correct dynamic type
+            } else {
+                delete dgram;
+            }
 #else
             if (dgram_sockfd >= 0) {
                 ::close(dgram_sockfd);
@@ -978,16 +979,30 @@ bool DgramTwoWayStream::setTypeOfService(int tos)
 
 int DgramTwoWayStream::getTypeOfService()
 {
+    // tos is the "Type Of Service" byte of the IP header of the packets sent
+    // through this socket. Its upper 6 bits are the DSCP (Differentiated
+    // Services Code Point) used by the network to prioritize the traffic,
+    // thus tos = DSCP * 4 (e.g. NORMAL = 0, LOW = 40, HIGH = 144, CRITICAL = 176).
+    // -1 is returned if the value cannot be read.
     int tos = -1;
     if (dgram == nullptr) {
         return tos;
     }
+    // optlen is both an input and an output parameter of getsockopt():
+    // on input it must contain the size of the buffer pointed by &tos,
+    // on output it contains the number of bytes actually written.
+    // If it is not initialized, getsockopt() may write nothing (optlen == 0)
+    // or fail with EINVAL (optlen < 0), leaving tos to -1.
 #if defined(YARP_HAS_ACE)
-    int optlen;
-    dgram->get_option(IPPROTO_IP, IP_TOS, (int*)&tos, &optlen);
+    int optlen = static_cast<int>(sizeof(tos));
+    if (dgram->get_option(IPPROTO_IP, IP_TOS, (int*)&tos, &optlen) != 0) {
+        return -1;
+    }
 #else
-    socklen_t optlen;
-    getsockopt(dgram_sockfd, IPPROTO_IP, IP_TOS, (int*)&tos, &optlen);
+    socklen_t optlen = sizeof(tos);
+    if (getsockopt(dgram_sockfd, IPPROTO_IP, IP_TOS, (int*)&tos, &optlen) != 0) {
+        return -1;
+    }
 #endif
     return tos;
 }

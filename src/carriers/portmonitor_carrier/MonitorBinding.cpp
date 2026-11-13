@@ -1,13 +1,15 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include "MonitorBinding.h"
 #include "MonitorSharedLib.h"
+
+#ifdef ENABLED_PORTMONITOR_PYTHON
+   #include "python/MonitorPython.h"
+#endif
+
 #include "MonitorLogComponent.h"
 
 #ifdef ENABLED_PORTMONITOR_LUA
@@ -27,7 +29,8 @@ MonitorBinding::~MonitorBinding() = default;
 
 MonitorBinding* MonitorBinding::create(const char* script_type)
 {
-    if(std::string(script_type) == "lua") {
+    if(std::string(script_type) == "lua")
+    {
 #ifdef ENABLED_PORTMONITOR_LUA
         return new MonitorLua();
 #else
@@ -35,10 +38,24 @@ MonitorBinding* MonitorBinding::create(const char* script_type)
         return nullptr;
 #endif
     }
-
-    if(std::string(script_type) == "dll") {
+    else if(std::string(script_type) == "dll")
+    {
         return new MonitorSharedLib();
     }
+    else if(std::string(script_type) == "python")
+    {
+#ifdef ENABLED_PORTMONITOR_PYTHON
+        return new MonitorPython();
+#else
+        yCError(PORTMONITORCARRIER) << "Cannot load PYTHON plugin. YARP portmonitor was built without PYTHON support";
+        return nullptr;
+#endif
+    }
+    else
+    {
+        yCError(PORTMONITORCARRIER, R"(Currently only 'lua','dll','python' objects are supported by portmonitor)");
+    }
+
 
     return nullptr;
 }

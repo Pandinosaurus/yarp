@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include "ShmemCarrier.h"
@@ -73,9 +70,9 @@ bool ShmemCarrier::becomeShmemVersionHybridStream(yarp::os::ConnectionState& pro
     bool ok = true;
 
     if (!sender) {
-        ACE_INET_Addr anywhere((u_short)0, (ACE_UINT32)INADDR_ANY);
-        base = yarp::os::Contact(anywhere.get_host_addr(), anywhere.get_port_number());
-        bool ok = stream->open(base, sender) == 0;
+        // Listen on any interface, on any free port
+        base = yarp::os::Contact("0.0.0.0", 0);
+        ok = stream->open(base, sender) == 0;
         if (ok) {
             int myPort = stream->getLocalAddress().getPort();
             writeYarpInt(myPort, proto);

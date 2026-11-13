@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2010 Daniel Krieg <krieg@fias.uni-frankfurt.de>
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2010 Daniel Krieg <krieg@fias.uni-frankfurt.de>
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include "MpiP2PStream.h"
@@ -25,12 +22,14 @@ ssize_t MpiP2PStream::read(Bytes& b) {
         int rank = comm->rank();
         MPI_Status status;
         while (true) {
-            if (terminate)
+            if (terminate) {
                 return -1;
+            }
             // Check for a message
             MPI_Iprobe(!rank, tag, comm->comm, &available, &status);
-            if (available)
+            if (available) {
                 break;
+            }
             // Prevent the busy polling which hurts
             // performance in the oversubscription scenario
             Time::yield();
@@ -87,8 +86,9 @@ void MpiP2PStream::write(const Bytes& b) {
         */
         // Check if message has been received
         MPI_Test(&request, &flag, &status);
-        if (flag)
+        if (flag) {
             break;
+        }
         // Prevent the busy polling which hurts
         // performance in the oversubscription scenario
         Time::yield();

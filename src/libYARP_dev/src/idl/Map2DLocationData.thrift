@@ -1,19 +1,22 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 namespace yarp yarp.dev
 
 struct Map2DLocationData
 {
+    /** name of the map */
     1: string map_id;
+    /** x position of the location [m], expressed in the map reference frame */
     2: double x;
+    /** y position of the location [m], expressed in the map reference frame  */
     3: double y;
+    /** orientation [deg] in the map reference frame */
     4: double theta;
+    /** user defined string*/
+    5: string description;
 }
 (
     yarp.api.include = "yarp/dev/api.h"

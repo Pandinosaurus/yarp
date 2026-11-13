@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_OS_ALL_H
@@ -37,20 +34,15 @@
 #include <yarp/os/NetUint8.h>
 #include <yarp/os/Network.h>
 #include <yarp/os/NetworkClock.h>
-#include <yarp/os/Node.h>
 #include <yarp/os/Os.h>
 #include <yarp/os/PeriodicThread.h>
 #include <yarp/os/Port.h>
 #include <yarp/os/PortInfo.h>
 #include <yarp/os/PortReader.h>
-#include <yarp/os/PortReaderBuffer.h>
 #include <yarp/os/PortReaderCreator.h>
 #include <yarp/os/PortWriter.h>
-#include <yarp/os/PortWriterBuffer.h>
 #include <yarp/os/Portable.h>
-#include <yarp/os/PortablePair.h>
 #include <yarp/os/Property.h>
-#include <yarp/os/Publisher.h>
 #include <yarp/os/RFModule.h>
 #include <yarp/os/Random.h>
 #include <yarp/os/RpcClient.h>
@@ -58,7 +50,6 @@
 #include <yarp/os/Searchable.h>
 #include <yarp/os/Semaphore.h>
 #include <yarp/os/Stamp.h>
-#include <yarp/os/Subscriber.h>
 #include <yarp/os/SystemClock.h>
 #include <yarp/os/Terminator.h>
 #include <yarp/os/Things.h>
@@ -69,18 +60,6 @@
 #include <yarp/os/Vocab.h>
 #include <yarp/os/Wire.h>
 #include <yarp/os/WireLink.h>
-
-#ifndef YARP_NO_DEPRECATED
-#define YARP_INCLUDING_DEPRECATED_HEADER_ON_PURPOSE
-     // since YARP 3.0.0
-#    include <yarp/os/ConstString.h>
-#    include <yarp/os/RateThread.h>
-     // since YARP 3.3
-#    include <yarp/os/LockGuard.h>
-#    include <yarp/os/Mutex.h>
-#    include <yarp/os/RecursiveMutex.h>
-#undef YARP_INCLUDING_DEPRECATED_HEADER_ON_PURPOSE
-#endif // YARP_NO_DEPRECATED
 
 
 /**

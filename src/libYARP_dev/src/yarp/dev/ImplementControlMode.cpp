@@ -1,37 +1,40 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/dev/ImplementControlMode.h>
 #include <yarp/dev/ControlBoardHelper.h>
+#include <yarp/dev/ControlBoardHelpers.h>
 #include <yarp/dev/impl/FixedSizeBuffersManager.h>
 
 #include <cstdio>
 using namespace yarp::dev;
 using namespace yarp::os;
 
-#define JOINTIDCHECK if (j >= castToMapper(helper)->axes()){yError("joint id out of bound"); return false;}
+namespace {
+YARP_LOG_COMPONENT(IMPLEMENT_LAYER_COMPONENT, "yarp.ImplementControlMode")
+}
 
 ImplementControlMode::ImplementControlMode(IControlModeRaw *r):
-    helper(nullptr),
-    raw(r),
-    buffManager(nullptr)
-{;}
+    m_helper(nullptr),
+    m_iraw(r)
+{}
 
 bool ImplementControlMode::initialize(int size, const int *amap)
 {
-    if (helper!=nullptr)
+    if (m_helper != nullptr) {
         return false;
+    }
 
-    helper=(void *)(new ControlBoardHelper(size, amap));
-    yAssert (helper != nullptr);
+    m_helper=(void *)(new ControlBoardHelper(size, amap));
+    yAssert (m_helper != nullptr);
 
-    buffManager = new yarp::dev::impl::FixedSizeBuffersManager<int> (size);
-    yAssert (buffManager != nullptr);
+    yAssert(size > 0);
+    m_vectorInt_tmp.resize(size);
+    m_vectorCM_tmp.resize(size);
+    m_vectorSCM_tmp.resize(size);
+
     return true;
 }
 
@@ -42,87 +45,100 @@ ImplementControlMode::~ImplementControlMode()
 
 bool ImplementControlMode::uninitialize ()
 {
-    if (helper!=nullptr)
+    if (m_helper!=nullptr)
     {
-        delete castToMapper(helper);
-        helper=nullptr;
+        delete castToMapper(m_helper);
+        m_helper=nullptr;
     }
 
-    if (buffManager!=nullptr)
-    {
-        delete buffManager;
-        buffManager=nullptr;
-    }
     return true;
 }
 
-bool ImplementControlMode::getControlMode(int j, int *f)
+ReturnValue ImplementControlMode::getAvailableControlModes(int j, std::vector<yarp::dev::SelectableControlModeEnum>& avail)
 {
-    JOINTIDCHECK
-    int k=castToMapper(helper)->toHw(j);
-    return raw->getControlModeRaw(k, f);
+    std::lock_guard lock(m_imp_mutex);
+    JOINTIDCHECK(IMPLEMENT_LAYER_COMPONENT,j)
+
+    int k=castToMapper(m_helper)->toHw(j);
+    return m_iraw->getAvailableControlModesRaw(k, avail);
 }
 
-bool ImplementControlMode::getControlModes(int *modes)
+ReturnValue ImplementControlMode::getControlMode(int j, yarp::dev::ControlModeEnum& mode)
 {
-    yarp::dev::impl::Buffer<int> buffValues = buffManager->getBuffer();
+    std::lock_guard lock(m_imp_mutex);
+    JOINTIDCHECK(IMPLEMENT_LAYER_COMPONENT,j)
 
-    bool ret=raw->getControlModesRaw(buffValues.getData());
-    castToMapper(helper)->toUser(buffValues.getData(), modes);
+    int k=castToMapper(m_helper)->toHw(j);
+    return m_iraw->getControlModeRaw(k, mode);
+}
 
-    buffManager->releaseBuffer(buffValues);
+ReturnValue ImplementControlMode::getControlModes(std::vector<yarp::dev::ControlModeEnum>& modes)
+{
+    std::lock_guard lock(m_imp_mutex);
+    VECCHECK_GET_ALL(IMPLEMENT_LAYER_COMPONENT,modes)
+
+    ReturnValue ret=m_iraw->getControlModesRaw(m_vectorCM_tmp);
+
+    for(int idx=0; idx<castToMapper(m_helper)->axes(); idx++)
+    {
+        modes[idx] = m_vectorCM_tmp[castToMapper(m_helper)->toHw(idx)];
+    }
+
     return ret;
 }
 
-bool ImplementControlMode::getControlModes(const int n_joint, const int *joints, int *modes)
+ReturnValue ImplementControlMode::getControlModes(const std::vector<int>& joints, std::vector<yarp::dev::ControlModeEnum>& modes)
 {
-    if(!castToMapper(helper)->checkAxesIds(n_joint, joints))
-        return false;
+    std::lock_guard lock(m_imp_mutex);
+    VECCHECK_GET_SOME(IMPLEMENT_LAYER_COMPONENT,joints,modes);
 
-    yarp::dev::impl::Buffer<int> buffValues = buffManager->getBuffer();
-
-    for(int idx=0; idx<n_joint; idx++)
+    std::vector<int> vectorInt_tmp(joints.size());
+    for(size_t idx=0; idx<joints.size(); idx++)
     {
-        buffValues[idx] = castToMapper(helper)->toHw(joints[idx]);
+        vectorInt_tmp[idx] = castToMapper(m_helper)->toHw(joints[idx]);
     }
-    bool ret = raw->getControlModesRaw(n_joint, buffValues.getData(), modes);
+    ReturnValue ret = m_iraw->getControlModesRaw(vectorInt_tmp, modes);
 
-    buffManager->releaseBuffer(buffValues);
     return ret;
 }
 
-bool ImplementControlMode::setControlMode(const int j, const int mode)
+ReturnValue ImplementControlMode::setControlMode(int j, yarp::dev::SelectableControlModeEnum mode)
 {
-    JOINTIDCHECK
-    int k=castToMapper(helper)->toHw(j);
-    return raw->setControlModeRaw(k, mode);
+    std::lock_guard lock(m_imp_mutex);
+    JOINTIDCHECK(IMPLEMENT_LAYER_COMPONENT,j)
+
+    int k=castToMapper(m_helper)->toHw(j);
+    return m_iraw->setControlModeRaw(k, mode);
 }
 
-bool ImplementControlMode::setControlModes(const int n_joint, const int *joints, int *modes)
+ReturnValue ImplementControlMode::setControlModes(const std::vector<int>& joints, const std::vector<yarp::dev::SelectableControlModeEnum>& modes)
 {
-    if(!castToMapper(helper)->checkAxesIds(n_joint, joints))
-        return false;
+    std::lock_guard lock(m_imp_mutex);
+    VECCHECK_SET_SOME(IMPLEMENT_LAYER_COMPONENT,joints, modes)
 
-    yarp::dev::impl::Buffer<int> buffValues  = buffManager->getBuffer();
-
-    for(int idx=0; idx<n_joint; idx++)
+    std::vector<int> vectorInt_tmp(joints.size());
+    for(size_t idx=0; idx<joints.size(); idx++)
     {
-        buffValues[idx] = castToMapper(helper)->toHw(joints[idx]);
+        vectorInt_tmp[idx] = castToMapper(m_helper)->toHw(joints[idx]);
     }
-    bool ret = raw->setControlModesRaw(n_joint, buffValues.getData(), modes);
 
-    buffManager->releaseBuffer(buffValues);
+    ReturnValue ret = m_iraw->setControlModesRaw(vectorInt_tmp, modes);
+
     return ret;
 }
 
-bool ImplementControlMode::setControlModes(int *modes)
+ReturnValue ImplementControlMode::setControlModes(const std::vector<yarp::dev::SelectableControlModeEnum>& modes)
 {
-    yarp::dev::impl::Buffer<int> buffValues  = buffManager->getBuffer();
-    for(int idx=0; idx<castToMapper(helper)->axes(); idx++)
+    std::lock_guard lock(m_imp_mutex);
+    VECCHECK_SET_ALL(IMPLEMENT_LAYER_COMPONENT,modes)
+
+    for(int idx=0; idx<castToMapper(m_helper)->axes(); idx++)
     {
-        buffValues[castToMapper(helper)->toHw(idx)] = modes[idx];
+        int j = castToMapper(m_helper)->toHw(idx);
+        m_vectorSCM_tmp[j] = modes[idx];
     }
-    bool ret = raw->setControlModesRaw(buffValues.getData());
-    buffManager->releaseBuffer(buffValues);
+
+    ReturnValue ret = m_iraw->setControlModesRaw(m_vectorSCM_tmp);
+
     return ret;
 }

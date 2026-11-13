@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_OS_CONNECTIONREADER_H
@@ -18,18 +15,15 @@
 
 #include <string>
 
-namespace yarp {
-namespace os {
+namespace yarp::os {
 class ConnectionWriter;
 class PortReader;
 class Portable;
 class InputStream;
-} // namespace os
-} // namespace yarp
+} // namespace yarp::os
 
 
-namespace yarp {
-namespace os {
+namespace yarp::os {
 
 /**
  * An interface for reading from a network connection.
@@ -77,17 +71,6 @@ public:
     }
 
     /**
-     * Read an integer from the network connection.
-     * @return the integer read from the connection
-     * @warning Unsafe, sizeof(int) is platform dependent. Use expectInt32 instead.
-     */
-    YARP_DEPRECATED_INTERNAL_MSG("Use expectInt32 instead") // Since YARP 3.0.0
-    virtual int expectInt() final
-    {
-        return static_cast<int>(expectInt32());
-    }
-
-    /**
      * Read a 8-bit integer from the network connection.
      * @return the integer read from the connection
      */
@@ -110,17 +93,6 @@ public:
      * @return the integer read from the connection
      */
     virtual std::int64_t expectInt64() = 0;
-
-    /**
-     * Read a floating point number from the network connection.
-     * @return the floating point number read from the connection
-     * @warning Unsafe, sizeof(double) is platform dependent. Use expectFloat64 instead.
-     */
-    YARP_DEPRECATED_INTERNAL_MSG("Use expectFloat64 instead") // Since YARP 3.0.0
-    virtual double expectDouble()
-    {
-        return static_cast<double>(expectFloat64());
-    }
 
     /**
      * Read a 32-bit floating point number from the network connection.
@@ -265,9 +237,10 @@ public:
      * Used by PortCoreInputUnit
      */
     virtual void setParentConnectionReader(ConnectionReader* parentConnectionReader);
+
+    virtual void flushWriter() = 0;
 };
 
-} // namespace os
-} // namespace yarp
+} // namespace yarp::os
 
 #endif // YARP_OS_CONNECTIONREADER_H

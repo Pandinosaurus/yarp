@@ -1,4 +1,6 @@
-bindings/java/examples/matlab/simulink/sfun_time.c
 bindings/lua/argcargv.i
-src/devices/opencv/OpenCVGrabber.cpp
-src/devices/opencv/OpenCVGrabber.h
+src/devices/openCVGrabber/OpenCVGrabber.cpp
+src/devices/openCVGrabber/OpenCVGrabber.h
+src/devices/fake/fakeLaserWithMotor/robotinterface_xml/
+src/devices/fake/fakeCalibrator/tests/RobotinterfaceWithFakeCalibrator.xml
+src/libYARP_robotinterface/tests/RobotinterfaceFile.xml

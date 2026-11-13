@@ -1,19 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #define _USE_MATH_DEFINES
@@ -32,7 +19,6 @@
 #include <limits>
 #include <mutex>
 
-using namespace std;
 
 #ifndef DEG2RAD
 #define DEG2RAD M_PI/180.0
@@ -46,7 +32,7 @@ bool LaserFromDepth::open(yarp::os::Searchable& config)
 {
     Property subConfig;
     m_info = "LaserFromDepth device";
-    m_device_status = DEVICE_OK_STANBY;
+    m_device_status = DEVICE_OK_STANDBY;
 
 #ifdef LASER_DEBUG
     yCDebug(LASER_FROM_DEPTH) << "%s\n", config.toString().c_str();
@@ -54,6 +40,9 @@ bool LaserFromDepth::open(yarp::os::Searchable& config)
 
     m_min_distance = 0.1; //m
     m_max_distance = 2.5;  //m
+    m_min_angle = 0;
+    m_max_angle = 60;
+    m_resolution = 1;
 
     if (this->parseConfiguration(config) == false)
     {
@@ -68,7 +57,7 @@ bool LaserFromDepth::open(yarp::os::Searchable& config)
         return false;
     }
     prop.fromString(config.findGroup("RGBD_SENSOR_CLIENT").toString());
-    prop.put("device", "RGBDSensorClient");
+    prop.put("device", "RGBDSensor_nwc_yarp");
 
     driver.open(prop);
     if (!driver.isValid())
@@ -87,7 +76,11 @@ bool LaserFromDepth::open(yarp::os::Searchable& config)
     m_depth_height = iRGBD->getDepthHeight();
     double hfov = 0;
     double vfov = 0;
-    iRGBD->getDepthFOV(hfov, vfov);
+    if (!iRGBD->getDepthFOV(hfov, vfov))
+    {
+        yCError(LASER_FROM_DEPTH) << "Error getting depth FOV";
+        return false;
+    }
     m_sensorsNum = m_depth_width;
     m_resolution = hfov / m_depth_width;
     m_laser_data.resize(m_sensorsNum, 0.0);
@@ -103,40 +96,41 @@ bool LaserFromDepth::close()
 {
     PeriodicThread::stop();
 
-    if(driver.isValid())
+    if (driver.isValid()) {
         driver.close();
+    }
 
     yCInfo(LASER_FROM_DEPTH) << "closed";
     return true;
 }
 
-bool LaserFromDepth::setDistanceRange(double min, double max)
+ReturnValue LaserFromDepth::setDistanceRange(double min, double max)
 {
     std::lock_guard<std::mutex> guard(m_mutex);
     m_min_distance = min;
     m_max_distance = max;
-    return true;
+    return ReturnValue_ok;
 }
 
-bool LaserFromDepth::setScanLimits(double min, double max)
+ReturnValue LaserFromDepth::setScanLimits(double min, double max)
 {
     std::lock_guard<std::mutex> guard(m_mutex);
     yCWarning(LASER_FROM_DEPTH) << "setScanLimits not yet implemented";
-    return true;
+    return ReturnValue_ok;
 }
 
-bool LaserFromDepth::setHorizontalResolution(double step)
+ReturnValue LaserFromDepth::setHorizontalResolution(double step)
 {
     std::lock_guard<std::mutex> guard(m_mutex);
     yCWarning(LASER_FROM_DEPTH) << "setHorizontalResolution not yet implemented";
-    return true;
+    return ReturnValue_ok;
 }
 
-bool LaserFromDepth::setScanRate(double rate)
+ReturnValue LaserFromDepth::setScanRate(double rate)
 {
     std::lock_guard<std::mutex> guard(m_mutex);
     yCWarning(LASER_FROM_DEPTH) << "setScanRate not yet implemented";
-    return false;
+    return ReturnValue::return_code::return_value_error_not_implemented_by_device;
 }
 
 bool LaserFromDepth::threadInit()
@@ -155,8 +149,8 @@ bool LaserFromDepth::acquireDataFromHW()
     double t1 = yarp::os::Time::now();
 #endif
 
-    iRGBD->getDepthImage(m_depth_image);
-    if (m_depth_image.getRawImage() == nullptr)
+    bool success = iRGBD->getDepthImage(m_depth_image);
+    if (!success || m_depth_image.getRawImage() == nullptr)
     {
         yCError(LASER_FROM_DEPTH) << "invalid image received";
         return false;
@@ -165,7 +159,10 @@ bool LaserFromDepth::acquireDataFromHW()
     if (m_depth_image.width() != m_depth_width ||
         m_depth_image.height() != m_depth_height)
     {
-        yCError(LASER_FROM_DEPTH) << "invalid image size";
+        yCError(LASER_FROM_DEPTH) << "invalid image size:" <<
+        m_depth_image.width() << "," <<m_depth_image.height() <<
+        "vs." <<
+        m_depth_width << "," << m_depth_height;
         return false;
     }
 
@@ -173,6 +170,10 @@ bool LaserFromDepth::acquireDataFromHW()
     auto* pointer = (float*)m_depth_image.getPixelAddress(0, m_depth_height / 2);
     double angle, distance, angleShift;
 
+    // angleshift is used to center the laser scan around 0 degrees,
+    // so that the laser scan goes from -deg to +deg.
+    // Example: if resolution is 1 deg and sensorsNum is 60,
+    // the laser scan will go from -30 deg to +30 deg.
     angleShift = m_sensorsNum * m_resolution / 2;
 
     for (size_t elem = 0; elem < m_sensorsNum; elem++)
@@ -189,9 +190,9 @@ bool LaserFromDepth::acquireDataFromHW()
 
 void LaserFromDepth::run()
 {
-    m_mutex.lock();
-    updateLidarData();
-    m_mutex.unlock();
+    bool b = updateLidarData();
+    YARP_UNUSED(b);
+
     return;
 }
 

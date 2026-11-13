@@ -1,9 +1,6 @@
-% Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
-% Copyright (C) 2012 Juan G. Victores
-% All rights reserved.
-%
-% This software may be modified and distributed under the terms of the
-% BSD-3-Clause license. See the accompanying LICENSE file for details.
+% SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+% SPDX-FileCopyrightText: 2012 Juan G. Victores
+% SPDX-License-Identifier: BSD-3-Clause
 
 function [sys,x0,str,ts,simStateCompliance] = yarpRemotePosEnc_sfun(t,x,u,flag,theName,theNumAxes)
 %SFUNTMPL General M-file S-function template
@@ -211,7 +208,7 @@ global dd;
 global pos;
 global enc;
 options = yarp.Property;  % create an instance of Property, a nice YARP class for storing name-value (key-value) pairs
-options.put('device','remote_controlboard');  % we add a name-value pair that indicates the YARP device
+options.put('device','controlBoard_nwc_yarp');  % we add a name-value pair that indicates the YARP device
 options.put('remote',fName);  % we add info on to whom we will connect
 options.put('local','/yarpRemotePosEnc');  % we add info on how we will call ourselves on the YARP network
 dd = yarp.PolyDriver(options);  % create a YARP multi-use driver with the given options

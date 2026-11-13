@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_OS_YARPPLUGIN_H
@@ -12,8 +9,7 @@
 #include <yarp/os/YarpPluginSelector.h>
 #include <yarp/os/YarpPluginSettings.h>
 
-namespace yarp {
-namespace os {
+namespace yarp::os {
 
 /**
  *
@@ -63,8 +59,9 @@ public:
     {
         close();
         factory = new SharedLibraryClassFactory<T>();
-        if (!factory)
+        if (!factory) {
             return false;
+        }
         if (!settings.open(*factory)) {
             settings.reportStatus(*factory);
             close();
@@ -185,7 +182,6 @@ public:
     }
 };
 
-} // namespace os
-} // namespace yarp
+} // namespace yarp::os
 
 #endif // YARP_OS_YARPPLUGIN_H

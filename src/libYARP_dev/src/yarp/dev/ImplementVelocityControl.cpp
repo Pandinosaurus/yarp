@@ -1,27 +1,26 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <cstdio>
 
 #include <yarp/dev/ImplementVelocityControl.h>
 #include <yarp/dev/ControlBoardHelper.h>
+#include <yarp/dev/ControlBoardHelpers.h>
 #include <yarp/os/Log.h>
 #include <yarp/dev/impl/FixedSizeBuffersManager.h>
 
 using namespace yarp::dev;
 using namespace yarp::os;
-#define JOINTIDCHECK if (j >= castToMapper(helper)->axes()){yError("joint id out of bound"); return false;}
+
+namespace {
+YARP_LOG_COMPONENT(IMPLEMENT_LAYER_COMPONENT, "yarp.ImplementVelocityControl")
+}
 
 ImplementVelocityControl::ImplementVelocityControl(IVelocityControlRaw *y) :
-    iVelocity(y),
-    helper(nullptr),
-    intBuffManager(nullptr),
-    doubleBuffManager(nullptr)
+    m_iraw(y),
+    m_helper(nullptr)
 {;}
 
 ImplementVelocityControl::~ImplementVelocityControl()
@@ -31,244 +30,244 @@ ImplementVelocityControl::~ImplementVelocityControl()
 
 bool ImplementVelocityControl::initialize(int size, const int *axis_map, const double *enc, const double *zeros)
 {
-    if (helper != nullptr)
+    if (m_helper != nullptr) {
         return false;
+    }
 
-    helper=(void *)(new ControlBoardHelper(size, axis_map, enc, zeros));
-    yAssert (helper != nullptr);
+    m_helper=(void *)(new ControlBoardHelper(size, axis_map, enc, zeros));
+    yAssert (m_helper != nullptr);
 
-    intBuffManager = new yarp::dev::impl::FixedSizeBuffersManager<int> (size);
-    yAssert (intBuffManager != nullptr);
-
-    doubleBuffManager = new yarp::dev::impl::FixedSizeBuffersManager<double> (size);
-    yAssert (doubleBuffManager != nullptr);
+    m_buffer_ints.resize   (size);
+    m_buffer_doubles.resize(size);
 
     return true;
 }
 
 bool ImplementVelocityControl::uninitialize()
 {
-    if(helper != nullptr)
+    if(m_helper != nullptr)
     {
-        delete castToMapper(helper);
-        helper = nullptr;
-    }
-
-    if(intBuffManager)
-    {
-        delete intBuffManager;
-        intBuffManager=nullptr;
-    }
-
-    if(doubleBuffManager)
-    {
-        delete doubleBuffManager;
-        doubleBuffManager=nullptr;
+        delete castToMapper(m_helper);
+        m_helper = nullptr;
     }
 
     return true;
 }
 
-bool ImplementVelocityControl::getAxes(int *ax)
+ReturnValue ImplementVelocityControl::getAxes(size_t& ax)
 {
-    (*ax)=castToMapper(helper)->axes();
-    return true;
+    (ax)=castToMapper(m_helper)->axes();
+    return ReturnValue_ok;
 }
 
-bool ImplementVelocityControl::velocityMove(int j, double sp)
+ReturnValue ImplementVelocityControl::velocityMove(int j, double sp)
 {
-    JOINTIDCHECK
+    std::lock_guard lock(m_imp_mutex);
+    JOINTIDCHECK(IMPLEMENT_LAYER_COMPONENT,j)
+
     int k;
     double enc;
-    castToMapper(helper)->velA2E(sp, j, enc, k);
-    return iVelocity->velocityMoveRaw(k, enc);
+    castToMapper(m_helper)->velA2E(sp, j, enc, k);
+    return m_iraw->velocityMoveRaw(k, enc);
 }
 
-bool ImplementVelocityControl::velocityMove(const int n_joint, const int *joints, const double *spds)
+ReturnValue ImplementVelocityControl::velocityMove(const int n_joints, const int *joints, const double *spds)
 {
-    if(!castToMapper(helper)->checkAxesIds(n_joint, joints))
-        return false;
+    std::lock_guard lock(m_imp_mutex);
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,joints);
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,spds);
+    JOINTSIDCHECK(IMPLEMENT_LAYER_COMPONENT,n_joints, joints)
 
-    yarp::dev::impl::Buffer<int> buffJoints =  intBuffManager->getBuffer();
-    yarp::dev::impl::Buffer<double> buffValues = doubleBuffManager->getBuffer();
+    std::vector<int> vectorInt_tmp(n_joints);
+    std::vector<double> vectorDouble_tmp(n_joints);
 
-    for(int idx=0; idx<n_joint; idx++)
+    for(int idx=0; idx<n_joints; idx++)
     {
-        buffJoints[idx] = castToMapper(helper)->toHw(joints[idx]);
-        buffValues[idx] = castToMapper(helper)->velA2E(spds[idx], joints[idx]);
+        vectorInt_tmp[idx] = castToMapper(m_helper)->toHw(joints[idx]);
+        vectorDouble_tmp[idx] = castToMapper(m_helper)->velA2E(spds[idx], joints[idx]);
     }
-    bool ret = iVelocity->velocityMoveRaw(n_joint, buffJoints.getData(), buffValues.getData());
+    ReturnValue ret = m_iraw->velocityMoveRaw(n_joints, vectorInt_tmp.data(), vectorDouble_tmp.data());
 
-    doubleBuffManager->releaseBuffer(buffValues);
-    intBuffManager->releaseBuffer(buffJoints);
     return ret;
 }
 
-bool ImplementVelocityControl::velocityMove(const double *sp)
+ReturnValue ImplementVelocityControl::velocityMove(const double *sp)
 {
-    yarp::dev::impl::Buffer<double> buffValues = doubleBuffManager->getBuffer();
-    castToMapper(helper)->velA2E(sp, buffValues.getData());
-    bool ret = iVelocity->velocityMoveRaw(buffValues.getData());
-    doubleBuffManager->releaseBuffer(buffValues);
+    std::lock_guard lock(m_imp_mutex);
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,sp);
+
+    castToMapper(m_helper)->velA2E(sp, m_buffer_doubles.data());
+    ReturnValue ret = m_iraw->velocityMoveRaw(m_buffer_doubles.data());
     return ret;
 }
 
-bool ImplementVelocityControl::getRefVelocity(const int j, double* vel)
+ReturnValue ImplementVelocityControl::getTargetVelocity(const int j, double* vel)
 {
-    JOINTIDCHECK
+    std::lock_guard lock(m_imp_mutex);
+    JOINTIDCHECK(IMPLEMENT_LAYER_COMPONENT,j)
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,vel);
+
     int k;
     double tmp;
-    k=castToMapper(helper)->toHw(j);
-    bool ret = iVelocity->getRefVelocityRaw(k, &tmp);
-    *vel=castToMapper(helper)->velE2A(tmp, k);
+    k=castToMapper(m_helper)->toHw(j);
+    ReturnValue ret = m_iraw->getTargetVelocityRaw(k, &tmp);
+    *vel=castToMapper(m_helper)->velE2A(tmp, k);
     return ret;
 }
 
-bool ImplementVelocityControl::getRefVelocities(double *vels)
+ReturnValue ImplementVelocityControl::getTargetVelocities(double *vels)
 {
-    yarp::dev::impl::Buffer<double> buffValues = doubleBuffManager->getBuffer();
-    bool ret=iVelocity->getRefVelocitiesRaw(buffValues.getData());
-    castToMapper(helper)->velE2A(buffValues.getData(), vels);
-    doubleBuffManager->releaseBuffer(buffValues);
+    std::lock_guard lock(m_imp_mutex);
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,vels);
+
+    ReturnValue ret=m_iraw->getTargetVelocitiesRaw(m_buffer_doubles.data());
+    castToMapper(m_helper)->velE2A(m_buffer_doubles.data(), vels);
     return ret;
 }
 
-bool ImplementVelocityControl::getRefVelocities(const int n_joint, const int *joints, double *vels)
+ReturnValue ImplementVelocityControl::getTargetVelocities(const int n_joints, const int *joints, double *vels)
 {
-    if(!castToMapper(helper)->checkAxesIds(n_joint, joints))
-        return false;
+    std::lock_guard lock(m_imp_mutex);
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,joints);
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,vels);
+    JOINTSIDCHECK(IMPLEMENT_LAYER_COMPONENT,n_joints,joints)
 
-    yarp::dev::impl::Buffer<int> buffJoints = intBuffManager->getBuffer();
-    yarp::dev::impl::Buffer<double> buffValues = doubleBuffManager->getBuffer();
+    std::vector<int> vectorInt_tmp(n_joints);
+    std::vector<double> vectorDouble_tmp(n_joints);
 
-    for(int idx=0; idx<n_joint; idx++)
+    for(int idx=0; idx<n_joints; idx++)
     {
-        buffJoints[idx] = castToMapper(helper)->toHw(joints[idx]);
+        vectorInt_tmp[idx] = castToMapper(m_helper)->toHw(joints[idx]);
     }
 
-    bool ret = iVelocity->getRefVelocitiesRaw(n_joint, buffJoints.getData(), buffValues.getData());
+    ReturnValue ret = m_iraw->getTargetVelocitiesRaw(n_joints, vectorInt_tmp.data(), vectorDouble_tmp.data());
 
-    for(int idx=0; idx<n_joint; idx++)
+    for(int idx=0; idx<n_joints; idx++)
     {
-        vels[idx]=castToMapper(helper)->velE2A(buffValues[idx], buffJoints[idx]);
+        vels[idx]=castToMapper(m_helper)->velE2A(vectorDouble_tmp[idx], vectorInt_tmp[idx]);
     }
 
-    intBuffManager->releaseBuffer(buffJoints);
-    doubleBuffManager->releaseBuffer(buffValues);
     return ret;
 }
 
-bool ImplementVelocityControl::setRefAcceleration(int j, double acc)
+ReturnValue ImplementVelocityControl::setTrajAcceleration(int j, double acc)
 {
-    JOINTIDCHECK
+    std::lock_guard lock(m_imp_mutex);
+    JOINTIDCHECK(IMPLEMENT_LAYER_COMPONENT,j)
+
     int k;
     double enc;
-    castToMapper(helper)->accA2E_abs(acc, j, enc, k);
-    return iVelocity->setRefAccelerationRaw(k, enc);
+    castToMapper(m_helper)->accA2E_abs(acc, j, enc, k);
+    return m_iraw->setTrajAccelerationRaw(k, enc);
 }
 
-bool ImplementVelocityControl::setRefAccelerations(const int n_joint, const int *joints, const double *accs)
+ReturnValue ImplementVelocityControl::setTrajAccelerations(const int n_joints, const int *joints, const double *accs)
 {
-    if(!castToMapper(helper)->checkAxesIds(n_joint, joints))
-        return false;
+    std::lock_guard lock(m_imp_mutex);
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,joints);
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,accs);
+    JOINTSIDCHECK(IMPLEMENT_LAYER_COMPONENT,n_joints,joints)
 
-    yarp::dev::impl::Buffer<int> buffJoints =  intBuffManager->getBuffer();
-    yarp::dev::impl::Buffer<double> buffValues = doubleBuffManager->getBuffer();
+    std::vector<int> vectorInt_tmp(n_joints);
+    std::vector<double> vectorDouble_tmp(n_joints);
 
-    for(int idx=0; idx<n_joint; idx++)
+    for(int idx=0; idx<n_joints; idx++)
     {
-        castToMapper(helper)->accA2E_abs(accs[idx], joints[idx], buffValues[idx], buffJoints[idx]);
+        castToMapper(m_helper)->accA2E_abs(accs[idx], joints[idx], vectorDouble_tmp[idx], vectorInt_tmp[idx]);
     }
-    bool ret = iVelocity->setRefAccelerationsRaw(n_joint, buffJoints.getData(), buffValues.getData());
-
-    doubleBuffManager->releaseBuffer(buffValues);
-    intBuffManager->releaseBuffer(buffJoints);
+    ReturnValue ret = m_iraw->setTrajAccelerationsRaw(n_joints, vectorInt_tmp.data(), vectorDouble_tmp.data());
 
     return ret;
 }
 
-bool ImplementVelocityControl::setRefAccelerations(const double *accs)
+ReturnValue ImplementVelocityControl::setTrajAccelerations(const double *accs)
 {
-    yarp::dev::impl::Buffer<double> buffValues = doubleBuffManager->getBuffer();
-    castToMapper(helper)->accA2E_abs(accs, buffValues.getData());
-    bool ret = iVelocity->setRefAccelerationsRaw(buffValues.getData());
-    doubleBuffManager->releaseBuffer(buffValues);
+    std::lock_guard lock(m_imp_mutex);
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,accs);
+
+    castToMapper(m_helper)->accA2E_abs(accs, m_buffer_doubles.data());
+    ReturnValue ret = m_iraw->setTrajAccelerationsRaw(m_buffer_doubles.data());
     return ret;
 }
 
-bool ImplementVelocityControl::getRefAcceleration(int j, double *acc)
+ReturnValue ImplementVelocityControl::getTrajAcceleration(int j, double *acc)
 {
-    JOINTIDCHECK
+    std::lock_guard lock(m_imp_mutex);
+    JOINTIDCHECK(IMPLEMENT_LAYER_COMPONENT,j)
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,acc);
+
     int k;
     double enc;
-    k=castToMapper(helper)->toHw(j);
-    bool ret = iVelocity->getRefAccelerationRaw(k, &enc);
-    *acc=castToMapper(helper)->accE2A_abs(enc, k);
+    k=castToMapper(m_helper)->toHw(j);
+    ReturnValue ret = m_iraw->getTrajAccelerationRaw(k, &enc);
+    *acc=castToMapper(m_helper)->accE2A_abs(enc, k);
     return ret;
 }
 
-bool ImplementVelocityControl::getRefAccelerations(const int n_joint, const int *joints, double *accs)
+ReturnValue ImplementVelocityControl::getTrajAccelerations(const int n_joints, const int *joints, double *accs)
 {
-    if(!castToMapper(helper)->checkAxesIds(n_joint, joints))
-        return false;
+    std::lock_guard lock(m_imp_mutex);
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,joints);
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,accs);
+    JOINTSIDCHECK(IMPLEMENT_LAYER_COMPONENT,n_joints,joints)
 
-    yarp::dev::impl::Buffer<int> buffJoints =  intBuffManager->getBuffer();
-    yarp::dev::impl::Buffer<double> buffValues = doubleBuffManager->getBuffer();
+    std::vector<int> vectorInt_tmp(n_joints);
+    std::vector<double> vectorDouble_tmp(n_joints);
 
-    for(int idx=0; idx<n_joint; idx++)
+    for(int idx=0; idx<n_joints; idx++)
     {
-        buffJoints[idx]=castToMapper(helper)->toHw(joints[idx]);
+        m_buffer_ints[idx]=castToMapper(m_helper)->toHw(joints[idx]);
     }
 
-    bool ret = iVelocity->getRefAccelerationsRaw(n_joint, buffJoints.getData(), buffValues.getData());
+    ReturnValue ret = m_iraw->getTrajAccelerationsRaw(n_joints, vectorInt_tmp.data(), vectorDouble_tmp.data());
 
-    for(int idx=0; idx<n_joint; idx++)
+    for(int idx=0; idx<n_joints; idx++)
     {
-        accs[idx]=castToMapper(helper)->accE2A_abs(buffValues[idx], buffJoints[idx]);
+        accs[idx]=castToMapper(m_helper)->accE2A_abs(vectorDouble_tmp[idx], vectorInt_tmp[idx]);
     }
 
-    doubleBuffManager->releaseBuffer(buffValues);
-    intBuffManager->releaseBuffer(buffJoints);
     return ret;
 }
 
 
-bool ImplementVelocityControl::getRefAccelerations(double *accs)
+ReturnValue ImplementVelocityControl::getTrajAccelerations(double *accs)
 {
-    yarp::dev::impl::Buffer<double> buffValues = doubleBuffManager->getBuffer();
-    bool ret=iVelocity->getRefAccelerationsRaw(buffValues.getData());
-    castToMapper(helper)->accE2A_abs(buffValues.getData(), accs);
-    doubleBuffManager->releaseBuffer(buffValues);
+    std::lock_guard lock(m_imp_mutex);
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,accs);
+
+    ReturnValue ret=m_iraw->getTrajAccelerationsRaw(m_buffer_doubles.data());
+    castToMapper(m_helper)->accE2A_abs(m_buffer_doubles.data(), accs);
     return ret;
 }
 
 
-bool ImplementVelocityControl::stop(int j)
+ReturnValue ImplementVelocityControl::stop(int j)
 {
-    JOINTIDCHECK
+    std::lock_guard lock(m_imp_mutex);
+    JOINTIDCHECK(IMPLEMENT_LAYER_COMPONENT,j)
+
     int k;
-    k=castToMapper(helper)->toHw(j);
-    return iVelocity->stopRaw(k);
+    k=castToMapper(m_helper)->toHw(j);
+    return m_iraw->stopRaw(k);
 }
 
 
-bool ImplementVelocityControl::stop(const int n_joint, const int *joints)
+ReturnValue ImplementVelocityControl::stop(const int n_joints, const int *joints)
 {
-    if(!castToMapper(helper)->checkAxesIds(n_joint, joints))
-        return false;
+    std::lock_guard lock(m_imp_mutex);
+    JOINTSIDCHECK(IMPLEMENT_LAYER_COMPONENT,n_joints,joints)
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,joints);
 
-    yarp::dev::impl::Buffer<int> buffJoints =  intBuffManager->getBuffer();
-    for(int idx=0; idx<n_joint; idx++)
+    for(int idx=0; idx<n_joints; idx++)
     {
-        buffJoints[idx] = castToMapper(helper)->toHw(joints[idx]);
+        m_buffer_ints[idx] = castToMapper(m_helper)->toHw(joints[idx]);
     }
-    bool ret = iVelocity->stopRaw(n_joint, buffJoints.getData());
-    intBuffManager->releaseBuffer(buffJoints);
+    ReturnValue ret = m_iraw->stopRaw(n_joints, m_buffer_ints.data());
     return ret;
 }
 
 
-bool ImplementVelocityControl::stop()
+ReturnValue ImplementVelocityControl::stop()
 {
-    return iVelocity->stopRaw();
+    return m_iraw->stopRaw();
 }

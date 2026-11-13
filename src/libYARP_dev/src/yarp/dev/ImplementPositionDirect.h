@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_IPOSITIONDIRECTIMPL_H
@@ -12,23 +9,17 @@
 
 #include <yarp/dev/IPositionDirect.h>
 
-namespace yarp{
-    namespace dev {
-        class ImplementPositionDirect;
-        class StubImplPositionDirectRaw;
-    }
+namespace yarp::dev {
+class ImplementPositionDirect;
+class StubImplPositionDirectRaw;
 }
 
-namespace yarp {
-namespace dev {
-namespace impl {
+namespace yarp::dev::impl {
 
 template <typename T>
 class FixedSizeBuffersManager;
 
-} // namespace impl
-} // namespace dev
-} // namespace yarp
+} // namespace yarp::dev::impl
 
 /**
  * Default implementation of the IPositionDirect interface. This class can
@@ -38,10 +29,11 @@ class FixedSizeBuffersManager;
 class YARP_dev_API yarp::dev::ImplementPositionDirect : public yarp::dev::IPositionDirect
 {
 protected:
-    IPositionDirectRaw *iPDirect;
-    void    *helper;
-    yarp::dev::impl::FixedSizeBuffersManager<int> *intBuffManager;
-    yarp::dev::impl::FixedSizeBuffersManager<double> *doubleBuffManager;
+    IPositionDirectRaw*      m_iraw=nullptr;
+    void*                    m_helper=nullptr;
+    std::vector<int>         m_buffer_ints;
+    std::vector<double>      m_buffer_doubles;
+    std::mutex               m_imp_mutex;
 
     /**
      * Initialize the internal data and alloc memory.
@@ -73,13 +65,13 @@ public:
      */
     virtual ~ImplementPositionDirect();
 
-    bool getAxes(int *axes) override;
-    bool setPosition(int j, double ref) override;
-    bool setPositions(const int n_joint, const int *joints, const double *refs) override;
-    bool setPositions(const double *refs) override;
-    bool getRefPosition(const int joint, double *ref) override;
-    bool getRefPositions(double *refs) override;
-    bool getRefPositions(const int n_joint, const int *joints, double *refs) override;
+    yarp::dev::ReturnValue getAxes(size_t& axes) override;
+    yarp::dev::ReturnValue setPosition(int j, double ref) override;
+    yarp::dev::ReturnValue setPositions(const int n_joint, const int *joints, const double *refs) override;
+    yarp::dev::ReturnValue setPositions(const double *refs) override;
+    yarp::dev::ReturnValue getRefPosition(const int joint, double *ref) override;
+    yarp::dev::ReturnValue getRefPositions(double *refs) override;
+    yarp::dev::ReturnValue getRefPositions(const int n_joint, const int *joints, double *refs) override;
 };
 
 
@@ -99,27 +91,20 @@ public:
  */
 class YARP_dev_API yarp::dev::StubImplPositionDirectRaw: public IPositionDirect
 {
-private:
-    /**
-     * Helper for printing error message, see below.
-     * Implemented in ControlBoardInterfacesImpl.cpp.
-     */
-    bool NOT_YET_IMPLEMENTED(const char *func=0);
-
 public:
     virtual ~StubImplPositionDirectRaw(){}
 
-    bool getAxes(int *axis) override
-    {return NOT_YET_IMPLEMENTED("getAxes");}
+    yarp::dev::ReturnValue getAxes(size_t& axis) override
+    {return YARP_METHOD_NOT_YET_IMPLEMENTED();}
 
-    bool setPosition(int j, double ref) override
-    {return NOT_YET_IMPLEMENTED("setPosition");}
+    yarp::dev::ReturnValue setPosition(int j, double ref) override
+    {return YARP_METHOD_NOT_YET_IMPLEMENTED();}
 
-    bool setPositions(const int n_joint, const int *joints, const double *refs) override
-    {return NOT_YET_IMPLEMENTED("setPositions");}
+    yarp::dev::ReturnValue setPositions(const int n_joint, const int *joints, const double *refs) override
+    {return YARP_METHOD_NOT_YET_IMPLEMENTED();}
 
-    bool setPositions(const double *refs) override
-    {return NOT_YET_IMPLEMENTED("setPositions");}
+    yarp::dev::ReturnValue setPositions(const double *refs) override
+    {return YARP_METHOD_NOT_YET_IMPLEMENTED();}
 };
 
 #endif // YARP_IPOSITIONDIRECTIMPL_H

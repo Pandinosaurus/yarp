@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_MANAGER_MODULE_H
@@ -17,8 +14,7 @@
 #include <yarp/manager/resource.h>
 #include <yarp/conf/api.h>
 
-namespace yarp {
-namespace manager {
+namespace yarp::manager {
 
 
 class Author {
@@ -237,43 +233,42 @@ typedef std::vector<Module*>::iterator ModulePIterator;
 
 #define PRINT_MODULE(m)\
         {\
-        cout<<"Name     : "<<m->getName()<<endl;\
-        cout<<"Desc     : "<<m->getDescription()<<endl;\
-        cout<<"Version  : "<<m->getVersion()<<endl;\
-        cout<<"Rank     : "<<m->getRank()<<endl;\
-        cout<<"Param    : "<<endl;\
+        std::cout<<"Name     : "<<m->getName()<<'\n';\
+        std::cout<<"Desc     : "<<m->getDescription()<<'\n';\
+        std::cout<<"Version  : "<<m->getVersion()<<'\n';\
+        std::cout<<"Rank     : "<<m->getRank()<<'\n';\
+        std::cout<<"Param    : "<<'\n';\
         for(int i=0; i<m->argumentCount(); i++)\
         {\
-            cout<<"           "<<m->getArgumentAt(i).getParam()<<" (";\
-            cout<<m->getArgumentAt(i).getDescription()<<")"<<endl;\
+            std::cout<<"           "<<m->getArgumentAt(i).getParam()<<" (";\
+            std::cout<<m->getArgumentAt(i).getDescription()<<")"<<'\n';\
         }\
-        cout<<"Authors  : "<<endl;\
+        std::cout<<"Authors  : "<<'\n';\
         for(int i=0; i<m->authorCount(); i++)\
-            cout<<"           "<<m->getAuthorAt(i).getName()<<" ("<<m->getAuthorAt(i).getEmail()<<")"<<endl;\
-        /*cout<<"Platforms: "<<endl;\
+            std::cout<<"           "<<m->getAuthorAt(i).getName()<<" ("<<m->getAuthorAt(i).getEmail()<<")"<<'\n';\
+        /*std::cout<<"Platforms: "<<'\n';\
         for(int i=0; i<m->platformCount(); i++)\
-            cout<<"           "<<m->getPlatformAt(i).getOS()\
-            <<", "<<m->getPlatformAt(i).getDistribution()<<endl;*/\
-        cout<<"Inputs   : "<<endl;\
+            std::cout<<"           "<<m->getPlatformAt(i).getOS()\
+            <<", "<<m->getPlatformAt(i).getDistribution()<<'\n';*/\
+        std::cout<<"Inputs   : "<<'\n';\
         for(int i=0; i<m->inputCount(); i++)\
         {\
-            cout<<"           "<<m->getInputAt(i).getName()\
+            std::cout<<"           "<<m->getInputAt(i).getName()\
             <<", "<<m->getInputAt(i).getPort();\
             if(m->getInputAt(i).isRequired())\
-                cout<<", [REQUIRED]";\
+                std::cout<<", [REQUIRED]";\
             if(m->getInputAt(i).withPriority())\
-                cout<<", [PRIORITY]";\
-            cout<<endl;\
+                std::cout<<", [PRIORITY]";\
+            std::cout<<'\n';\
         }\
-        cout<<"Outputs  : "<<endl;\
+        std::cout<<"Outputs  : "<<'\n';\
         for(int i=0; i<m->outputCount(); i++)\
-            cout<<"           "<<m->getOutputAt(i).getName()\
-            <<", "<<m->getOutputAt(i).getPort()<<endl;\
-        cout<<endl;\
+            std::cout<<"           "<<m->getOutputAt(i).getName()\
+            <<", "<<m->getOutputAt(i).getPort()<<'\n';\
+        std::cout<<'\n';\
         }
 
-} // namespace yarp
-} // namespace manager
+} // namespace yarp::manager
 
 
 #endif // YARP_MANAGER_MODULE

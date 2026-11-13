@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_OS_PORT_H
@@ -19,8 +16,7 @@
 #include <yarp/os/UnbufferedContactable.h>
 
 
-namespace yarp {
-namespace os {
+namespace yarp::os {
 
 /**
  * @ingroup comm_class
@@ -38,7 +34,7 @@ namespace os {
  * if you use an unreliable protocol like UDP).
  *
  * @sa For help sending and receiving data in the background and decouple
- *     timing, see BufferedPort, or PortReaderBuffer and PortWriterBuffer.
+ *     timing, see BufferedPort.
  *
  * For examples and help, see:
  * @li @ref what_is_a_port
@@ -206,54 +202,16 @@ public:
      */
     bool setTimeout(float timeout);
 
-#ifndef YARP_NO_DEPRECATED // Since YARP 3.4
-    /**
-     * Set whether the port should issue messages about its operations.
-     *
-     * @param level verbosity level, -1 to inhibit messages.
-     * @deprecated since YARP 3.4
-     */
-    YARP_DEPRECATED_MSG("Use LogComponent instead")
-    void setVerbosity(int level);
-
-    /**
-     * Get port verbosity level.
-     *
-     * @return port verbosity level.
-     * @deprecated since YARP 3.4
-     */
-    YARP_DEPRECATED
-    int getVerbosity();
-#endif
-
     // Documented in Contactable
     Type getType() override;
 
     // Documented in Contactable
     void promiseType(const Type& typ) override;
 
-    // Documented in Contactable
-    Property* acquireProperties(bool readOnly) override;
-
-    // Documented in Contactable
-    void releaseProperties(Property* prop) override;
-
-    // Documented in Contactable
-    void includeNodeInName(bool flag) override;
-
     /**
      * Check if the port has been opened.
      */
     bool isOpen() const;
-
-#ifndef YARP_NO_DEPRECATED // Since YARP 3.3
-YARP_WARNING_PUSH
-YARP_DISABLE_DEPRECATED_WARNING
-    // Documented in Contactable
-    YARP_DEPRECATED_MSG("Use setCallbackLock with std::mutex instead")
-    bool setCallbackLock(yarp::os::Mutex* mutex) override;
-YARP_WARNING_POP
-#endif
 
     // Documented in Contactable
     bool setCallbackLock(std::mutex* mutex = nullptr) override;
@@ -281,7 +239,6 @@ private:
               const char* fakeName);
 };
 
-} // namespace os
-} // namespace yarp
+} // namespace yarp::os
 
 #endif // YARP_OS_PORT_H

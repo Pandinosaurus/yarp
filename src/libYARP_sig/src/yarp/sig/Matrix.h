@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2026 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_SIG_MATRIX_H
@@ -12,7 +9,8 @@
 
 #include <cstdlib> //defines size_t
 #include <cstring> //memset
-#include <yarp/os/Portable.h>
+#include <utility> //std::move
+#include <yarp/sig/MatrixData.h>
 #include <yarp/sig/Vector.h>
 #include <yarp/os/ManagedBytes.h>
 
@@ -20,18 +18,14 @@
 * \file Matrix.h contains the definition of a Matrix type
 */
 
-namespace yarp {
-    namespace sig {
-        class Matrix;
-    }
+namespace yarp::sig {
+class Matrix;
 }
 
-namespace yarp {
-    namespace sig {
-        YARP_sig_API bool submatrix(const Matrix &in, Matrix &out, size_t r1, size_t r2, size_t c1, size_t c2);
-        YARP_sig_API bool removeCols(const Matrix &in, Matrix &out, size_t first_col, size_t how_many);
-        YARP_sig_API bool removeRows(const Matrix &in, Matrix &out, size_t first_row, size_t how_many);
-    }
+namespace yarp::sig {
+YARP_sig_API bool submatrix(const Matrix& in, Matrix& out, size_t r1, size_t r2, size_t c1, size_t c2);
+YARP_sig_API bool removeCols(const Matrix& in, Matrix& out, size_t first_col, size_t how_many);
+YARP_sig_API bool removeRows(const Matrix& in, Matrix& out, size_t first_row, size_t how_many);
 }
 
 /**
@@ -42,14 +36,13 @@ namespace yarp {
 * The function returns a pointer so [][] access the r,c element
 * in the matrix.
 */
-class YARP_sig_API yarp::sig::Matrix: public yarp::os::Portable
+class YARP_sig_API yarp::sig::Matrix: public yarp::sig::MatrixData
 {
 private:
-    double *storage;
-    double **matrix; //double pointer access to elements
+    using MatrixData::read;
+    using MatrixData::write;
 
-    size_t nrows;
-    size_t ncols;
+    double **matrix; //double pointer access to elements
 
     /**
     * Update pointer to data, call this every time you
@@ -59,10 +52,7 @@ private:
 
 public:
     Matrix():
-      storage(0),
-          matrix(0),
-          nrows(0),
-          ncols(0)
+          matrix(0)
       {}
 
       Matrix(size_t r, size_t c);
@@ -302,32 +292,45 @@ public:
       * @return the pointer to the first element (or NULL if either dimension of the matrix is 0)
       */
       inline double *data()
-      {return (nrows>0&&ncols>0)?storage:0/*NULL*/;}
+      {return (nrows>0&&ncols>0)?storage.data():nullptr;}
 
       /**
       * Return a pointer to the first element (const version).
       * @return the (const) pointer to the first element (or NULL if either dimension of the matrix is 0)
       */
       inline const double *data() const
-      {return (nrows>0&&ncols>0)?storage:0/*NULL*/;}
+      {return (nrows>0&&ncols>0)?storage.data():nullptr;}
 
       /**
       * True iff all elements of a match all element of b.
       */
       bool operator==(const yarp::sig::Matrix &r) const;
 
-      ///////// Serialization methods
-      /*
-      * Read vector from a connection.
-      * return true iff a vector was read correctly
-      */
-      bool read(yarp::os::ConnectionReader& connection) override;
+      bool read(yarp::os::ConnectionReader& connection) override
+      {
+          // Read into a temporary object, so that a failed or malformed read
+          // leaves this matrix (and its row pointers) untouched.
+          Matrix tmp;
+          if (!tmp.MatrixData::read(connection)) {
+              return false;
+          }
+          if (tmp.nrows < 0 ||
+              tmp.ncols < 0 ||
+              tmp.storage.size() != static_cast<size_t>(tmp.nrows) * static_cast<size_t>(tmp.ncols))
+          {
+              return false;
+          }
+          nrows = tmp.nrows;
+          ncols = tmp.ncols;
+          storage = std::move(tmp.storage);
+          updatePointers();
+          return true;
+      }
 
-      /**
-      * Write vector to a connection.
-      * return true iff a vector was written correctly
-      */
-      bool write(yarp::os::ConnectionWriter& connection) const override;
+      bool write(yarp::os::ConnectionWriter& connection) const override
+      {
+          return MatrixData::write(connection);
+      }
 
 };
 

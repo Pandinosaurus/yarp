@@ -1,0 +1,877 @@
+/*
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
+/**
+ * @file ffmpegPortmonitor.cpp
+ * @author Giulia Martino, Fabio Valla
+ * @brief Implementation of FfmpegPortmonitor: a port monitor for video compression/decompression
+ * @version 1.0
+ * @date 2021-01-04
+ */
+
+
+// Local imports
+#include "ffmpegPortmonitor.h"
+#include "constants.h"
+// YARP imports
+#include <yarp/os/LogComponent.h>
+#include <yarp/os/Time.h>
+#include <yarp/sig/all.h>
+// Standard imports
+#include <cstring>
+#include <cmath>
+#include <algorithm>
+#include <iostream>
+#include <sstream>
+#include <mutex>
+#include <iomanip>
+
+// Ffmpeg imports
+extern "C" {
+    #include <libavcodec/avcodec.h>
+    #include <libavutil/opt.h>
+    #include <libavutil/imgutils.h>
+    #include <libavformat/avformat.h>
+    #include <libswscale/swscale.h>
+}
+
+using namespace yarp::os;
+using namespace yarp::sig;
+
+namespace {
+YARP_LOG_COMPONENT(FFMPEGMONITOR,
+                   "yarp.carrier.portmonitor.image_compression_ffmpeg",
+                   yarp::os::Log::minimumPrintLevel(),
+                   yarp::os::Log::LogTypeReserved,
+                   yarp::os::Log::printCallback(),
+                   nullptr)
+
+} // anonymous namespace
+
+// As per version 5.1.2 of ffmpeg, there seem to be race conditions between sws_scale and
+// sws_freeContext even when called from different instances on different threads.
+// We use a static mutex to prevent segmentation faults when connecting two port monitors
+// to the same sender or receiver.
+static std::mutex instances_mutex;
+
+bool FfmpegMonitorObject::create(const yarp::os::Property& options)
+{
+    // Check if this is sender or not
+    senderSide = (options.find("sender_side").asBool());
+    printStatistics = false;
+    previousFrameTime = yarp::os::Time::now();
+    bandwidthRunningAverage = 0.0;
+    lagRunningAverage = 0.0;
+    statisticsCounter = -1;
+    previousStatisticPrintTime = previousFrameTime;
+
+    // Parse command line parameters and set them into global variable "paramsMap"
+    int frameRate = 15;
+    if (!parsePropertyParams(options, codec, pixelFormat, frameRate)) {
+        return false;
+    }
+
+    // Prepare codec context
+    if (codecContext == NULL) {
+        codecContext = avcodec_alloc_context3(codec);
+    } else {
+        yCError(FFMPEGMONITOR, "Codec context is already allocated");
+        return false;
+    }
+    if (!codecContext) {
+        yCError(FFMPEGMONITOR, "Could not allocate video codec context");
+        return false;
+    }
+
+    // FFmpeg 8 (libavcodec 62) removed AVCodec::pix_fmts; since FFmpeg 7.1
+    // (libavcodec 61.13.100) avcodec_get_supported_config() must be used instead.
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(61, 13, 100)
+    const AVPixelFormat* pix_fmts = nullptr;
+    {
+        const void* out = nullptr;
+        if (avcodec_get_supported_config(codecContext, codec, AV_CODEC_CONFIG_PIX_FORMAT, 0, &out, nullptr) >= 0) {
+            pix_fmts = static_cast<const AVPixelFormat*>(out);
+        }
+    }
+#else
+    const AVPixelFormat* pix_fmts = codec->pix_fmts;
+#endif
+
+    if (!pix_fmts)
+    {
+        yCWarning(FFMPEGMONITOR, "The specified codec (%s) has unknown available pixel formats. There might be visualization issues.", codec->name);
+    }
+    else
+    {
+        std::stringstream pixelFormatList;
+        bool found = false;
+        size_t i = 0;
+        AVPixelFormat test = pix_fmts[i];
+
+        if (test == AV_PIX_FMT_NONE)
+        {
+            yCError(FFMPEGMONITOR, "The specified codec (%s) has no available pixel format.", codec->name);
+            return false;
+        }
+
+        pixelFormatList << test;
+        while (test != AV_PIX_FMT_NONE)
+        {
+            if (test == pixelFormat)
+            {
+                found = true;
+                break;
+            }
+            ++i;
+            test = pix_fmts[i];
+
+            if (test != AV_PIX_FMT_NONE)
+            {
+                pixelFormatList << ", " << test;
+            }
+        }
+
+        if (!found)
+        {
+            AVPixelFormat suggestedFormat = avcodec_default_get_format(codecContext, pix_fmts);
+
+            if (pixelFormat == FFMPEGPORTMONITOR_DEFAULT_PIXEL_FORMAT)
+            {
+                yCError(FFMPEGMONITOR, "The specified codec (%s) is not compatible with the default pixel format AV_PIX_FMT_YUV420P (code %d). "
+                                       "Try specifying the suggested pixel format of the codec with the option \"pixel_format.%d\". "
+                                       "The available pixel formats are %s.",
+                                        codec->name, FFMPEGPORTMONITOR_DEFAULT_PIXEL_FORMAT, suggestedFormat, pixelFormatList.str().c_str());
+            }
+            else
+            {
+                yCError(FFMPEGMONITOR, "The specified codec (%s) is not compatible with the specified pixel format (code %d). "
+                                       "The available pixel formats are as follows %s (suggested = %d).",
+                                        codec->name, pixelFormat, pixelFormatList.str().c_str(), suggestedFormat);
+            }
+            return false;
+        }
+    }
+
+    firstTime = true;
+
+    // Set time base parameter
+    codecContext->time_base.num = 1;
+    codecContext->time_base.den = frameRate;
+    // Set command line params
+    if (setCommandLineParams() == -1) {
+        return false;
+    }
+
+    return true;
+}
+
+void FfmpegMonitorObject::destroy(void)
+{
+    paramsMap.clear();
+
+    // Check if codec context is freeable, if yes free it.
+    if (codecContext != NULL) {
+#if LIBAVCODEC_VERSION_MAJOR < 61
+        // See https://github.com/FFmpeg/FFmpeg/blob/n7.0/libavcodec/avcodec.h#L2381-L2384
+        avcodec_close(codecContext);
+#endif
+        avcodec_free_context(&codecContext);
+        codecContext = NULL;
+    }
+}
+
+bool FfmpegMonitorObject::setparam(const yarp::os::Property& params)
+{
+    yCTrace(FFMPEGMONITOR, "setparam");
+    return false;
+}
+
+bool FfmpegMonitorObject::getparam(yarp::os::Property& params)
+{
+    yCTrace(FFMPEGMONITOR, "getparam");
+    return false;
+}
+
+bool FfmpegMonitorObject::accept(yarp::os::Things& thing)
+{
+    if (senderSide) {
+        // If sender side
+        yCTrace(FFMPEGMONITOR, "accept - sender");
+        // Try to cast the Thing into an Image
+        Image* img = thing.cast_as< Image >();
+        // If cast fails, try to cast the Thing into a Bottle
+        if(img == nullptr) {
+            Bottle* bt = thing.cast_as<Bottle>();
+            // If cast fails, return error
+            if (bt == nullptr) {
+                yCError(FFMPEGMONITOR, "Expected type Image or Bottle in sender side, but got wrong data type!");
+                return false;
+            }
+        }
+    }
+    else {
+        // If receiver side
+        yCTrace(FFMPEGMONITOR, "accept - receiver");
+        // Try to cast the Thing into a Bottle
+        Bottle* bt = thing.cast_as<Bottle>();
+        // If cast fails, return error
+        if(bt == nullptr){
+            yCError(FFMPEGMONITOR, "Expected type Bottle in receiver side, but got wrong data type!");
+            return false;
+        }
+    }
+    return true;
+}
+
+void FfmpegMonitorObject::updateStatistics(yarp::os::Bottle& inputBottle, double currentLag)
+{
+    double now = yarp::os::Time::now();
+    const double printInterval = 5.0;
+
+    if (statisticsCounter < 0)
+    {
+        previousFrameTime = now;
+        previousStatisticPrintTime = now;
+        statisticsCounter = 0;
+    }
+    else
+    {
+        size_t outputData{0};
+        inputBottle.toBinary(&outputData);
+        double dt = now - previousFrameTime;
+        double bandwidth = outputData * 8 / dt /1000;
+        int previousCounter = statisticsCounter;
+        statisticsCounter++;
+        bandwidthRunningAverage = (bandwidthRunningAverage * previousCounter + bandwidth) / statisticsCounter;
+        lagRunningAverage = (lagRunningAverage * previousCounter + currentLag) / statisticsCounter;
+
+    }
+    if (now - previousStatisticPrintTime > printInterval)
+    {
+        previousStatisticPrintTime = now;
+        statisticsCounter = 0;
+        std::stringstream bandwidthString, lagString;
+        bandwidthString << std::fixed << std::setprecision(2) << bandwidthRunningAverage;
+        lagString << std::fixed << std::setprecision(3) << lagRunningAverage * 1000;
+        yCInfo(FFMPEGMONITOR, "Statistics: current bandwidth %s kb/s, codec computational time %s ms",
+               bandwidthString.str().c_str(), lagString.str().c_str());
+    }
+}
+
+yarp::os::Things& FfmpegMonitorObject::update(yarp::os::Things& thing)
+{
+    double startTime = yarp::os::Time::now();
+    if (senderSide) {
+        bool success = true;
+        yCTrace(FFMPEGMONITOR, "update - sender");
+        // Cast Thing into an Image
+        Image* img = thing.cast_as< Image >();
+
+        if (img == nullptr) {
+            Bottle* bot = thing.cast_as<Bottle>();
+            if (!yarp::os::Portable::copyPortable(*bot, imageBottleBuffer))
+            {
+                yCError(FFMPEGMONITOR, "The input type is a Bottle, but it cannot be copied to an Image");
+                success = false;
+            }
+            img = &imageBottleBuffer;
+        }
+
+        // Allocate memory for packet
+        AVPacket *packet = av_packet_alloc();
+        if (packet == NULL) {
+            yCError(FFMPEGMONITOR, "Error in packet allocation");
+            success = false;
+        }
+
+        // Call compress function
+        if (success && compress(img, packet) != 0) {
+            yCError(FFMPEGMONITOR, "Error in compression");
+            success = false;
+        }
+
+        // Insert compressed image into a Bottle to be sent
+        data.clear();
+
+        int successCode = success ? 1 : 0;
+        data.addInt32(successCode);
+        data.addInt32(img->width());
+        data.addInt32(img->height());
+        data.addInt32(img->getPixelCode());
+        data.addInt32(img->getPixelSize());
+
+        if (success) {  // If compression was successful, insert also compressed data
+            // Packet
+            Value p(packet, sizeof(*packet));
+            data.add(p);
+            // Packet data
+            Value d(packet->data, packet->size);
+            data.add(d);
+            // Buffer size
+            data.addInt32(packet->buf->size);
+            // Buffer data
+            Value bd(packet->buf->data, packet->buf->size);
+            data.add(bd);
+
+            // Side data elements
+            for (int i = 0; i < packet->side_data_elems; i++) {
+                data.addInt32(packet->side_data[i].size);
+                data.addInt32(packet->side_data[i].type);
+                Value sd(packet->side_data[i].data, packet->side_data[i].size);
+                data.add(sd);
+            }
+        }
+
+        if (printStatistics)
+        {
+            updateStatistics(data, yarp::os::Time::now() - startTime);
+        }
+
+        th.setPortWriter(&data);
+        // Free the memory allocated for the packet
+        av_packet_unref(packet);
+    }
+    else {
+
+        yCTrace(FFMPEGMONITOR, "update - receiver");
+        // Cast the Thin as a Bottle
+        Bottle* compressedBottle = thing.cast_as<Bottle>();
+        // Fill the final image with zeros
+        imageOut.zero();
+        // Extract decompression data from the Bottle
+        int width = compressedBottle->get(1).asInt32();
+        int height = compressedBottle->get(2).asInt32();
+        int pixelCode = compressedBottle->get(3).asInt32();
+        int pixelSize = compressedBottle->get(4).asInt32();
+        // Set information into final image
+
+        if (pixelCode != VOCAB_PIXEL_INVALID)
+        {
+            imageOut.setPixelCode(pixelCode);
+            imageOut.setPixelSize(pixelSize);
+            imageOut.resize(width, height);
+        }
+        else
+        {
+            yCError(FFMPEGMONITOR, "Invalid input pixel code");
+        }
+
+        // Check if compression was successful
+        if (compressedBottle->get(0).asInt32() == 1) {
+            bool success = true;
+            // Get compressed image from Bottle
+            AVPacket* tmp = (AVPacket*) compressedBottle->get(5).asBlob();
+            // Allocate memory for packet
+            AVPacket* packet = av_packet_alloc();
+            // Set all packet parameters
+            packet->dts = tmp->dts;
+            packet->duration = tmp->duration;
+            packet->flags = tmp->flags;
+            packet->pos = tmp->pos;
+            packet->pts = tmp->pts;
+            packet->side_data_elems = 0;
+            packet->stream_index = tmp->stream_index;
+            packet->size = tmp->size;
+            // Image data
+            packet->data = (uint8_t *) compressedBottle->get(6).asBlob();
+            // Buffer data
+            packet->buf = av_buffer_create((uint8_t *) compressedBottle->get(8).asBlob(),
+                                            compressedBottle->get(7).asInt32(), av_buffer_default_free,
+                                            nullptr, AV_BUFFER_FLAG_READONLY);
+
+            // Packet side data
+            for (int i = 0; i < tmp->side_data_elems; i++) {
+
+                int ret = av_packet_add_side_data(packet,
+                                                    (AVPacketSideDataType) compressedBottle->get(10).asInt32(),     // Type
+                                                    (uint8_t *) compressedBottle->get(11).asBlob(),                 // Data
+                                                    compressedBottle->get(9).asInt32());                            // Size
+                if (ret < 0) {
+                    success = false;
+                    break;
+                }
+            }
+
+            // Call to decompress function
+            if (success && decompress(packet, width, height, pixelCode) != 0) {
+                yCError(FFMPEGMONITOR, "Error in decompression");
+            }
+
+            if (printStatistics)
+            {
+                updateStatistics(*compressedBottle, yarp::os::Time::now() - startTime);
+            }
+
+            // Free memory allocated for side data and packet
+            av_freep(&packet->side_data);
+            av_freep(&packet);
+
+        }
+
+        th.setPortWriter(&imageOut);
+
+    }
+    return th;
+}
+
+int FfmpegMonitorObject::compress(Image* img, AVPacket *pkt) {
+
+    yCTrace(FFMPEGMONITOR, "compress");
+    AVFrame *startFrame;
+    AVFrame *endFrame;
+
+    // Get width and height
+    int w = img->width();
+    int h = img->height();
+
+    // Allocate video frame for original frames
+    startFrame = av_frame_alloc();
+    if (startFrame == NULL) {
+        yCError(FFMPEGMONITOR, "Cannot allocate starting frame!");
+        return -1;
+    }
+
+    // Allocate a video frame for end frame
+    endFrame = av_frame_alloc();
+    if (endFrame == NULL) {
+        yCError(FFMPEGMONITOR, "Cannot allocate end frame!");
+        av_frame_free(&startFrame);
+        return -1;
+    }
+
+    // Allocate space into start frame to contain data
+    int success = av_image_alloc(startFrame->data, startFrame->linesize,
+                    w, h,
+                    (AVPixelFormat) FFMPEGPORTMONITOR_PIXELMAP[img->getPixelCode()], 16);
+
+    if (success < 0) {
+        yCError(FFMPEGMONITOR, "Cannot allocate starting frame buffer!");
+        av_frame_free(&startFrame);
+        av_frame_free(&endFrame);
+        return -1;
+    }
+
+    // Set Image data into AVFrame
+    startFrame->linesize[0] = img->getRowSize();
+    // Free old pointer (because we will use the buffer contained into img)
+    av_freep(&startFrame->data[0]);
+    startFrame->data[0] = img->getRawImage();
+    startFrame->height = h;
+    startFrame->width = w;
+    startFrame->format = (AVPixelFormat) FFMPEGPORTMONITOR_PIXELMAP[img->getPixelCode()];
+
+    // Allocate memory for end frame data
+    success = av_image_alloc(endFrame->data, endFrame->linesize,
+                    w, h, pixelFormat, 16);
+
+    if (success < 0) {
+        yCError(FFMPEGMONITOR, "Cannot allocate end frame buffer!");
+        av_frame_free(&startFrame);
+        av_frame_free(&endFrame);
+        return -1;
+    }
+
+    // Set end frame parameters
+    endFrame->height = h;
+    endFrame->width = w;
+    endFrame->format = pixelFormat;
+
+    {
+        std::lock_guard<std::mutex> lock(instances_mutex);
+
+        // Convert the image from start format into end format
+        static struct SwsContext *img_convert_ctx;
+
+        // Allocate context for conversion
+        img_convert_ctx = sws_getContext(w, h,
+                                         (AVPixelFormat) FFMPEGPORTMONITOR_PIXELMAP[img->getPixelCode()],
+                w, h,
+                pixelFormat,
+                SWS_BICUBIC,
+                NULL, NULL, NULL);
+        if (img_convert_ctx == NULL) {
+            yCError(FFMPEGMONITOR, "Cannot initialize pixel format conversion context!");
+            av_freep(&endFrame->data[0]);
+            av_frame_free(&startFrame);
+            av_frame_free(&endFrame);
+            return -1;
+        }
+
+        // Perform conversion
+        int ret = sws_scale(img_convert_ctx, startFrame->data, startFrame->linesize, 0,
+                            h, endFrame->data, endFrame->linesize);
+
+        if (ret < 0) {
+            yCError(FFMPEGMONITOR, "Could not convert pixel format!");
+            sws_freeContext(img_convert_ctx);
+            av_freep(&endFrame->data[0]);
+            av_frame_free(&startFrame);
+            av_frame_free(&endFrame);
+            return -1;
+        }
+
+        if (firstTime) {
+            // If this is the first compression
+
+            // Set codec context parameters
+            codecContext->width = w;
+            codecContext->height = h;
+            codecContext->pix_fmt = pixelFormat;
+
+            // Open codec
+            ret = avcodec_open2(codecContext, codec, NULL);
+            if (ret < 0) {
+                yCError(FFMPEGMONITOR, "Could not open codec");
+                sws_freeContext(img_convert_ctx);
+                av_freep(&endFrame->data[0]);
+                av_frame_free(&startFrame);
+                av_frame_free(&endFrame);
+                return -1;
+            }
+            firstTime = false;
+        }
+
+        // Set presentation timestamp
+#if LIBAVCODEC_VERSION_MAJOR >= 61
+        // See https://github.com/FFmpeg/FFmpeg/commit/6b6f7db81932f94876ff4bcfd2da0582b8ab897e
+        endFrame->pts = codecContext->frame_num;
+#else
+        endFrame->pts = codecContext->frame_number;
+#endif
+
+        // Send image frame to codec
+        ret = avcodec_send_frame(codecContext, endFrame);
+        if (ret < 0) {
+            yCError(FFMPEGMONITOR, "Error sending a frame for encoding");
+            sws_freeContext(img_convert_ctx);
+            av_freep(&endFrame->data[0]);
+            av_frame_free(&startFrame);
+            av_frame_free(&endFrame);
+            return -1;
+        }
+
+        // Receive compressed data into packet
+        ret = avcodec_receive_packet(codecContext, pkt);
+        sws_freeContext(img_convert_ctx);
+        av_freep(&endFrame->data[0]);
+        av_frame_free(&startFrame);
+        av_frame_free(&endFrame);
+
+
+        if (ret == AVERROR(EAGAIN)) {
+            // Not enough data
+            yCError(FFMPEGMONITOR, "Error EAGAIN");
+            return -1;
+        } else if (ret == AVERROR_EOF) {
+            // End of file reached
+            yCError(FFMPEGMONITOR, "Error EOF");
+            return -1;
+        } else if (ret < 0) {
+            yCError(FFMPEGMONITOR, "Error during encoding");
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+int FfmpegMonitorObject::decompress(AVPacket* pkt, int w, int h, int pixelCode) {
+
+    yCTrace(FFMPEGMONITOR, "decompress");
+    AVFrame *startFrame;
+    AVFrame *endFrame;
+
+    if (firstTime) {
+        // If this is the first decompression
+
+        // Set codec context parameters
+        codecContext->width = w;
+        codecContext->height = h;
+        codecContext->pix_fmt = pixelFormat;
+
+        // Open codec
+        int ret = avcodec_open2(codecContext, codec, NULL);
+        if (ret < 0) {
+            yCError(FFMPEGMONITOR, "Could not open codec");
+            return -1;
+        }
+        firstTime = false;
+    }
+
+    // Allocate video frame
+    startFrame = av_frame_alloc();
+    if (startFrame == NULL) {
+        yCError(FFMPEGMONITOR, "Could not allocate start frame!");
+        return -1;
+    }
+
+    // Send compressed packet to codec
+    int ret = avcodec_send_packet(codecContext, pkt);
+    if (ret < 0) {
+        yCError(FFMPEGMONITOR, "Error sending a frame for decoding");
+        av_frame_free(&startFrame);
+        return -1;
+    }
+
+    // Receive decompressed image into an AVFrame
+    ret = avcodec_receive_frame(codecContext, startFrame);
+    if (ret == AVERROR(EAGAIN)) {
+        // No enough data
+        yCError(FFMPEGMONITOR, "Error EAGAIN");
+        av_frame_free(&startFrame);
+        return -1;
+    }
+    else if (ret == AVERROR_EOF) {
+        // End of file reached
+        yCError(FFMPEGMONITOR, "Error EOF");
+        av_frame_free(&startFrame);
+        return -1;
+    }
+    else if (ret < 0) {
+        yCError(FFMPEGMONITOR, "Error during decoding");
+        av_frame_free(&startFrame);
+        return -1;
+    }
+
+    // Allocate a video frame for end frame
+    endFrame = av_frame_alloc();
+    if (endFrame == NULL) {
+        yCError(FFMPEGMONITOR, "Could not allocate start frame!");
+        av_frame_free(&startFrame);
+        return -1;
+    }
+
+    // Allocate memory into end frame to contain data
+    int success = av_image_alloc(endFrame->data, endFrame->linesize,
+                    w, h,
+                    (AVPixelFormat) FFMPEGPORTMONITOR_PIXELMAP[pixelCode], 16);
+
+    if (success < 0) {
+        yCError(FFMPEGMONITOR, "Error allocating end frame buffer!");
+        av_frame_free(&startFrame);
+        av_frame_free(&endFrame);
+        return -1;
+    }
+
+    // Set end frame parameters
+    endFrame->height = h;
+    endFrame->width = w;
+    endFrame->format = (AVPixelFormat) FFMPEGPORTMONITOR_PIXELMAP[pixelCode];
+
+    {
+        std::lock_guard<std::mutex> lock(instances_mutex);
+
+        // Convert the image into RGB format
+        static struct SwsContext *img_convert_ctx;
+
+        // Allocate conversion context
+        img_convert_ctx = sws_getContext(w, h,
+                                         pixelFormat,
+                                         w, h,
+                                         (AVPixelFormat) FFMPEGPORTMONITOR_PIXELMAP[pixelCode],
+                                         SWS_BICUBIC,
+                                         NULL, NULL, NULL);
+        if (img_convert_ctx == NULL) {
+            yCError(FFMPEGMONITOR, "Cannot initialize the pixel format conversion context!");
+            av_freep(&endFrame->data[0]);
+            av_frame_free(&endFrame);
+            av_frame_free(&startFrame);
+            return -1;
+        }
+
+        // Perform conversion
+        ret = sws_scale(img_convert_ctx, startFrame->data, startFrame->linesize, 0,
+                        h, endFrame->data, endFrame->linesize);
+
+        if (ret < 0) {
+            yCError(FFMPEGMONITOR, "Could not convert pixel format!");
+            av_freep(&endFrame->data[0]);
+            av_frame_free(&endFrame);
+            av_frame_free(&startFrame);
+            sws_freeContext(img_convert_ctx);
+            return -1;
+        }
+
+        // Copy decompressed data from end frame to imageOut
+        memcpy(imageOut.getRawImage(), endFrame->data[0], success);
+
+        // Free allocated memory
+        av_freep(&endFrame->data[0]);
+        av_frame_free(&endFrame);
+        av_frame_free(&startFrame);
+        sws_freeContext(img_convert_ctx);
+    }
+
+    return 0;
+}
+
+bool FfmpegMonitorObject::parsePropertyParams(yarp::os::Property inputoptions, const AVCodec*& codecOut, AVPixelFormat& pixelFormatOut, int& frameRate)
+{
+
+    // Set default pixel format
+    pixelFormatOut = FFMPEGPORTMONITOR_DEFAULT_PIXEL_FORMAT;
+
+    bool customEnc = false;
+    bool customDec = false;
+
+    // checks for encoder/decoders
+    if (senderSide == true && inputoptions.check(FFMPEGPORTMONITOR_CL_DECODER_KEY))
+    {
+        yCError(FFMPEGMONITOR, "`decoder` parameter is not allowed on sender side");
+        return false;
+    }
+    if (senderSide == false && inputoptions.check(FFMPEGPORTMONITOR_CL_ENCODER_KEY))
+    {
+        yCError(FFMPEGMONITOR, "`encoder` parameter is not allowed on receiver side");
+        return false;
+    }
+
+    if (inputoptions.check(FFMPEGPORTMONITOR_CL_ENCODER_KEY))
+    {
+        std::string paramValue = inputoptions.find(FFMPEGPORTMONITOR_CL_ENCODER_KEY).asString();
+
+        codecOut = avcodec_find_encoder_by_name(paramValue.c_str());
+        if (!codecOut)
+        {
+            yCError(FFMPEGMONITOR, "Can't find encoder %s", paramValue.c_str());
+            codecOut = nullptr;
+            return false;
+        }
+        customEnc = true;
+    }
+
+    // parse for custom decoder
+    if (inputoptions.check(FFMPEGPORTMONITOR_CL_DECODER_KEY))
+    {
+        std::string paramValue = inputoptions.find(FFMPEGPORTMONITOR_CL_DECODER_KEY).asString();
+
+        codecOut = avcodec_find_decoder_by_name(paramValue.c_str());
+        if (!codecOut)
+        {
+            yCError(FFMPEGMONITOR, "Can't find decoder %s", paramValue.c_str());
+            codecOut = nullptr;
+            return false;
+        }
+        customDec = true;
+    }
+
+    //extra options: pixel format
+    if (inputoptions.check(FFMPEGPORTMONITOR_CL_PIXEL_FORMAT_KEY))
+    {
+        std::string paramValue = inputoptions.find(FFMPEGPORTMONITOR_CL_PIXEL_FORMAT_KEY).asString();
+        pixelFormatOut = static_cast<AVPixelFormat>(std::atoi(paramValue.c_str()));
+    }
+
+    //extra options: frame rate
+    if (inputoptions.check(FFMPEGPORTMONITOR_CL_FRAME_RATE_KEY))
+    {
+        std::string paramValue = inputoptions.find(FFMPEGPORTMONITOR_CL_FRAME_RATE_KEY).asString();
+        frameRate = std::atoi(paramValue.c_str());
+    }
+
+    // extra options: statistics printing
+    if (inputoptions.check(FFMPEGPORTMONITOR_CL_PRINT_STATISTICS_KEY))
+    {
+        std::string paramValue = inputoptions.find(FFMPEGPORTMONITOR_CL_PRINT_STATISTICS_KEY).asString();
+        printStatistics = std::atoi(paramValue.c_str());
+    }
+
+    // Iterate through all properties and save unknown parameters to paramsMap
+    Bottle propertyBottle;
+    std::string inputoptionsStr = inputoptions.toString();
+    propertyBottle.fromString(inputoptionsStr);
+
+    for (size_t i = 0; i < propertyBottle.size(); i++)
+    {
+        Value& element = propertyBottle.get(i);
+        if (!element.isList()) { continue; }
+
+        Bottle* entry = element.asList();
+        if (entry->size() < 2) { continue; }
+
+        std::string key = entry->get(0).asString();
+
+        // Skip known parameters
+        if (key == FFMPEGPORTMONITOR_CL_ENCODER_KEY ||
+            key == FFMPEGPORTMONITOR_CL_DECODER_KEY ||
+            key == FFMPEGPORTMONITOR_CL_PIXEL_FORMAT_KEY ||
+            key == FFMPEGPORTMONITOR_CL_FRAME_RATE_KEY ||
+            key == FFMPEGPORTMONITOR_CL_PRINT_STATISTICS_KEY ||
+            key == "type" ||
+            key == "filename" ||
+            key == "source" ||
+            key == "destination" ||
+            key == "sender_side" ||
+            key == "receiver_side" ||
+            key == "carrier")
+        { continue;}
+
+
+        // Add unknown parameter to params map
+        std::string value = entry->get(1).toString();
+        paramsMap[key] = value;
+    }
+
+    if (!customEnc && senderSide==true)
+    {
+        yCWarning(FFMPEGMONITOR, "No encoder specified, using default codec (mpeg2video).");
+
+        // Set default codec
+        AVCodecID codecId = AV_CODEC_ID_MPEG2VIDEO;
+        codecOut = avcodec_find_encoder(codecId);
+        if (!codecOut) {
+            yCError(FFMPEGMONITOR, "Can't find default codec (mpeg2video).");
+            return false;
+        }
+    }
+    if (!customDec && senderSide==false)
+    {
+        yCWarning(FFMPEGMONITOR, "No decoder specified, using default codec (mpeg2video).");
+
+        // Set default codec
+        AVCodecID codecId = AV_CODEC_ID_MPEG2VIDEO;
+        codecOut = avcodec_find_decoder(codecId);
+        if (!codecOut) {
+            yCError(FFMPEGMONITOR, "Can't find default codec (mpeg2video).");
+            return false;
+        }
+    }
+
+    return true;
+}
+
+int FfmpegMonitorObject::setCommandLineParams() {
+
+    // Iterate over all saved parameters
+    for (auto const& x : paramsMap) {
+
+        // Get key and value
+        std::string key = x.first;
+        std::string value = x.second;
+
+        // Try to set this pair (key, value) into codec context (global parameters).
+        int globalError = av_opt_set(codecContext, key.c_str(), value.c_str(), 0);
+        // Try to set this pair (key, value) into codec context -> priv data (parameters that are specific for a codec).
+        int privError = av_opt_set(codecContext->priv_data, key.c_str(), value.c_str(), 0);
+
+        // If the param exists, but the value is out of range
+        if (globalError == AVERROR(ERANGE) || privError == AVERROR(ERANGE)) {
+            yCError(FFMPEGMONITOR, "Parameter out of range: %s", key.c_str());
+            return -1;
+        }
+        // If the param exists, but the value is invalid
+        else if (globalError == AVERROR(EINVAL) || privError == AVERROR(EINVAL)) {
+            yCError(FFMPEGMONITOR, "Invalid value for parameter: %s", key.c_str());
+            return -1;
+        }
+        // If the param doesn't exists (we check only in sender side because some parameters doesn't exist in the decoders)
+        else if (senderSide && globalError == AVERROR_OPTION_NOT_FOUND && privError == AVERROR_OPTION_NOT_FOUND) {
+            yCError(FFMPEGMONITOR, "Parameter not found: %s", key.c_str());
+            return -1;
+        }
+
+    }
+    return 0;
+}

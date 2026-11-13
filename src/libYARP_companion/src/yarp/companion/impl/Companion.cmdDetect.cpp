@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/companion/impl/Companion.h>
@@ -28,55 +25,6 @@ using yarp::os::OutputProtocol;
 using yarp::os::impl::NameConfig;
 
 
-int Companion::detectRos(bool write)
-{
-    YARP_UNUSED(write);
-    bool have_xmlrpc = false;
-    bool have_tcpros = false;
-    Carrier *xmlrpc = Carriers::chooseCarrier("xmlrpc");
-    if (xmlrpc != nullptr) {
-        have_xmlrpc = true;
-        delete xmlrpc;
-    }
-    Carrier *tcpros = Carriers::chooseCarrier("tcpros");
-    if (tcpros != nullptr) {
-        have_tcpros = true;
-        delete tcpros;
-    }
-    if (!(have_xmlrpc&&have_tcpros)) {
-        yCError(COMPANION, "ROS support requires enabling some optional carriers");
-        yCError(COMPANION, "   xmlrpc %s", have_xmlrpc ? "(already enabled)" : "");
-        yCError(COMPANION, "   tcpros %s", have_tcpros ? "(already enabled)" : "");
-        return 1;
-    }
-
-    std::string uri = yarp::conf::environment::getEnvironment("ROS_MASTER_URI");
-    if (uri=="") {
-        yCError(COMPANION, "ROS_MASTER_URI environment variable not set.");
-        uri = "http://127.0.0.1:11311/";
-    }
-    Contact root = Contact::fromString(uri);
-    root.setCarrier("xmlrpc");
-    yCError(COMPANION, "Trying ROS_MASTER_URI=%s...", uri.c_str());
-    OutputProtocol *out = Carriers::connect(root);
-    bool ok = (out != nullptr);
-    if (ok) delete out;
-    if (!ok) {
-        yCError(COMPANION, "Could not reach server.");
-        return 1;
-    } else {
-        yCError(COMPANION, "Reachable.  Writing.");
-    }
-    NameConfig nc;
-    nc.fromFile();
-    nc.setAddress(root);
-    nc.setMode("ros");
-    nc.toFile();
-    yCError(COMPANION, "Configuration stored.  Testing.");
-    return cmdWhere(0, nullptr);
-}
-
-
 int Companion::cmdDetect(int argc, char *argv[])
 {
     //NameConfig nc;
@@ -84,21 +32,16 @@ int Companion::cmdDetect(int argc, char *argv[])
     //nc.fromFile();
     //nic.setScan();
     bool shouldUseServer = false;
-    bool ros = false;
     if (argc>0) {
         if (std::string(argv[0])=="--write") {
             //nic.setSave();
             shouldUseServer = true;
-        } else if (std::string(argv[0])=="--ros") {
-            ros = true;
         } else {
             yCError(COMPANION, "Argument not understood");
             return 1;
         }
     }
-    if (ros) {
-        return detectRos(shouldUseServer);
-    }
+
     bool didScan = false;
     bool didUse = false;
     Contact addr = NetworkBase::detectNameServer(shouldUseServer,
@@ -113,7 +56,9 @@ int Companion::cmdDetect(int argc, char *argv[])
     }
     OutputProtocol *out = Carriers::connect(addr);
     bool ok = (out != nullptr);
-    if (ok) delete out;
+    if (ok) {
+        delete out;
+    }
     if (ok) {
         yCInfo(COMPANION);
         yCInfo(COMPANION, "=========================================================");

@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/Port.h>
@@ -101,8 +98,15 @@ bool Port::open(const Contact& contact, bool registerName, const char* fakeName)
     std::string n = contact2.getName();
 
     NameConfig conf;
+
+    std::string nportnumber = std::string("YARP_PORTNUMBER") + conf.getSafeString(n);
+    uint16_t port = yarp::conf::environment::get_numeric<uint16_t>(nportnumber);
+    if (port != 0) {
+        contact2.setPort(port);
+    }
+
     std::string nenv = std::string("YARP_RENAME") + conf.getSafeString(n);
-    std::string rename = yarp::conf::environment::getEnvironment(nenv.c_str());
+    std::string rename = yarp::conf::environment::get_string(nenv);
     if (!rename.empty()) {
         n = rename;
         contact2.setName(n);
@@ -115,30 +119,9 @@ bool Port::open(const Contact& contact, bool registerName, const char* fakeName)
         n = "...";
     }
 
-    NestedContact nc(n);
-    if (!nc.getNestedName().empty()) {
-        if (nc.getNodeName().empty()) {
-            Nodes& nodes = NameClient::getNameClient().getNodes();
-            nodes.requireActiveName();
-            std::string node_name = nodes.getActiveName();
-            if (!node_name.empty()) {
-                n = n + node_name;
-            }
-        }
-    }
-
     PortCoreAdapter* currentCore = &(IMPL());
     if (currentCore != nullptr) {
         currentCore->active = false;
-        if (!n.empty() && (n[0] != '/' || currentCore->includeNode) && n[0] != '=' && n != "..." && n.substr(0, 3) != "...") {
-            if (fakeName == nullptr) {
-                Nodes& nodes = NameClient::getNameClient().getNodes();
-                std::string node_name = nodes.getActiveName();
-                if (!node_name.empty()) {
-                    n = (n[0] == '/' ? "" : "/") + n + "@" + node_name;
-                }
-            }
-        }
     }
     if (!n.empty() && n[0] != '/' && n[0] != '=' && n != "..." && n.substr(0, 3) != "...") {
         if (fakeName == nullptr) {
@@ -148,7 +131,7 @@ bool Port::open(const Contact& contact, bool registerName, const char* fakeName)
     }
     if (!n.empty() && n != "..." && n[0] != '=' && n.substr(0, 3) != "...") {
         if (fakeName == nullptr) {
-            std::string prefix = yarp::conf::environment::getEnvironment("YARP_PORT_PREFIX");
+            std::string prefix = yarp::conf::environment::get_string("YARP_PORT_PREFIX");
             if (!prefix.empty()) {
                 n = prefix + n;
                 contact2.setName(n);
@@ -266,12 +249,6 @@ bool Port::open(const Contact& contact, bool registerName, const char* fakeName)
     core.setControlRegistration(registerName);
     success = (address.isValid() || local) && (fakeName == nullptr);
 
-    if (success) {
-        // create a node if needed
-        Nodes& nodes = NameClient::getNameClient().getNodes();
-        nodes.prepare(address.getRegName());
-    }
-
     // If we are a service client, go ahead and connect
     if (success) {
         NestedContact nc;
@@ -308,11 +285,11 @@ bool Port::open(const Contact& contact, bool registerName, const char* fakeName)
         }
 
         if (address.getRegName().empty()) {
-            yCInfo(PORT,
+            yCIInfo(PORT, core.getName(),
                    "Anonymous port active at %s",
                    address.toURI().c_str());
         } else {
-            yCInfo(PORT,
+            yCIInfo(PORT, core.getName(),
                    "Port %s active at %s",
                    address.getRegName().c_str(),
                    address.toURI().c_str());
@@ -325,17 +302,13 @@ bool Port::open(const Contact& contact, bool registerName, const char* fakeName)
     }
 
     if (!success) {
-        yCError(PORT, "Port %s failed to activate%s%s (%s)",
+        yCIError(PORT,
+                core.getName().c_str(),
+                "Port %s failed to activate%s%s (%s)",
                 (address.isValid() ? (address.getRegName().c_str()) : (contact2.getName().c_str())),
                 (address.isValid() ? " at " : ""),
                 (address.isValid() ? address.toURI().c_str() : ""),
                 blame.c_str());
-    }
-
-    if (success) {
-        // create a node if needed
-        Nodes& nodes = NameClient::getNameClient().getNodes();
-        nodes.add(*this);
     }
 
     if (success && currentCore != nullptr) {
@@ -360,9 +333,6 @@ void Port::close()
         return;
     }
 
-    Nodes& nodes = NameClient::getNameClient().getNodes();
-    nodes.remove(*this);
-
     PortCoreAdapter& core = IMPL();
     core.finishReading();
     core.finishWriting();
@@ -376,9 +346,6 @@ void Port::close()
 
 void Port::interrupt()
 {
-    Nodes& nodes = NameClient::getNameClient().getNodes();
-    nodes.remove(*this);
-
     PortCoreAdapter& core = IMPL();
     core.interrupt();
 }
@@ -391,8 +358,6 @@ void Port::resume()
         return;
     }
     core.resumeFull();
-    Nodes& nodes = NameClient::getNameClient().getNodes();
-    nodes.add(*this);
 }
 
 
@@ -631,18 +596,6 @@ bool Port::setTimeout(float timeout)
     return true;
 }
 
-#ifndef YARP_NO_DEPRECATED // Since YARP 3.4
-void Port::setVerbosity(int level)
-{
-    YARP_UNUSED(level);
-}
-
-int Port::getVerbosity()
-{
-    return 0;
-}
-#endif
-
 Type Port::getType()
 {
     return IMPL().getType();
@@ -653,21 +606,6 @@ void Port::promiseType(const Type& typ)
     IMPL().promiseType(typ);
 }
 
-Property* Port::acquireProperties(bool readOnly)
-{
-    return IMPL().acquireProperties(readOnly);
-}
-
-void Port::releaseProperties(Property* prop)
-{
-    IMPL().releaseProperties(prop);
-}
-
-void Port::includeNodeInName(bool flag)
-{
-    IMPL().includeNodeInName(flag);
-}
-
 bool Port::isOpen() const
 {
     if (implementation == nullptr) {
@@ -675,16 +613,6 @@ bool Port::isOpen() const
     }
     return IMPL().active;
 }
-
-#ifndef YARP_NO_DEPRECATED // Since YARP 3.3
-YARP_WARNING_PUSH
-YARP_DISABLE_DEPRECATED_WARNING
-bool Port::setCallbackLock(yarp::os::Mutex* mutex)
-{
-    return IMPL().configCallbackLock(mutex);
-}
-YARP_WARNING_POP
-#endif
 
 bool Port::setCallbackLock(std::mutex* mutex)
 {
@@ -699,7 +627,10 @@ bool Port::removeCallbackLock()
 bool Port::lockCallback()
 {
     if (!IMPL().lockCallback()) {
-        yCError(PORT,"Cannot do lockCallback() without setCallbackLock() before opening port");
+        PortCoreAdapter& core = IMPL();
+        yCIError(PORT,
+                core.getName(),
+                "Cannot do lockCallback() without setCallbackLock() before opening port");
     }
     return true;
 }

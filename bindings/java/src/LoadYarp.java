@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 package yarp.matlab;
@@ -22,11 +19,11 @@ class LoadYarp {
         if (yarpInitialized == 0) {
             System.loadLibrary("yarp_java");
             Network.init();
-            System.out.println("Yarp library loaded and initialized");
+            System.out.println("YARP library loaded and initialized");
             System.out.flush();
         } else {
             System.out.println(
-                "Yarp library already loaded and initialized, doing nothing");
+                "YARP library already loaded and initialized, doing nothing");
             System.out.flush();
         }
         yarpInitialized = 1;

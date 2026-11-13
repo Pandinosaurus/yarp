@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_OS_IMPL_TCPCONNECTOR_H
@@ -16,24 +13,20 @@
 #    ifdef main
 #        undef main
 #    endif
-#elif defined(__unix__)
+#elif defined(__unix__) || defined(__APPLE__)
 #    include <yarp/os/impl/posix/TcpConnector.h>
 #else
 YARP_COMPILER_ERROR(Cannot implement TcpConnector on this platform)
 #endif
 
-namespace yarp {
-namespace os {
-namespace impl {
+namespace yarp::os::impl {
 
 #ifdef YARP_HAS_ACE
 typedef ACE_SOCK_Connector TcpConnector;
-#elif defined(__unix__)
+#elif defined(__unix__) || defined(__APPLE__)
 typedef yarp::os::impl::posix::TcpConnector TcpConnector;
 #endif
 
-} // namespace impl
-} // namespace os
-} // namespace yarp
+} // namespace yarp::os::impl
 
 #endif // YARP_OS_IMPL_TCPCONNECTOR_H

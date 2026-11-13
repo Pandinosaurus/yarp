@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_IMPLEMENTCONTROLCALIBRATION_H
@@ -14,18 +11,18 @@
 #include <yarp/dev/ControlBoardHelper.h>
 
 #include <yarp/dev/api.h>
-namespace yarp{
-    namespace dev {
-        class ImplementControlCalibration;
-    }
+namespace yarp::dev {
+class ImplementControlCalibration;
 }
 
 class YARP_dev_API yarp::dev::ImplementControlCalibration : public IControlCalibration
 {
 protected:
-    IControlCalibrationRaw *iCalibrate;
-    void *helper;
-    double *temp;
+    IControlCalibrationRaw*  m_iraw=nullptr;
+    void*                    m_helper=nullptr;
+    std::vector<int>         m_buffer_ints;
+    std::vector<double>      m_buffer_doubles;
+    std::mutex               m_imp_mutex;
 
     /**
      * Initialize the internal data and alloc memory.
@@ -55,11 +52,9 @@ public:
      */
     virtual ~ImplementControlCalibration();
 
-    bool calibrateAxisWithParams(int axis, unsigned int type, double p1, double p2, double p3) override;
-
-    bool setCalibrationParameters(int axis, const CalibrationParameters& params) override;
-
-    bool calibrationDone(int j) override;
+    ReturnValue calibrateAxisWithParams(int axis, unsigned int type, double p1, double p2, double p3) override;
+    ReturnValue setCalibrationParameters(int axis, const CalibrationParameters& params) override;
+    ReturnValue calibrationDone(int j) override;
 };
 
 

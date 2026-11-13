@@ -1,42 +1,21 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include <yarp/dev/ControlBoardInterfaces.h>
+#include <yarp/dev/ControlBoardPid.h>
 
 using namespace yarp::dev;
 
 Pid::Pid(double p, double d, double i,
          double intm, double sc, double omax):
-    kp(p),
-    kd(d),
-    ki(i),
-    max_int(intm),
-    scale(sc),
-    max_output(omax),
-    offset(0),
-    stiction_up_val(0),
-    stiction_down_val(0),
-    kff(0)
+        PidGainsData(p, d, i, intm, sc, omax, 0.0, 0.0 ,0.0, 0.0)
 {}
 
 Pid::Pid(double p, double d, double i,
          double intm, double sc, double omax, double st_up, double st_down, double ff) :
-    kp(p),
-    kd(d),
-    ki(i),
-    max_int(intm),
-    scale(sc),
-    max_output(omax),
-    offset(0),
-    stiction_up_val(st_up),
-    stiction_down_val(st_down),
-    kff(ff)
+        PidGainsData(p, d, i, intm, sc, omax, 0.0, st_up, st_down, ff)
 {}
 
 Pid::~Pid() = default;
@@ -109,36 +88,45 @@ void Pid::setKff(double ff)
 bool Pid::operator==(const yarp::dev::Pid &p) const
 {
 
-    if(kp != p.kp)
+    if (kp != p.kp) {
         return false;
+    }
 
-    if(ki != p.ki)
+    if (ki != p.ki) {
         return false;
+    }
 
-    if(kd != p.kd)
+    if (kd != p.kd) {
         return false;
+    }
 
-    if(max_output != p.max_output)
+    if (max_output != p.max_output) {
         return false;
+    }
 
-    if(max_int != p.max_int)
+    if (max_int != p.max_int) {
         return false;
+    }
 
-    if(kff != p.kff)
+    if (kff != p.kff) {
         return false;
+    }
 
-    if(offset != p.offset)
+    if (offset != p.offset) {
         return false;
+    }
 
-    if(scale != p.scale)
+    if (scale != p.scale) {
         return false;
+    }
 
-    if(stiction_down_val !=  p.stiction_down_val)
+    if (stiction_down_val != p.stiction_down_val) {
         return false;
+    }
 
-    if(stiction_up_val != p.stiction_up_val)
+    if (stiction_up_val != p.stiction_up_val) {
         return false;
+    }
 
     return true;
-
 }

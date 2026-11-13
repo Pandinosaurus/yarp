@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/Bottle.h>
@@ -37,8 +34,8 @@ void showBottle(Bottle& anUnknownBottle, int indentation = 0)
         case BOTTLE_TAG_BLOB:
             printf("binary blob of length %zd\n", element.asBlobLength());
             break;
-        case BOTTLE_TAG_VOCAB:
-            printf("vocab [%s]\n", yarp::os::Vocab::decode(element.asVocab()).c_str());
+        case BOTTLE_TAG_VOCAB32:
+            printf("vocab [%s]\n", yarp::os::Vocab32::decode(element.asVocab32()).c_str());
             break;
         default:
             if (element.isList()) {

@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <stdio.h>
@@ -52,9 +49,9 @@ public:
 
 class UpdateThread : public Thread {
 public:
-    Port p;
+    Port p;                          // commands to the game (with responses)
+    BufferedPort<Bottle> broadcastIn; // messages broadcast from the game
     String name;
-    PortReaderBuffer<Bottle> reader;
     std::mutex mutex;
 
     UpdateThread() : mutex() {
@@ -65,13 +62,13 @@ public:
     }
 
     void connect() {
-        reader.attach(p);
-        reader.useCallback(handler);
+        broadcastIn.useCallback(handler);
 
         if (name[0]!='.') {
             name = String("/player/") + name;
         }
         p.open(name.c_str());
+        broadcastIn.open((name + "/broadcast:i").c_str());
 
         printf("Connecting...\n");
 
@@ -81,7 +78,7 @@ public:
         Network::connect(p.getName(),"/game");
 
         // there are occasional messages broadcast from the game to us
-        Network::connect("/game",p.getName(),"mcast");
+        Network::connect("/game",broadcastIn.getName(),"mcast");
 
     }
 
@@ -161,6 +158,7 @@ public:
             show();
         }
         mutex.lock();
+        broadcastIn.close();
         p.close();
         mutex.unlock();
     }

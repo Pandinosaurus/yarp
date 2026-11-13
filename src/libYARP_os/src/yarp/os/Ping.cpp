@@ -1,16 +1,14 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/Ping.h>
 
 #include <yarp/os/Bottle.h>
 #include <yarp/os/impl/LogComponent.h>
+#include <yarp/os/impl/PortCoreClient.h>
 #include <yarp/os/Network.h>
 #include <yarp/os/Port.h>
 #include <yarp/os/Time.h>
@@ -142,10 +140,8 @@ void Ping::connect()
     ContactStyle rpc;
     rpc.admin = true;
     rpc.quiet = true;
-    Bottle cmd;
-    Bottle reply;
-    cmd.addVocab(Vocab::encode("ver"));
-    bool ok = NetworkBase::write(c, cmd, reply, rpc);
+    yarp::os::impl::PortCoreClient client(c, rpc);
+    bool ok = client.getAdminProtocolVersion().ret;
     if (!ok) {
         yCError(PING, "Port did not respond as expected");
     }

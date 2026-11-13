@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_CONTROLBOARDHELPER_H
@@ -49,10 +46,8 @@ void checkAndDestroy(T* &p) {
     }
 }
 
-namespace yarp {
-    namespace dev {
-        class ControlBoardHelper;
-    }
+namespace yarp::dev {
+class ControlBoardHelper;
 }
 
 //////////////// Control Board Helper
@@ -67,6 +62,7 @@ public:
 public:
     bool checkAxisId(int id);
     bool checkAxesIds(const int n_axes, const int* axesList);
+    bool checkAxesIds(const std::vector<int>& axesList);
     int toHw(int axis);
     int toUser(int axis);
     void toUser(const double *hwData, double *user);
@@ -150,10 +146,26 @@ public:
     // *******************************************//
     double bemf_user2raw(double bemf_user, int j);
     double ktau_user2raw(double ktau_user, int j);
+    double viscousPos_user2raw(double viscousPos_user, int j);
+    double viscousNeg_user2raw(double viscousNeg_user, int j);
+    double coulombPos_user2raw(double coulombPos_user, int j);
+    double coulombNeg_user2raw(double coulombNeg_user, int j);
+    double velocityThres_user2raw(double velocityThres_user, int j);
+
     void bemf_user2raw(double bemf_user, int j, double &bemf_raw, int &k);
     void ktau_user2raw(double ktau_user, int j, double &ktau_raw, int &k);
+    void viscousPos_user2raw(double viscousPos_user, int j, double &viscousPos_raw, int &k);
+    void viscousNeg_user2raw(double viscousNeg_user, int j, double &viscousNeg_raw, int &k);
+    void coulombPos_user2raw(double coulombPos_user, int j, double &coulombPos_raw, int &k);
+    void coulombNeg_user2raw(double coulombNeg_user, int j, double &coulombNeg_raw, int &k);
+    void velocityThres_user2raw(double velocityThres_user, int j, double &velocityThres_raw, int &k);
     void bemf_raw2user(double bemf_raw, int k_raw, double &bemf_user, int &j_user);
     void ktau_raw2user(double ktau_raw, int k_raw, double &ktau_user, int &j_user);
+    void viscousPos_raw2user(double viscousPos_raw, int k_raw, double &viscousPos_user, int &j_user);
+    void viscousNeg_raw2user(double viscousNeg_raw, int k_raw, double &viscousNeg_user, int &j_user);
+    void coulombPos_raw2user(double coulombPos_raw, int k_raw, double &coulombPos_user, int &j_user);
+    void coulombNeg_raw2user(double coulombNeg_raw, int k_raw, double &coulombNeg_user, int &j_user);
+    void velocityThres_raw2user(double threshold_raw, int k_raw, double &velocityThres_user, int &j_user);
 
     int axes();
 
@@ -168,7 +180,7 @@ public:
     void convert_pid_to_machine(const yarp::dev::PidControlTypeEnum& pidtype, const Pid &in_usr, int j_usr, Pid &out_raw, int &k_raw);
     Pid  convert_pid_to_machine(const yarp::dev::PidControlTypeEnum& pidtype, const Pid &in_usr, int j_usr);
 
-    void set_pid_conversion_units(const PidControlTypeEnum& pidtype, const PidFeedbackUnitsEnum fbk_conv_units, const PidOutputUnitsEnum out_conv_units);
+    void   set_pid_conversion_units(const PidControlTypeEnum& pidtype, const PidFeedbackUnitsEnum fbk_conv_units, const PidOutputUnitsEnum out_conv_units);
     double get_pidfeedback_conversion_factor_user2raw(const yarp::dev::PidControlTypeEnum& pidtype,  int j);
     double get_pidoutput_conversion_factor_user2raw(const yarp::dev::PidControlTypeEnum& pidtype, int j);
 

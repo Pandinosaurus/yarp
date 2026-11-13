@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/Log.h>
@@ -13,6 +10,10 @@
 #include <yarp/dev/ControlBoardInterfaces.h>
 
 #include <yarp/robotinterface/impl/CalibratorThread.h>
+
+namespace {
+YARP_LOG_COMPONENT(YRI_CALIBRATOR, "yarp.yri.Calibrator")
+}
 
 class yarp::robotinterface::impl::CalibratorThread::Private
 {
@@ -29,14 +30,14 @@ public:
     {
         switch (action) {
         case ActionCalibrate:
-            yDebug() << calibratorName << "starting calibration of device" << targetName;
+            yCDebug(YRI_CALIBRATOR) << calibratorName << "starting calibration of device" << targetName;
             calibrator->calibrate(target);
-            yDebug() << calibratorName << "finished calibration of device" << targetName;
+            yCDebug(YRI_CALIBRATOR) << calibratorName << "finished calibration of device" << targetName;
             break;
         case ActionPark:
-            yDebug() << calibratorName << "starting park device" << targetName;
+            yCDebug(YRI_CALIBRATOR) << calibratorName << "starting park device" << targetName;
             calibrator->park(target);
-            yDebug() << calibratorName << "finished park device" << targetName;
+            yCDebug(YRI_CALIBRATOR) << calibratorName << "finished park device" << targetName;
             break;
         }
     }
@@ -45,11 +46,11 @@ public:
     {
         switch (action) {
         case ActionCalibrate:
-            yDebug() << calibratorName << "killing calibration of device" << targetName;
+            yCDebug(YRI_CALIBRATOR) << calibratorName << "killing calibration of device" << targetName;
             calibrator->quitCalibrate();
             break;
         case ActionPark:
-            yDebug() << calibratorName << "killing park of device" << targetName;
+            yCDebug(YRI_CALIBRATOR) << calibratorName << "killing park of device" << targetName;
             calibrator->quitPark();
             break;
         }

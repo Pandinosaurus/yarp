@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_OS_IMPL_LOGCOMPONENT_H
@@ -12,10 +9,7 @@
 #include <yarp/os/api.h>
 #include <yarp/os/LogComponent.h>
 
-namespace yarp {
-namespace os {
-namespace impl {
-namespace LogComponent {
+namespace yarp::os::impl::LogComponent {
 
 void print_callback(yarp::os::Log::LogType type,
                     const char* msg,
@@ -27,20 +21,18 @@ void print_callback(yarp::os::Log::LogType type,
                     double externaltime,
                     const char* comp_name);
 
+yarp::os::Log::LogType minimumLogType();
 void setMinumumLogType(yarp::os::Log::LogType minumumLogType);
 
-} // namespace LogComponent
-} // namespace impl
-} // namespace os
-} // namespace yarp
+} // namespace yarp::os::impl::LogComponent
 
 #define YARP_OS_LOG_COMPONENT(name, name_string) \
     const yarp::os::LogComponent& name() \
     { \
         static const yarp::os::LogComponent component(name_string, \
-                                                      yarp::os::Log::TraceType, \
+                                                      yarp::os::impl::LogComponent::minimumLogType(), \
                                                       yarp::os::Log::LogTypeReserved, \
-                                                      yarp::os::impl::LogComponent::print_callback, \
+                                                      yarp::os::Log::defaultPrintCallback(), \
                                                       nullptr); \
         return component; \
     }
@@ -49,9 +41,9 @@ void setMinumumLogType(yarp::os::Log::LogType minumumLogType);
     yarp::os::LogComponent& name() \
     { \
         static yarp::os::LogComponent component(name_string, \
-                                                yarp::os::Log::TraceType, \
+                                                yarp::os::impl::LogComponent::minimumLogType(), \
                                                 yarp::os::Log::LogTypeReserved, \
-                                                yarp::os::impl::LogComponent::print_callback, \
+                                                yarp::os::Log::defaultPrintCallback(), \
                                                 nullptr); \
         return component; \
     }

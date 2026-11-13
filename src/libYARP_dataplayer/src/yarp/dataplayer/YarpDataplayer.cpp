@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #if defined(_WIN32)
@@ -38,16 +35,6 @@
 #include <yarp/os/SystemClock.h>
 #include <yarp/dataplayer/YarpDataplayer.h>
 
-//ROS messages
-#include <yarp/rosmsg/sensor_msgs/LaserScan.h>
-#include <yarp/rosmsg/nav_msgs/Odometry.h>
-#include <yarp/rosmsg/tf/tfMessage.h>
-#include <yarp/rosmsg/tf2_msgs/TFMessage.h>
-#include <yarp/rosmsg/geometry_msgs/Pose.h>
-#include <yarp/rosmsg/geometry_msgs/Pose2D.h>
-
-
-using namespace std;
 using namespace yarp::yarpDataplayer;
 using namespace yarp::os;
 using namespace yarp::sig;
@@ -96,7 +83,7 @@ DataplayerUtilities::DataplayerUtilities() :
 }
 
 /**********************************************************/
-DataplayerUtilities::DataplayerUtilities(string name, bool _add_prefix, bool _verbose) :
+DataplayerUtilities::DataplayerUtilities(std::string name, bool _add_prefix, bool _verbose) :
     dir_count(0),
     moduleName(std::move(name)),
     add_prefix(_add_prefix),
@@ -136,20 +123,20 @@ void DataplayerUtilities::setVerbose(const bool &verbose)
 }
 
 /**********************************************************/
-string DataplayerUtilities::getCurrentPath()
+std::string DataplayerUtilities::getCurrentPath()
 {
     char cCurrentPath[FILENAME_MAX];
     if (!yarp::os::getcwd(cCurrentPath, sizeof(cCurrentPath) )){
         yError() << "ERROR GETTING THE CURRENT DIR";
     }
     //cCurrentPath[sizeof(cCurrentPath) - 1] = '\0'; /* not really required */
-    string currentPath = cCurrentPath;
+    std::string currentPath = cCurrentPath;
 
     return currentPath;
 }
 
 /**********************************************************/
-int DataplayerUtilities::getRecSubDirList(const string& dir, vector<RowInfo>& rowInfoVec, int recursive)
+int DataplayerUtilities::getRecSubDirList(const std::string& dir, std::vector<RowInfo>& rowInfoVec, int recursive)
 {
     struct dirent *direntp = nullptr;
     DIR *dirp = nullptr;
@@ -198,12 +185,12 @@ int DataplayerUtilities::getRecSubDirList(const string& dir, vector<RowInfo>& ro
             continue;
         }
         if (S_ISDIR(fstat.st_mode)) {
-            string recDir = full_name;
+            std::string recDir = full_name;
             struct stat st;
-            string fullName = string(dir + "/" + direntp->d_name + "/info.log");
+            std::string fullName = std::string(dir + "/" + direntp->d_name + "/info.log");
             const char * filename = fullName.c_str();
             if(stat(filename,&st) == 0) {
-                string dataFileName = string(dir + "/" + direntp->d_name + "/data.log");
+                std::string dataFileName = std::string(dir + "/" + direntp->d_name + "/data.log");
 
                 bool checkLog = checkLogValidity( filename );
                 bool checkData = checkLogValidity( dataFileName.c_str() );
@@ -245,10 +232,10 @@ int DataplayerUtilities::getRecSubDirList(const string& dir, vector<RowInfo>& ro
                 recursiveIterations ++;
                 if (recursiveIterations > 1){
                     if (recursiveName.empty()){
-                        recursiveName = string( direntp->d_name );
+                        recursiveName = std::string( direntp->d_name );
                     }
                 } else {
-                    recursiveName = string( direntp->d_name );
+                    recursiveName = std::string( direntp->d_name );
                 }
 
                 getRecSubDirList(recDir, rowInfoVec, 1);
@@ -274,11 +261,11 @@ int DataplayerUtilities::getRecSubDirList(const string& dir, vector<RowInfo>& ro
 bool DataplayerUtilities::checkLogValidity(const char *filename)
 {
     bool check = true;
-    fstream str;
-    str.open (filename, ios_base::in);//, ios::binary);
+    std::fstream str;
+    str.open (filename, std::ios_base::in);//, ios::binary);
 
     if (str.is_open()){
-        string line;
+        std::string line;
         int itr = 0;
         while( getline( str, line ) && itr < 3){
             Bottle b( line );
@@ -299,16 +286,16 @@ bool DataplayerUtilities::checkLogValidity(const char *filename)
 /**********************************************************/
 bool DataplayerUtilities::setupDataFromParts(PartsData &part)
 {
-    fstream str;
+    std::fstream str;
 
     // info part
     if (verbose){
         yInfo() << "opening file " <<  part.infoFile.c_str() ;
     }
 
-    str.open (part.infoFile.c_str(), ios_base::in);//, ios::binary);
+    str.open (part.infoFile.c_str(), std::ios_base::in);//, ios::binary);
     if (str.is_open()){
-        string line;
+        std::string line;
         int itr = 0;
         while( getline( str, line ) && (itr < 3) ){
             Bottle b( line );
@@ -324,8 +311,8 @@ bool DataplayerUtilities::setupDataFromParts(PartsData &part)
                 part.type.erase(part.type.size() -1 );          // remove the ";" character
             }
             else{
-                string stamp_tag = b.get(0).toString();
-                if (stamp_tag.find("Stamp") == string::npos){   // skip stamp information
+                std::string stamp_tag = b.get(0).toString();
+                if (stamp_tag.find("Stamp") == std::string::npos){   // skip stamp information
                     part.portName = b.get(1).toString();
                     if (verbose) {
                         yInfo() << "the name of the port is " << part.portName.c_str();
@@ -343,11 +330,11 @@ bool DataplayerUtilities::setupDataFromParts(PartsData &part)
     if (verbose){
         yInfo() <<"opening file " << part.logFile.c_str();
     }
-    str.open (part.logFile.c_str(), ios_base::in);//, ios::binary);
+    str.open (part.logFile.c_str(), std::ios_base::in);//, ios::binary);
 
     //read throughout
     if (str.is_open()){
-        string line;
+        std::string line;
         int itr = 0;
         while( getline( str, line ) ){
             Bottle b( line );
@@ -437,7 +424,7 @@ void DataplayerUtilities::resetDirCount()
 /**********************************************************/
 bool DataplayerUtilities::configurePorts(PartsData &part)
 {
-    string tmp_port_name=part.portName;
+    std::string tmp_port_name=part.portName;
     if(add_prefix){
         tmp_port_name="/"+moduleName+tmp_port_name;
     }
@@ -454,21 +441,6 @@ bool DataplayerUtilities::configurePorts(PartsData &part)
             )
     {
         if (part.outputPort == nullptr) { part.outputPort = new BufferedPort<yarp::sig::Image>; }
-    }
-    else if (strcmp(part.type.c_str(), "sensor_msgs/LaserScan") == 0 ) {
-        if (part.outputPort == nullptr) { part.outputPort = new BufferedPort<yarp::rosmsg::sensor_msgs::LaserScan>; }
-    }
-    else if (strcmp(part.type.c_str(), "nav_msgs/Odometry") == 0) {
-        if (part.outputPort == nullptr) { part.outputPort = new BufferedPort<yarp::rosmsg::nav_msgs::Odometry>; }
-    }
-    else if (strcmp(part.type.c_str(), "tf2_msgs/tf") == 0) {
-        if (part.outputPort == nullptr) { part.outputPort = new BufferedPort<yarp::rosmsg::tf2_msgs::TFMessage>; }
-    }
-    else if (strcmp(part.type.c_str(), "geometry_msgs/Pose") == 0) {
-        if (part.outputPort == nullptr) { part.outputPort = new BufferedPort<yarp::rosmsg::geometry_msgs::Pose>; }
-    }
-    else if (strcmp(part.type.c_str(), "geometry_msgs/Pose2D") == 0) {
-        if (part.outputPort == nullptr) { part.outputPort = new BufferedPort<yarp::rosmsg::geometry_msgs::Pose2D>; }
     }
     else
     {
@@ -654,25 +626,9 @@ void DataplayerWorker::run()
             ret = sendImages(part, frame);
         }
         else if (strcmp(utilities->partDetails[part].type.c_str(), "Bottle") == 0)  {
-            ret = sendBottle(part, frame);
-            // the above line can be safely replaced with sendGenericData<Bottle>.
-            // I kept it for no particular reason, thinking that maybe it could be convenient (later)
-            // to process Bottles in a different way.
-        }
-        else if (strcmp(utilities->partDetails[part].type.c_str(), "sensor_msgs/LaserScan") == 0)  {
-            ret = sendGenericData<yarp::rosmsg::sensor_msgs::LaserScan>(part, frame);
-        }
-        else if (strcmp(utilities->partDetails[part].type.c_str(), "nav_msgs/Odometry") == 0) {
-            ret = sendGenericData<yarp::rosmsg::nav_msgs::Odometry>(part, frame);
-        }
-        else if (strcmp(utilities->partDetails[part].type.c_str(), "tf2_msgs/tf") == 0) {
-            ret = sendGenericData<yarp::rosmsg::tf2_msgs::TFMessage>(part, frame);
-        }
-        else if (strcmp(utilities->partDetails[part].type.c_str(), "geometry_msgs/Pose") == 0) {
-            ret = sendGenericData<yarp::rosmsg::geometry_msgs::Pose>(part, frame);
-        }
-        else if (strcmp(utilities->partDetails[part].type.c_str(), "geometry_msgs/Pose2D") == 0) {
-            ret = sendGenericData<yarp::rosmsg::geometry_msgs::Pose2D>(part, frame);
+            ret = sendGenericData<Bottle>(part, frame);
+            //the above line could be replaced with sendBottle(part, frame) if
+            //specifically different behaviour is required for a bottle.
         }
         else  {
             if (utilities->verbose){
@@ -725,8 +681,13 @@ int DataplayerWorker::sendBottle(int part, int frame)
     Bottle& outBot = the_port->prepare();
     outBot = tmp;
 
+    /* Note: sendBottle differs from sendGenericData as the envelope is a single
+             timestamp, ionstead of the standard yarp::os::Stamp which includes
+             also the sequence number */
+
     //propagate timestamp
-    Stamp ts(frame, utilities->partDetails[part].timestamp[frame]);
+    std::string time = yarp::conf::numeric::to_string(utilities->partDetails[part].timestamp[frame]);
+    Bottle ts(time);
     the_port->setEnvelope(ts);
 
     if (utilities->sendStrict) {
@@ -741,8 +702,8 @@ int DataplayerWorker::sendBottle(int part, int frame)
 /**********************************************************/
 int DataplayerWorker::sendImages(int part, int frame)
 {
-    string tmpPath = utilities->partDetails[part].path;
-    string tmpName, tmp;
+    std::string tmpPath = utilities->partDetails[part].path;
+    std::string tmpName, tmp;
     bool fileValid = false;
     if (utilities->withExtraColumn) {
         tmpName = utilities->partDetails[part].bot.get(frame).asList()->tail().tail().get(1).asString();
@@ -756,16 +717,16 @@ int DataplayerWorker::sendImages(int part, int frame)
     if (tmp.size()>0) {
         tmp.erase(tmp.begin());
         tmp.erase(tmp.end()-1);
-        code = Vocab::encode(tmp);
+        code = Vocab32::encode(tmp);
     }
 
     tmpPath = tmpPath + tmpName;
-    unique_ptr<Image> img_yarp = nullptr;
+    std::unique_ptr<Image> img_yarp = nullptr;
 
 #ifdef HAS_OPENCV
     cv::Mat cv_img;
     if (code==VOCAB_PIXEL_MONO_FLOAT) {
-        img_yarp = unique_ptr<Image>(new ImageOf<PixelFloat>);
+        img_yarp = std::unique_ptr<Image>(new ImageOf<PixelFloat>);
         fileValid = read(*static_cast<ImageOf<PixelFloat>*>(img_yarp.get()),tmpPath);
     }
     else {
@@ -773,26 +734,26 @@ int DataplayerWorker::sendImages(int part, int frame)
         if ( cv_img.data != nullptr ) {
             if (code==VOCAB_PIXEL_RGB)
             {
-                img_yarp = unique_ptr<Image>(new ImageOf<PixelRgb>);
+                img_yarp = std::unique_ptr<Image>(new ImageOf<PixelRgb>);
                 *img_yarp = yarp::cv::fromCvMat<PixelRgb>(cv_img);
             }
             else if (code==VOCAB_PIXEL_BGR)
             {
-                img_yarp = unique_ptr<Image>(new ImageOf<PixelBgr>);
+                img_yarp = std::unique_ptr<Image>(new ImageOf<PixelBgr>);
                 *img_yarp = yarp::cv::fromCvMat<PixelBgr>(cv_img);
             }
             else if (code==VOCAB_PIXEL_RGBA)
             {
-                img_yarp = unique_ptr<Image>(new ImageOf<PixelRgba>);
+                img_yarp = std::unique_ptr<Image>(new ImageOf<PixelRgba>);
                 *img_yarp = yarp::cv::fromCvMat<PixelRgba>(cv_img);
             }
             else if (code==VOCAB_PIXEL_MONO){
-                img_yarp = unique_ptr<Image>(new ImageOf<PixelMono>);
+                img_yarp = std::unique_ptr<Image>(new ImageOf<PixelMono>);
                 *img_yarp = yarp::cv::fromCvMat<PixelMono>(cv_img);
             }
             else
             {
-                img_yarp = unique_ptr<Image>(new ImageOf<PixelRgb>);
+                img_yarp = std::unique_ptr<Image>(new ImageOf<PixelRgb>);
                 *img_yarp = yarp::cv::fromCvMat<PixelRgb>(cv_img);
             }
             fileValid = true;
@@ -800,22 +761,22 @@ int DataplayerWorker::sendImages(int part, int frame)
     }
 #else
     if (code==VOCAB_PIXEL_RGB) {
-        img_yarp = unique_ptr<Image>(new ImageOf<PixelRgb>);
+        img_yarp = std::unique_ptr<Image>(new ImageOf<PixelRgb>);
         fileValid = read(*static_cast<ImageOf<PixelRgb>*>(img_yarp.get()),tmpPath.c_str());
     } else if (code==VOCAB_PIXEL_BGR) {
-        img_yarp = unique_ptr<Image>(new ImageOf<PixelBgr>);
+        img_yarp = std::unique_ptr<Image>(new ImageOf<PixelBgr>);
         fileValid = read(*static_cast<ImageOf<PixelBgr>*>(img_yarp.get()),tmpPath.c_str());
     } else if (code==VOCAB_PIXEL_RGBA) {
-        img_yarp = unique_ptr<Image>(new ImageOf<PixelRgba>);
+        img_yarp = std::unique_ptr<Image>(new ImageOf<PixelRgba>);
         fileValid = read(*static_cast<ImageOf<PixelRgba>*>(img_yarp.get()),tmpPath.c_str());
     } else if (code==VOCAB_PIXEL_MONO_FLOAT) {
-        img_yarp = unique_ptr<Image>(new ImageOf<PixelFloat>);
+        img_yarp = std::unique_ptr<Image>(new ImageOf<PixelFloat>);
         fileValid = read(*static_cast<ImageOf<PixelFloat>*>(img_yarp.get()),tmpPath.c_str());
     } else if (code==VOCAB_PIXEL_MONO) {
-        img_yarp = unique_ptr<Image>(new ImageOf<PixelMono>);
+        img_yarp = std::unique_ptr<Image>(new ImageOf<PixelMono>);
         fileValid = read(*static_cast<ImageOf<PixelMono>*>(img_yarp.get()),tmpPath.c_str());
     } else {
-        img_yarp = unique_ptr<Image>(new ImageOf<PixelRgb>);
+        img_yarp = std::unique_ptr<Image>(new ImageOf<PixelRgb>);
         fileValid = read(*static_cast<ImageOf<PixelRgb>*>(img_yarp.get()),tmpPath.c_str());
     }
 #endif
@@ -853,11 +814,6 @@ void DataplayerWorker::setManager(yarp::yarpDataplayer::DataplayerUtilities *uti
 
 /**********************************************************/
 template int DataplayerWorker::sendGenericData<yarp::os::Bottle>(int,int);
-template int DataplayerWorker::sendGenericData<yarp::rosmsg::sensor_msgs::LaserScan>(int, int);
-template int DataplayerWorker::sendGenericData<yarp::rosmsg::nav_msgs::Odometry>(int, int);
-template int DataplayerWorker::sendGenericData<yarp::rosmsg::tf2_msgs::TFMessage>(int, int);
-template int DataplayerWorker::sendGenericData<yarp::rosmsg::geometry_msgs::Pose>(int, int);
-template int DataplayerWorker::sendGenericData<yarp::rosmsg::geometry_msgs::Pose2D>(int, int);
 
 /**********************************************************/
 template <class T>
@@ -1056,43 +1012,48 @@ void DataplayerEngine::stepFromCmd()
 /**********************************************************/
 void DataplayerEngine::runNormally()
 {
-    for (int i=0; i < this->numPart; i++){
-        bool isActive = this->isPartActive[i];
-        if ( this->utilities->partDetails[i].currFrame <= this->utilities->partDetails[i].maxFrame ){
-            if ( this->virtualTime >= this->utilities->partDetails[i].timestamp[ this->utilities->partDetails[i].currFrame ] ){
-                if ( this->initTime > 300 && this->virtualTime < this->utilities->partDetails[i].timestamp[this->utilities->partDetails[i].timestamp.length()-1]){
-                    this->initTime = 0;
-                }
-                if (!this->utilities->partDetails[i].hasNotified){
-                    this->utilities->partDetails[i].worker->sendData(this->utilities->partDetails[i].currFrame, isActive, this->virtualTime );
-                    this->utilities->partDetails[i].currFrame++;
-                }
-            }
-        } else {
-            if (this->utilities->repeat) {
-                this->initThread();
-                this->utilities->partDetails[i].worker->init();
-            } else {
-                if ( !this->utilities->partDetails[i].hasNotified ) {
-                    if (utilities->verbose){
-                        yInfo() << "partID:" << i << "has finished";
-                    }
-                    this->utilities->partDetails[i].hasNotified = true;
-                }
+    for (int i=0; i < this->numPart; i++) {
+        //get a reference to the part we are interested in
+        PartsData &this_part = this->utilities->partDetails[i];
 
+        //if we have alredy stopped we have nothing to do
+        if(this_part.hasNotified)
+            continue;
+
+        //if this port is not active, keep progressing though the frames without
+        //sending, so if the part activates it is in synch
+        bool isActive = this->isPartActive[i];
+
+        //send all available frames up to the current virtualTime
+        while (this_part.currFrame <= this_part.maxFrame &&
+            this->virtualTime >= this_part.timestamp[this_part.currFrame]) {
+            this_part.worker->sendData(this_part.currFrame++, isActive, this->virtualTime);
+        }
+
+        //if we have sent all frames perform reset/stop
+        if(this_part.currFrame > this_part.maxFrame) {
+            if (this->utilities->repeat) {
+                //restart the part
+                this->initThread();
+                this_part.worker->init();
+            } else {
+                //this part has finished
+                if (utilities->verbose) {
+                    yInfo() << "partID:" << i << "has finished";
+                }
+                this_part.hasNotified = true;
+
+                //perform a check to see if ALL parts have finished
                 int stopAll = 0;
                 for (int x=0; x < this->numPart; x++){
-                    if (this->utilities->partDetails[x].hasNotified){
-                        stopAll++;
+                    stopAll += this->utilities->partDetails[x].hasNotified ? 1 : 0;
+                }
+                if (stopAll == this->numPart) {
+                    if (utilities->verbose) {
+                        yInfo() << "All parts have Finished!";
                     }
-
-                    if (stopAll == this->numPart){
-                        if (utilities->verbose) {
-                            yInfo() << "All parts have Finished!";
-                        }
-                        this->utilities->stopAtEnd();
-                        this->allPartsStatus = true;
-                    }
+                    this->utilities->stopAtEnd();
+                    this->allPartsStatus = true;
                 }
             }
         }
@@ -1100,7 +1061,6 @@ void DataplayerEngine::runNormally()
 
     this->virtualTime += this->diff_seconds() * this->utilities->speed;
     this->tick();
-    this->initTime++;
 }
 
 /**********************************************************/

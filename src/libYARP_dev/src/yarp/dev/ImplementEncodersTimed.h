@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_IMPLEMENTENCODERSTIMED_H
@@ -11,29 +8,26 @@
 
 #include <yarp/dev/IEncodersTimed.h>
 
-namespace yarp {
-    namespace dev {
-        class ImplementEncodersTimed;
-    }
+namespace yarp::dev {
+class ImplementEncodersTimed;
 }
 
-namespace yarp {
-namespace dev {
-namespace impl {
+namespace yarp::dev::impl {
 
 template <typename T>
 class FixedSizeBuffersManager;
 
-} // namespace impl
-} // namespace dev
-} // namespace yarp
+} // namespace yarp::dev::impl
 
 class YARP_dev_API yarp::dev::ImplementEncodersTimed: public IEncodersTimed
 {
 protected:
-    IEncodersTimedRaw *iEncoders;
-    void *helper;
-    yarp::dev::impl::FixedSizeBuffersManager<double> *buffManager;
+    IEncodersTimedRaw*       m_iraw=nullptr;
+    void*                    m_helper=nullptr;
+    std::vector<int>         m_buffer_ints;
+    std::vector<double>      m_buffer_doubles;
+    std::vector<double>      m_buffer_doubles2;
+    std::mutex               m_imp_mutex;
 
 
     /**
@@ -62,20 +56,20 @@ public:
 
     virtual ~ImplementEncodersTimed();
 
-    bool getAxes(int *ax) override;
+    yarp::dev::ReturnValue getAxes(size_t& ax) override;
 
-    bool resetEncoder(int j) override;
-    bool resetEncoders() override;
-    bool setEncoder(int j, double val) override;
-    bool setEncoders(const double *vals) override;
-    bool getEncoder(int j, double *v) override;
-    bool getEncodersTimed(double *encs, double *time) override;
-    bool getEncoderTimed(int j, double *v, double *t) override;
-    bool getEncoders(double *encs) override;
-    bool getEncoderSpeed(int j, double *spds) override;
-    bool getEncoderSpeeds(double *spds) override;
-    bool getEncoderAcceleration(int j, double *spds) override;
-    bool getEncoderAccelerations(double *accs) override;
+    yarp::dev::ReturnValue resetEncoder(int j) override;
+    yarp::dev::ReturnValue resetEncoders() override;
+    yarp::dev::ReturnValue setEncoder(int j, double val) override;
+    yarp::dev::ReturnValue setEncoders(const double *vals) override;
+    yarp::dev::ReturnValue getEncoder(int j, double *v) override;
+    yarp::dev::ReturnValue getEncodersTimed(double *encs, double *time) override;
+    yarp::dev::ReturnValue getEncoderTimed(int j, double *v, double *t) override;
+    yarp::dev::ReturnValue getEncoders(double *encs) override;
+    yarp::dev::ReturnValue getEncoderSpeed(int j, double *spds) override;
+    yarp::dev::ReturnValue getEncoderSpeeds(double *spds) override;
+    yarp::dev::ReturnValue getEncoderAcceleration(int j, double *spds) override;
+    yarp::dev::ReturnValue getEncoderAccelerations(double *accs) override;
 };
 
 #endif // YARP_DEV_IMPLEMENTENCODERSTIMED_H

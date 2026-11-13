@@ -6,22 +6,32 @@ on:
   workflow_dispatch:
 
 jobs:
-  nightly-merge-yarp-3-4:
+  nightly-merge-yarp:
     if: github.repository == 'robotology/yarp'
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
     - name: Checkout
-      uses: actions/checkout@v1
-
-    - name: Nightly Merge
-      uses: robotology/gh-action-nightly-merge@v1.3.1
+      uses: actions/checkout@v5
       with:
-        stable_branch: 'yarp-3.4'
+        fetch-depth: 100
+        persist-credentials: false
+
+    - name: Check bot identity
+      env:
+        GH_TOKEN: ${{ secrets.ROBOTOLOGY_BOT_TOKEN }}
+      run: |
+        gh api user --jq '.login'
+    
+    - name: Nightly Merge
+      uses: robotology/gh-action-nightly-merge@v1.3.3
+      with:
+        stable_branch: 'yarp-4.0'
         development_branch: 'master'
         allow_ff: false
-        user_name: 'Daniele E. Domenichelli (Nightly Merge Action)'
-        user_email: 'daniele.domenichelli@iit.it'
-        push_token: 'drdanz_TOKEN'
+        user_name: 'robotology-bot'
+        user_email: 'robotology@iit.it'
+        push_token: 'BOT_TOKEN'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        drdanz_TOKEN: ${{ secrets.drdanz_TOKEN }}
+        BOT_TOKEN: ${{ secrets.ROBOTOLOGY_BOT_TOKEN }}
+        

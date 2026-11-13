@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/companion/impl/Companion.h>
@@ -18,6 +15,7 @@
 #include <yarp/os/Stamp.h>
 #include <yarp/os/TypedReaderCallback.h>
 #include <yarp/os/Value.h>
+#include <signal.h>
 
 using yarp::companion::impl::Companion;
 using yarp::os::Bottle;
@@ -35,6 +33,12 @@ using yarp::os::PortReader;
 using yarp::os::ConnectionReader;
 
 namespace {
+
+bool interrupt = false;
+void signal_callback_handler(int signum)
+{
+    interrupt = true;
+}
 
 class CompanionStatsInput
 {
@@ -177,7 +181,7 @@ int Companion::cmdStats(int argc, char *argv[])
 
     //makes the connection
     std::string remote_port = argv[0];
-    std::string protocol= options.check("protocol", Value("tcp")).asString();
+    std::string protocol= options.check("protocol", Value("fast_tcp")).asString();
     double max_time = options.check("duration", Value(0)).asFloat32();
 
     bool b = yarp::os::NetworkBase::connect(remote_port.c_str(), localPort->getName().c_str(), protocol, false);
@@ -193,7 +197,9 @@ int Companion::cmdStats(int argc, char *argv[])
     double total_bottles_received = 0;
     double total_bytes_received = 0;
     size_t periods=0;
-    while(true)
+
+    signal(SIGINT, signal_callback_handler);
+    while (!interrupt)
     {
         double curr_time= yarp::os::Time::now();
         if (curr_time- period_time >=1.0)
@@ -223,5 +229,6 @@ int Companion::cmdStats(int argc, char *argv[])
     delete localPort;
     delete inData;
 
+    yCDebug(COMPANION) << "yarp stats completed";
     return 0;
 }

@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/dev/PolyDriverList.h>
@@ -12,7 +9,7 @@
 #include <vector>
 
 
-#define RES(v) ((std::vector<PolyDriverDescriptor> *)v)
+#define RES(v) (static_cast<std::vector<PolyDriverDescriptor>*> (v))
 
 using namespace yarp::dev;
 
@@ -55,4 +52,9 @@ const PolyDriverList &PolyDriverList::operator=(const PolyDriverList &l)
 {
     *RES(descriptors)=*RES(l.descriptors);
     return *this;
+}
+
+void PolyDriverList::clear()
+{
+    RES(descriptors)->clear();
 }

@@ -1,19 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #ifndef LASER_FROM_DEPTH_H
@@ -41,7 +28,8 @@ typedef unsigned char byte;
 /**
  * @ingroup dev_impl_lidar
  *
- * \brief `laserFromDepth`: Documentation to be added
+ * \brief `laserFromDepth`: This devices connects to an RGBDSensor_nws_yarp to receive depth data.
+ * Data is then processed and exposed as a lidar device exposing a IRangefinder2D interface.
  */
 class LaserFromDepth : public PeriodicThread, public yarp::dev::Lidar2DDeviceBase, public DeviceDriver
 {
@@ -70,10 +58,10 @@ public:
 
 public:
     //IRangefinder2D interface
-    bool setDistanceRange    (double min, double max) override;
-    bool setScanLimits        (double min, double max) override;
-    bool setHorizontalResolution      (double step) override;
-    bool setScanRate         (double rate) override;
+    yarp::dev::ReturnValue setDistanceRange    (double min, double max) override;
+    yarp::dev::ReturnValue setScanLimits        (double min, double max) override;
+    yarp::dev::ReturnValue setHorizontalResolution      (double step) override;
+    yarp::dev::ReturnValue setScanRate         (double rate) override;
 
 public:
     //Lidar2DDeviceBase

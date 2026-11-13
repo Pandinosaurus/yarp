@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_EIGEN_EIGEN_H
@@ -14,8 +11,7 @@
 #include <yarp/sig/Matrix.h>
 #include <yarp/sig/Vector.h>
 
-namespace yarp {
-namespace eigen {
+namespace yarp::eigen {
 
 /**
  * Convert a yarp::sig::Vector to a Eigen::Map<Eigen::VectorXd> object
@@ -57,7 +53,6 @@ inline Eigen::Map<const Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic,Eigen
     return Eigen::Map<const Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic,Eigen::RowMajor> >(yarpMatrix.data(),yarpMatrix.rows(),yarpMatrix.cols());
 }
 
-} // namespace eigen
-} // namespace yarp
+} // namespace yarp::eigen
 
 #endif // YARP_EIGEN_EIGEN_H

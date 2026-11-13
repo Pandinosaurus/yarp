@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_OS_TERMINATOR_H
@@ -13,8 +10,7 @@
 
 #include <yarp/os/Thread.h>
 
-namespace yarp {
-namespace os {
+namespace yarp::os {
 
 /**
  * \file Terminator.h classes to handle graceful process termination.
@@ -26,9 +22,9 @@ namespace os {
  * a graceful quit procedure. The receiving process must
  * collaborate and take appropriate action after receiving the
  * message. The Terminator/Terminee class pair starts a tcp socket on the
- * server side listening for incoming connections and the magic word "quit"
+ * server side listening for incoming connections and the "quit" command
  * (all lowercase). The ip-port pair is registered with a symbolic name
- * on the Yarp name server and can be queried by the client to send the
+ * on the YARP name server and can be queried by the client to send the
  * termination message.
  */
 class YARP_os_API Terminator
@@ -91,7 +87,6 @@ public:
     void onStop() override;
 };
 
-} // namespace os
-} // namespace yarp
+} // namespace yarp::os
 
 #endif // YARP_OS_TERMINATOR_H

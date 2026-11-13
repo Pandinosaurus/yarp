@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <cstdlib>
@@ -12,7 +9,6 @@
 
 #include <sqlite3.h>
 
-#include <yarp/os/RosNameSpace.h>
 #include <yarp/serversql/impl/LogComponent.h>
 #include <yarp/serversql/impl/SubscriberOnSql.h>
 #include <yarp/serversql/impl/ParseName.h>
@@ -35,7 +31,6 @@
 
 using namespace yarp::os;
 using namespace yarp::serversql::impl;
-using namespace std;
 
 namespace {
 YARP_SERVERSQL_LOG_COMPONENT(SUBSCRIBERONSQL, "yarp.serversql.impl.SubscriberOnSql")
@@ -195,7 +190,9 @@ bool SubscriberOnSql::addSubscription(const std::string& src,
     }
     char *msg = nullptr;
     const char *zmode = mode.c_str();
-    if (mode == "") zmode = nullptr;
+    if (mode == "") {
+        zmode = nullptr;
+    }
     char *query = sqlite3_mprintf("INSERT INTO subscriptions (src,dest,srcFull,destFull,mode) VALUES(%Q,%Q,%Q,%Q,%Q)",
                                   psrc.getPortName().c_str(),
                                   pdest.getPortName().c_str(),
@@ -259,25 +256,6 @@ bool SubscriberOnSql::removeSubscription(const std::string& src,
 bool SubscriberOnSql::welcome(const std::string& port, int activity) {
     mutex.lock();
 
-    NameSpace *ns = getDelegate();
-    if (ns) {
-        NestedContact nc(port);
-        if (nc.getNestedName().size()>0) {
-            NameStore *store = getStore();
-            if (store != nullptr) {
-                Contact node = store->query(nc.getNodeName());
-                Contact me = store->query(port);
-                if (node.isValid() && me.isValid()) {
-                    if (activity>0) {
-                        ns->registerAdvanced(me,store);
-                    } else {
-                        ns->unregisterAdvanced(port,store);
-                    }
-                }
-            }
-        }
-    }
-
     char *msg = nullptr;
     char *query;
     if (activity>0) {
@@ -317,12 +295,6 @@ bool SubscriberOnSql::welcome(const std::string& port, int activity) {
 }
 
 bool SubscriberOnSql::hookup(const std::string& port) {
-    if (getDelegate()) {
-        NestedContact nc(port);
-        if (nc.getNestedName().size()>0) {
-            return false;
-        }
-    }
     mutex.lock();
     sqlite3_stmt *statement = nullptr;
     char *query = nullptr;
@@ -355,12 +327,6 @@ bool SubscriberOnSql::hookup(const std::string& port) {
 
 
 bool SubscriberOnSql::breakdown(const std::string& port) {
-    if (getDelegate()) {
-        NestedContact nc(port);
-        if (nc.getNestedName().size()>0) {
-            return false;
-        }
-    }
     mutex.lock();
     sqlite3_stmt *statement = nullptr;
     char *query = nullptr;
@@ -395,15 +361,6 @@ bool SubscriberOnSql::checkSubscription(const std::string& src,const std::string
                                         const std::string& srcFull,
                                         const std::string& destFull,
                                         const std::string& mode) {
-    if (getDelegate()) {
-        NestedContact nc(src);
-        if (nc.getNestedName().size()>0) {
-            NestedContact nc(dest);
-            if (nc.getNestedName().size()>0) {
-                return false;
-            }
-        }
-    }
     yCDebug(SUBSCRIBERONSQL,
             "+++ Checking %s %s / %s %s",
             src.c_str(),
@@ -448,15 +405,6 @@ bool SubscriberOnSql::breakSubscription(const std::string& dropper,
                                         const std::string& srcFull,
                                         const std::string& destFull,
                                         const std::string& mode) {
-    if (getDelegate()) {
-        NestedContact nc(src);
-        if (nc.getNestedName().size()>0) {
-            NestedContact nc(dest);
-            if (nc.getNestedName().size()>0) {
-                return false;
-            }
-        }
-    }
     yCDebug(SUBSCRIBERONSQL,
             "--- Checking %s %s / %s %s",
             src.c_str(),
@@ -573,8 +521,12 @@ bool SubscriberOnSql::setTopic(const std::string& port, const std::string& struc
         }
         sqlite3_free(query);
         mutex.unlock();
-        if (!ok) return false;
-        if (!active) return true;
+        if (!ok) {
+            return false;
+        }
+        if (!active) {
+            return true;
+        }
     }
 
     bool have_topic = false;
@@ -602,7 +554,9 @@ bool SubscriberOnSql::setTopic(const std::string& port, const std::string& struc
         mutex.lock();
         char *msg = nullptr;
         const char *pstructure = structure.c_str();
-        if (structure=="") pstructure = nullptr;
+        if (structure == "") {
+            pstructure = nullptr;
+        }
         char *query = sqlite3_mprintf("INSERT INTO topics (topic,structure) VALUES(%Q,%Q)",
                                       port.c_str(),pstructure);
         yCDebug(SUBSCRIBERONSQL, "Query: %s", query);
@@ -618,10 +572,12 @@ bool SubscriberOnSql::setTopic(const std::string& port, const std::string& struc
         }
         sqlite3_free(query);
         mutex.unlock();
-        if (!ok) return false;
+        if (!ok) {
+            return false;
+        }
     }
 
-    vector<vector<std::string> > subs;
+    std::vector<std::vector<std::string> > subs;
 
     // go ahead and connect anything needed
     mutex.lock();
@@ -643,7 +599,7 @@ bool SubscriberOnSql::setTopic(const std::string& port, const std::string& struc
         char *srcFull = (char *)sqlite3_column_text(statement,2);
         char *destFull = (char *)sqlite3_column_text(statement,3);
         char *mode = (char *)sqlite3_column_text(statement,4);
-        vector<std::string> sub;
+        std::vector<std::string> sub;
         sub.emplace_back(src);
         sub.emplace_back(dest);
         sub.emplace_back(srcFull);

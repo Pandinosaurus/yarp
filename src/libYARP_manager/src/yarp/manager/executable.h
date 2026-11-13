@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_MANAGER_Executable
@@ -23,8 +20,7 @@
 #include <yarp/manager/execstate.h>
 
 
-namespace yarp {
-namespace manager {
+namespace yarp::manager {
 
 
 #define DEF_PERIOD      0.1  //s
@@ -74,7 +70,7 @@ class ConcurentRateWrapper;
 class Executable : public BrokerEventSink
 {
 public:
-    Executable(Broker* _broker, MEvent* _event, Module* module, bool bWatchDog=true);
+    Executable(Broker* _broker, MEvent* _event, Module* themodule, bool bWatchDog=true);
     ~Executable() override;
 
     bool start();
@@ -109,7 +105,7 @@ public:
     const char* getWorkDir() { return strWorkdir.c_str(); }
     const char* getEnv() { return strEnv.c_str(); }
     int getID() { return theID; }
-    Module* getModule() { return module; }
+    Module* getModule() { return themodule; }
 
     void setPostExecWait(double t) { waitStart = t; }
     double getPostExecWait() { return waitStart; }
@@ -147,7 +143,7 @@ private:
     bool bWatchDog;
     Broker* broker;
     MEvent* event;
-    Module* module;
+    Module* themodule;
     CnnContainer connections;
     ResourceContainer resources;
 
@@ -219,8 +215,7 @@ private:
     Executable* executable;
 };
 
-} // namespace yarp
-} // namespace manager
+} // namespace yarp::manager
 
 
 #endif // __YARP_MANAGER_Executable__

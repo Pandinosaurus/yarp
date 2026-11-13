@@ -1,19 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 
@@ -24,8 +11,9 @@
 #include <yarp/os/Semaphore.h>
 
 #include <yarp/dev/DeviceDriver.h>
-#include <yarp/dev/FrameGrabberInterfaces.h>
-#include <yarp/dev/IVisualParams.h>
+#include <yarp/dev/IFrameGrabberImage.h>
+#include <yarp/dev/IFrameGrabberControls.h>
+#include <yarp/dev/IRgbVisualParams.h>
 #include <yarp/dev/IPreciselyTimed.h>
 
 #include <asm/types.h>
@@ -92,7 +80,7 @@ typedef struct
 
     double horizontalFov;
     double verticalFov;
-    yarp::os::Property intrinsic;
+    yarp::sig::IntrinsicParams intrinsic;
     bool dual;
 
     io_method io;
@@ -121,7 +109,7 @@ typedef struct
     // OpenCV object to perform the final rescaling of the image
     cv::Mat outMat; // OpenCV output
 
-    yarp::sig::VectorOf<yarp::dev::CameraConfig> configurations;
+    std::vector<yarp::dev::CameraConfig> configurations;
     bool flip;
 
     unsigned int n_buffers;
@@ -140,8 +128,8 @@ typedef struct
 
 class V4L_camera :
         public yarp::dev::DeviceDriver,
-        public yarp::dev::IFrameGrabberRgb,
-        public yarp::dev::IFrameGrabber,
+        public yarp::dev::IFrameGrabberImage,
+        public yarp::dev::IFrameGrabberImageRaw,
         public yarp::dev::IFrameGrabberControls,
         public yarp::dev::IPreciselyTimed,
         public yarp::os::PeriodicThread,
@@ -156,54 +144,42 @@ public:
 
     yarp::os::Stamp getLastInputStamp() override;
 
-    // IFrameGrabberRgb    Interface
-    bool getRgbBuffer(unsigned char* buffer) override;
-
-    // IFrameGrabber Interface
-    bool getRawBuffer(unsigned char* buffer) override;
-    int getRawBufferSize() override;
-
-    /**
-     * Return the height of each frame.
-     * @return image height
-     */
+    /*Implementation of IFrameGrabberImage and IFrameGrabberImageRaw interfaces*/
+    yarp::dev::ReturnValue getImage(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image) override;
+    yarp::dev::ReturnValue getImage(yarp::sig::ImageOf<yarp::sig::PixelMono>& image) override;
     int height() const override;
-
-    /**
-     * Return the width of each frame.
-     * @return image width
-     */
     int width() const override;
 
     /*Implementation of IRgbVisualParams interface*/
     int getRgbHeight() override;
     int getRgbWidth() override;
-    bool getRgbSupportedConfigurations(yarp::sig::VectorOf<yarp::dev::CameraConfig>& configurations) override;
-    bool getRgbResolution(int& width, int& height) override;
-    bool setRgbResolution(int width, int height) override;
-    bool getRgbFOV(double& horizontalFov, double& verticalFov) override;
-    bool setRgbFOV(double horizontalFov, double verticalFov) override;
-    bool getRgbIntrinsicParam(yarp::os::Property& intrinsic) override;
-    bool getRgbMirroring(bool& mirror) override;
-    bool setRgbMirroring(bool mirror) override;
+    yarp::dev::ReturnValue getRgbSupportedConfigurations(std::vector<yarp::dev::CameraConfig>& configurations) override;
+    yarp::dev::ReturnValue getRgbResolution(int& width, int& height) override;
+    yarp::dev::ReturnValue setRgbResolution(int width, int height) override;
+    yarp::dev::ReturnValue getRgbFOV(double& horizontalFov, double& verticalFov) override;
+    yarp::dev::ReturnValue setRgbFOV(double horizontalFov, double verticalFov) override;
+    yarp::dev::ReturnValue getRgbIntrinsicParam(yarp::sig::IntrinsicParams& intrinsic) override;
+    yarp::dev::ReturnValue getRgbMirroring(bool& mirror) override;
+    yarp::dev::ReturnValue setRgbMirroring(bool mirror) override;
 
 
     /* Implementation of IFrameGrabberControls interface */
-    bool getCameraDescription(CameraDescriptor* camera) override;
-    bool hasFeature(int feature, bool* hasFeature) override;
-    bool setFeature(int feature, double value) override;
-    bool getFeature(int feature, double* value) override;
-    bool setFeature(int feature, double value1, double value2) override;
-    bool getFeature(int feature, double* value1, double* value2) override;
-    bool hasOnOff(int feature, bool* _hasOnOff) override;
-    bool setActive(int feature, bool onoff) override;
-    bool getActive(int feature, bool* _isActive) override;
-    bool hasAuto(int feature, bool* _hasAuto) override;
-    bool hasManual(int feature, bool* _hasManual) override;
-    bool hasOnePush(int feature, bool* _hasOnePush) override;
-    bool setMode(int feature, FeatureMode mode) override;
-    bool getMode(int feature, FeatureMode* mode) override;
-    bool setOnePush(int feature) override;
+    yarp::dev::ReturnValue getCameraDescription(yarp::dev::CameraDescriptor& camera) override;
+    yarp::dev::ReturnValue hasFeature(yarp::dev::cameraFeature_id_t feature, bool& hasFeature) override;
+    yarp::dev::ReturnValue setFeature(yarp::dev::cameraFeature_id_t feature, double value) override;
+    yarp::dev::ReturnValue getFeature(yarp::dev::cameraFeature_id_t feature, double&value) override;
+    yarp::dev::ReturnValue setFeature(yarp::dev::cameraFeature_id_t feature, double  value1, double  value2) override;
+    yarp::dev::ReturnValue getFeature(yarp::dev::cameraFeature_id_t feature, double& value1, double& value2) override;
+    yarp::dev::ReturnValue setActive(yarp::dev::cameraFeature_id_t feature, bool onoff) override;
+    yarp::dev::ReturnValue getActive(yarp::dev::cameraFeature_id_t feature, bool& isActive) override;
+    yarp::dev::ReturnValue hasOnOff(yarp::dev::cameraFeature_id_t feature, bool& HasOnOff) override;
+    yarp::dev::ReturnValue hasAuto(yarp::dev::cameraFeature_id_t feature, bool& hasAuto) override;
+    yarp::dev::ReturnValue hasManual(yarp::dev::cameraFeature_id_t feature, bool& hasManual) override;
+    yarp::dev::ReturnValue setMode(yarp::dev::cameraFeature_id_t feature, yarp::dev::FeatureMode mode) override;
+    yarp::dev::ReturnValue getMode(yarp::dev::cameraFeature_id_t feature, yarp::dev::FeatureMode& mode) override;
+    yarp::dev::ReturnValue hasOnePush(yarp::dev::cameraFeature_id_t feature, bool& hasOnePush) override;
+    yarp::dev::ReturnValue setOnePush(yarp::dev::cameraFeature_id_t feature) override;
+
 
 private:
     bool verbose;
@@ -219,7 +195,7 @@ private:
     bool configIntrins;
     bool configured;
     bool doCropping;
-    bool isActive_vector[YARP_FEATURE_NUMBER_OF];
+    bool isActive_vector[(int)yarp::dev::cameraFeature_id_t::YARP_FEATURE_NUMBER_OF];
     double timeStart, timeTot, timeNow, timeElapsed;
     int myCounter;
     int frameCounter;
@@ -298,7 +274,7 @@ private:
      */
     int xioctl(int fd, int request, void* argp);
 
-    int convertYARP_to_V4L(int feature);
+    int convertYARP_to_V4L(yarp::dev::cameraFeature_id_t feature);
     void enumerate_menu();
     bool enumerate_controls();
     bool check_V4L2_control(uint32_t id);

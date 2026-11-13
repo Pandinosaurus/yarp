@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include "YarpPluginFixture.h"
@@ -18,7 +15,6 @@
 #include <yarp/os/Carriers.h>
 #include <yarp/dev/Drivers.h>
 
-using namespace std;
 using namespace robottestingframework;
 using namespace yarp::os;
 using namespace yarp::dev;
@@ -36,13 +32,15 @@ bool YarpPluginFixture::scanPlugins(std::string name, std::string type)
         Value& options = lst.get(i);
         if(!type.empty())
         {
-            if(name == options.check("name",Value("untitled")).asString() && type== options.check("type",Value("untitled")).asString())
-                res=true;
+            if (name == options.check("name", Value("untitled")).asString() && type == options.check("type", Value("untitled")).asString()) {
+                res = true;
+            }
         }
         else
         {
-            if(name == options.check("name",Value("untitled")).asString())
-                    res=true;
+            if (name == options.check("name", Value("untitled")).asString()) {
+                res = true;
+            }
         }
     }
     return res;

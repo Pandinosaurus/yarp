@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 /**
@@ -20,8 +17,9 @@
 
 #include <yarp/dev/api.h>
 
-namespace yarp {
-namespace dev {
+#include <yarp/dev/ReturnValue.h>
+
+namespace yarp::dev {
 
 class YARP_dev_API IAudioVisualStream
 {
@@ -31,16 +29,13 @@ public:
      */
     virtual ~IAudioVisualStream();
 
-    virtual bool hasAudio() = 0;
+    virtual yarp::dev::ReturnValue hasAudio(bool& has) = 0;
 
-    virtual bool hasVideo() = 0;
+    virtual yarp::dev::ReturnValue hasVideo(bool& has) = 0;
 
-    virtual bool hasRawVideo() {
-        return hasVideo();
-    }
+    virtual yarp::dev::ReturnValue hasRawVideo(bool& has) = 0;
 };
 
-} // namespace dev
-} // namespace yarp
+} // namespace yarp::dev
 
 #endif // YARP_DEV_IAUDIOVISUALSTREAM_H

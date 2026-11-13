@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_CV_CV_H
@@ -13,11 +10,18 @@
 
 #include <type_traits>
 #include <opencv2/core/core.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/imgproc/types_c.h>
+#include <opencv2/imgproc.hpp>
 
-namespace yarp {
-namespace cv {
+namespace yarp::cv {
+
+/**
+ * Convert a yarp::sig::FlexImage to a cv::Mat object
+ * @param[in] yarpImage yarp::sig::FlexImage input.
+ * Only VOCAB_PIXEL_RGB_INT, VOCAB_PIXEL_RGB, VOCAB_PIXEL_MONO_FLOAT
+ * are currently supported.
+ * @return the resulting cv::Mat.
+ */
+::cv::Mat toCvMat(const yarp::sig::Image& yarpImage);
 
 /**
  * Convert a yarp::sig::ImageOf to a cv::Mat object
@@ -33,7 +37,7 @@ namespace cv {
  * @return the resulting cv::Mat.
  */
 template<typename T>
-::cv::Mat toCvMat(yarp::sig::ImageOf<T>& yarpImage);
+::cv::Mat toCvMat(const yarp::sig::ImageOf<T>& yarpImage);
 
 /**
  * Convert a cv::Mat to a yarp::sig::ImageOf object.
@@ -53,10 +57,9 @@ template<typename T>
  * @return the resulting yarp::sig::ImageOf.
  */
 template<typename T>
-yarp::sig::ImageOf<T> fromCvMat(::cv::Mat& cvImage);
+yarp::sig::ImageOf<T> fromCvMat(const ::cv::Mat& cvImage);
 
-} // namespace cv
-} // namespace yarp
+} // namespace yarp::cv
 
 #include "Cv-inl.h"
 

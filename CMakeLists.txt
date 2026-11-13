@@ -1,11 +1,10 @@
-# Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
-# Copyright (C) 2006-2010 RobotCub Consortium
-# All rights reserved.
-#
-# This software may be modified and distributed under the terms of the
-# BSD-3-Clause license. See the accompanying LICENSE file for details.
+# SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+# SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+# SPDX-License-Identifier: BSD-3-Clause
 
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.19)
+
+cmake_policy(SET CMP0127 NEW)
 
 # UseSWIG generates now standard target names.
 if(${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.13)
@@ -18,9 +17,11 @@ if(${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.14)
 endif()
 
 # Main project
-project(YARP
-        VERSION 3.4.101
-        LANGUAGES C CXX)
+project(
+  YARP
+  VERSION 4.0.2
+  LANGUAGES C CXX
+)
 set(PROJECT_DESCRIPTION "YARP: A thin middleware for humanoid robots and more")
 
 
@@ -30,7 +31,7 @@ list(APPEND CMAKE_MODULE_PATH ${YARP_MODULE_DIR})
 
 # Find YCM
 # This is required here, because YarpVersion uses GitInfo from YCM
-set(YCM_REQUIRED_VERSION 0.11.0) # Used also by YarpFindDependencies
+set(YCM_REQUIRED_VERSION 0.18.0) # Used also by YarpFindDependencies
 find_package(YCM ${YCM_REQUIRED_VERSION} REQUIRED)
 
 # Get the current YARP version.
@@ -40,6 +41,9 @@ include(YarpVersion)
 set_property(GLOBAL PROPERTY USE_FOLDERS 1)
 set_property(GLOBAL PROPERTY AUTOGEN_TARGETS_FOLDER "Autogen Targets")
 set_property(GLOBAL PROPERTY AUTOGEN_SOURCE_GROUP "Generated Files")
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.30)
+  set_property(GLOBAL PROPERTY INSTALL_PARALLEL ON)
+endif()
 
 # Check system configuration.
 # See cmake/YarpSystemCheck.cmake.

@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 
@@ -12,12 +9,11 @@
 
 #include <yarp/os/Vocab.h>
 #include <yarp/dev/api.h>
+#include <yarp/dev/ReturnValue.h>
 
-namespace yarp {
-    namespace dev {
-        class IPositionDirect;
-        class IPositionDirectRaw;
-    }
+namespace yarp::dev {
+class IPositionDirect;
+class IPositionDirectRaw;
 }
 
 /**
@@ -25,7 +21,7 @@ namespace yarp {
  *
  * Interface for a generic control board device implementing position control.
  * This interface is used to send high frequency streaming commands to the boards, the aim
- * is to reach low level control in firmware bypassing the trajetory generator.
+ * is to reach low level control in firmware bypassing the trajectory generator.
  */
 
 class YARP_dev_API yarp::dev::IPositionDirect
@@ -42,14 +38,14 @@ public:
      * axes for the current physical interface.
      * @return the number of controlled axes.
      */
-    virtual bool getAxes(int *ax)=0;
+    virtual yarp::dev::ReturnValue getAxes(size_t& ax)=0;
 
     /** Set new position for a single axis.
      * @param j joint number
      * @param ref specifies the new ref point
      * @return true/false on success/failure
      */
-    virtual bool setPosition(int j, double ref)=0;
+    virtual yarp::dev::ReturnValue setPosition(int j, double ref)=0;
 
     /** Set new reference point for all axes.
      * @param n_joint how many joints this command is referring to
@@ -62,13 +58,13 @@ public:
      *          refs    10 30 40
      * @return true/false on success/failure
      */
-    virtual bool setPositions(const int n_joint, const int *joints, const double *refs)=0;
+    virtual yarp::dev::ReturnValue setPositions(const int n_joint, const int *joints, const double *refs)=0;
 
     /** Set new position for a set of axis.
      * @param refs specifies the new reference points
      * @return true/false on success/failure
      */
-    virtual bool setPositions(const double *refs)=0;
+    virtual yarp::dev::ReturnValue setPositions(const double *refs)=0;
 
     /** Get the last position reference for the specified axis.
      *  This is the dual of setPositionsRaw and shall return only values sent using
@@ -79,7 +75,7 @@ public:
      * @param ref last reference sent using setPosition(s) functions
      * @return true/false on success/failure
      */
-    virtual bool getRefPosition(const int joint, double *ref) {return false;}
+    virtual yarp::dev::ReturnValue getRefPosition(const int joint, double *ref) =0;
 
     /** Get the last position reference for all axes.
      *  This is the dual of setPositionsRaw and shall return only values sent using
@@ -90,7 +86,7 @@ public:
      * @param ref array containing last reference sent using setPosition(s) functions
      * @return true/false on success/failure
      */
-    virtual bool getRefPositions(double *refs) {return false;}
+    virtual yarp::dev::ReturnValue getRefPositions(double *refs)=0;
 
     /** Get the last position reference for the specified group of axes.
      *  This is the dual of setPositionsRaw and shall return only values sent using
@@ -101,18 +97,18 @@ public:
      * @param ref array containing last reference sent using setPosition(s) functions
      * @return true/false on success/failure
      */
-    virtual bool getRefPositions(const int n_joint, const int *joints, double *refs) {return false;}
+    virtual yarp::dev::ReturnValue getRefPositions(const int n_joint, const int *joints, double *refs) =0;
 };
 
 
 
 /**
- * @ingroup dev_iface_motor
+ * @ingroup dev_iface_motor_raw
  *
  * Interface for a generic control board device implementing position control in encoder
  * coordinates.
  * This interface is used to send high frequency streaming commands to the boards, the aim
- * is to reach low level control in firmware bypassing the trajetory generator, raw functions.
+ * is to reach low level control in firmware bypassing the trajectory generator, raw functions.
  */
 class YARP_dev_API yarp::dev::IPositionDirectRaw
 {
@@ -127,14 +123,14 @@ public:
      * axes for the current physical interface.
      * @return the number of controlled axes.
      */
-    virtual bool getAxes(int *axes) = 0;
+    virtual yarp::dev::ReturnValue getAxes(size_t& axes) = 0;
 
     /** Set new position for a single axis.
      * @param j joint number
      * @param ref specifies the new ref point
      * @return true/false on success/failure
      */
-    virtual bool setPositionRaw(int j, double ref)=0;
+    virtual yarp::dev::ReturnValue setPositionRaw(int j, double ref)=0;
 
     /** Set new reference point for all axes.
      * @param n_joint how many joints this command is referring to
@@ -146,14 +142,14 @@ public:
      *          refs    10 30 40
      * @return true/false on success/failure
      */
-    virtual bool setPositionsRaw(const int n_joint, const int *joints, const double *refs)=0;
+    virtual yarp::dev::ReturnValue setPositionsRaw(const int n_joint, const int *joints, const double *refs)=0;
 
 
     /** Set new position for a set of axes.
      * @param refs specifies the new reference points
      * @return true/false on success/failure
      */
-    virtual bool setPositionsRaw(const double *refs)=0;
+    virtual yarp::dev::ReturnValue setPositionsRaw(const double *refs)=0;
 
     /** Get the last position reference for the specified axis.
      *  This is the dual of setPositionsRaw and shall return only values sent using
@@ -164,7 +160,7 @@ public:
      * @param ref last reference sent using setPosition(s) functions
      * @return true/false on success/failure
      */
-    virtual bool getRefPositionRaw(const int joint, double *ref) {return false;}
+    virtual yarp::dev::ReturnValue getRefPositionRaw(const int joint, double *ref)=0;
 
     /** Get the last position reference for all axes.
      *  This is the dual of setPositionsRaw and shall return only values sent using
@@ -175,7 +171,7 @@ public:
      * @param ref array containing last reference sent using setPosition(s) functions
      * @return true/false on success/failure
      */
-    virtual bool getRefPositionsRaw(double *refs) {return false;};
+    virtual yarp::dev::ReturnValue getRefPositionsRaw(double *refs)=0;
 
 
     /** Get the last position reference for the specified group of axes.
@@ -187,11 +183,14 @@ public:
      * @param ref array containing last reference sent using setPosition(s) functions
      * @return true/false on success/failure
      */
-    virtual bool getRefPositionsRaw(const int n_joint, const int *joints, double *refs) {return false;}
+    virtual yarp::dev::ReturnValue getRefPositionsRaw(const int n_joint, const int *joints, double *refs)=0;
 };
 
-constexpr yarp::conf::vocab32_t VOCAB_POSITION_DIRECT           = yarp::os::createVocab('d','p','o');
-constexpr yarp::conf::vocab32_t VOCAB_POSITION_DIRECTS          = yarp::os::createVocab('d','p','o','s');
-constexpr yarp::conf::vocab32_t VOCAB_POSITION_DIRECT_GROUP     = yarp::os::createVocab('d','p','o','g');
+// Interface name
+constexpr yarp::conf::vocab32_t VOCAB_POSITIONDIRECTCONTROL_INTERFACE   = yarp::os::createVocab32('i','p','o','d');
+
+constexpr yarp::conf::vocab32_t VOCAB_POSITION_DIRECT           = yarp::os::createVocab32('d','p','o');
+constexpr yarp::conf::vocab32_t VOCAB_POSITION_DIRECTS          = yarp::os::createVocab32('d','p','o','s');
+constexpr yarp::conf::vocab32_t VOCAB_POSITION_DIRECT_GROUP     = yarp::os::createVocab32('d','p','o','g');
 
 #endif // YARP_IPOSITIONDIRECT_H

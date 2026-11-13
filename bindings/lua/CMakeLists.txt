@@ -1,9 +1,6 @@
-# Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
-# Copyright (C) 2006-2010 RobotCub Consortium
-# All rights reserved.
-#
-# This software may be modified and distributed under the terms of the
-# BSD-3-Clause license. See the accompanying LICENSE file for details.
+# SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+# SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+# SPDX-License-Identifier: BSD-3-Clause
 
 # this is set in the parent directory, but for some reason it does not get inherited
 set_source_files_properties(${SWIG_BINDINGS_SOURCE_FILE} PROPERTIES CPLUSPLUS ON)
@@ -14,8 +11,9 @@ find_package(Lua REQUIRED)
 
 include_directories(SYSTEM ${LUA_INCLUDE_DIR})
 swig_add_library(yarp_lua
-                 LANGUAGE lua
-                 SOURCES ${SWIG_BINDINGS_SOURCE_FILE})
+  LANGUAGE lua
+  SOURCES ${SWIG_BINDINGS_SOURCE_FILE}
+)
 swig_link_libraries(yarp_lua ${LUA_LIBRARY} ${SWIG_YARP_LIBRARIES})
 
 set(_CMAKE_INSTALL_LUADIR "${CMAKE_INSTALL_LIBDIR}/lua/${LUA_VERSION_MAJOR}.${LUA_VERSION_MINOR}")
@@ -27,9 +25,12 @@ else()
   set(CMAKE_INSTALL_FULL_LUADIR "${CMAKE_INSTALL_LUADIR}")
 endif()
 
-set_target_properties(${SWIG_MODULE_yarp_lua_REAL_NAME} PROPERTIES PREFIX ""
-                                                                   OUTPUT_NAME "yarp"
-                                                                   LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LUADIR})
+set_target_properties(${SWIG_MODULE_yarp_lua_REAL_NAME}
+  PROPERTIES
+    PREFIX ""
+    OUTPUT_NAME "yarp"
+    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LUADIR}
+)
 
 # Update RPATH
 if(NOT CMAKE_SKIP_RPATH AND NOT CMAKE_SKIP_INSTALL_RPATH)
@@ -43,8 +44,10 @@ if(NOT CMAKE_SKIP_RPATH AND NOT CMAKE_SKIP_INSTALL_RPATH)
   set_target_properties(${SWIG_MODULE_yarp_lua_REAL_NAME} PROPERTIES INSTALL_RPATH "${_current_rpath}")
 endif()
 
-install(TARGETS ${SWIG_MODULE_yarp_lua_REAL_NAME}
-        DESTINATION ${CMAKE_INSTALL_LUADIR})
+install(
+  TARGETS ${SWIG_MODULE_yarp_lua_REAL_NAME}
+  DESTINATION ${CMAKE_INSTALL_LUADIR}
+)
 
 if(YARP_COMPILE_TESTS)
   add_subdirectory(tests)

@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/Network.h>
@@ -14,7 +11,6 @@
 #include "MonitorLogComponent.h"
 
 using namespace yarp::os;
-using namespace std;
 
 
 /**
@@ -51,8 +47,9 @@ MonitorLua::~MonitorLua()
         //  call PortMonitor.destroy if exists
         if(getLocalFunction("destroy"))
         {
-            if(lua_pcall(L, 0, 0, 0) != 0)
+            if (lua_pcall(L, 0, 0, 0) != 0) {
                 yCError(PORTMONITORCARRIER, "%s", lua_tostring(L, -1));
+            }
         }
         // closing lua state handler
         lua_close(L);
@@ -122,9 +119,9 @@ bool MonitorLua::load(const Property &options)
             L = nullptr;
             luaMutex.unlock();
             return false;
-        }
-        else
+        } else {
             result = lua_toboolean(L, -1);
+        }
     }
     lua_pop(L,1);
 
@@ -403,8 +400,9 @@ bool MonitorLua::registerExtraFunctions()
 
 bool MonitorLua::canAccept()
 {
-    if(constraint == "")
+    if (constraint == "") {
         return true;
+    }
 
     MonitorEventRecord& record = MonitorEventRecord::getInstance();
 
@@ -412,22 +410,22 @@ bool MonitorLua::canAccept()
      * following piece of code replaces each event symbolic name
      * with a boolean value based on their existence in MonitorEventRecord
      */
-    string strConstraint = constraint;
-    string strDummy = strConstraint;
+    std::string strConstraint = constraint;
+    std::string strDummy = strConstraint;
     searchReplace(strDummy, "(", " ");
     searchReplace(strDummy, ")", " ");
     // wrap it with some  guard space
     strDummy = " " + strDummy + " ";
-    string delimiter = " ";
+    std::string delimiter = " ";
     size_t pos = 0;
-    string token;
-    while ((pos = strDummy.find(delimiter)) != string::npos)
+    std::string token;
+    while ((pos = strDummy.find(delimiter)) != std::string::npos)
     {
         token = strDummy.substr(0, pos);
         if(token.size() && !isKeyword(token.c_str()))
         {
             record.lock();
-            string value = (record.hasEvent(token.c_str())) ? "true" : "false";
+            std::string value = (record.hasEvent(token.c_str())) ? "true" : "false";
             record.unlock();
             searchReplace(strConstraint, token, value);
         }
@@ -460,36 +458,40 @@ bool MonitorLua::canAccept()
 }
 
 
-inline void MonitorLua::searchReplace(string& str, const string& oldStr, const string& newStr)
+inline void MonitorLua::searchReplace(std::string& str, const std::string& oldStr, const std::string& newStr)
 {
   size_t pos = 0;
-  while((pos = str.find(oldStr, pos)) != string::npos)
+  while((pos = str.find(oldStr, pos)) != std::string::npos)
   {
      str.replace(pos, oldStr.length(), newStr);
      pos += newStr.length();
   }
 }
 
-inline void MonitorLua::trimString(string& str)
+inline void MonitorLua::trimString(std::string& str)
 {
-  string::size_type pos = str.find_last_not_of(' ');
-  if(pos != string::npos) {
+  std::string::size_type pos = str.find_last_not_of(' ');
+  if(pos != std::string::npos) {
     str.erase(pos + 1);
     pos = str.find_first_not_of(' ');
-    if(pos != string::npos) str.erase(0, pos);
+    if (pos != std::string::npos) {
+        str.erase(0, pos);
+    }
+  } else {
+      str.erase(str.begin(), str.end());
   }
-  else str.erase(str.begin(), str.end());
 }
 
 inline bool MonitorLua::isKeyword(const char* str)
 {
-    if(!str)
+    if (!str) {
         return false;
+    }
 
-    string token = str;
-    if((token == "true") || (token == "false") ||
-       (token == "and") || (token == "or") || (token == "not") )
-       return true;
+    std::string token = str;
+    if ((token == "true") || (token == "false") || (token == "and") || (token == "or") || (token == "not")) {
+        return true;
+    }
     return false;
 }
 
@@ -543,10 +545,9 @@ int MonitorLua::setEvent(lua_State* L)
         // check if the event's lifetime is given as argument
         if(n_args > 1)
         {
-            if(lua_isnumber(L,2))
+            if (lua_isnumber(L, 2)) {
                 lifetime = (double) luaL_checknumber(L,2);
-            else
-            {
+            } else {
                 yCError(PORTMONITORCARRIER, "The second arguemnt of setEvent() must be number");
                 return 0;
             }
@@ -560,8 +561,9 @@ int MonitorLua::setEvent(lua_State* L)
         }
         auto* owner = static_cast<MonitorLua*>(lua_touserdata(L, -1));
         yCAssert(PORTMONITORCARRIER, owner);
-        if(owner->isKeyword(event_name))
+        if (owner->isKeyword(event_name)) {
             return 0;
+        }
         MonitorEventRecord& record = MonitorEventRecord::getInstance();
         record.lock();
         record.setEvent(event_name, owner, lifetime);
@@ -583,8 +585,9 @@ int MonitorLua::unsetEvent(lua_State* L)
         }
         auto* owner = static_cast<MonitorLua*>(lua_touserdata(L, -1));
         yCAssert(PORTMONITORCARRIER, owner);
-        if(owner->isKeyword(event_name))
+        if (owner->isKeyword(event_name)) {
             return 0;
+        }
         MonitorEventRecord& record = MonitorEventRecord::getInstance();
         record.lock();
         record.unsetEvent(event_name, owner);
@@ -598,9 +601,9 @@ int MonitorLua::setTrigInterval(lua_State* L)
     double period = 0.0;
     int n_args =  lua_gettop(L);
     if(n_args > 0) {
-        if(lua_isnumber(L, 1))
+        if (lua_isnumber(L, 1)) {
             period = (double) luaL_checknumber(L,1);
-        else {
+        } else {
             yCError(PORTMONITORCARRIER, "The arguemnt of setTrigInterval() must be number");
             return 0;
         }

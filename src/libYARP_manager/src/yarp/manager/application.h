@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_MANAGER_APPLICATION
@@ -20,8 +17,7 @@
 #include <yarp/manager/arbitrator.h>
 
 
-namespace yarp {
-namespace manager {
+namespace yarp::manager {
 
 
 /**
@@ -170,7 +166,7 @@ public:
         waitStart = waitStop = 0.0;
     }
 
-    ModuleInterface(Module* module);
+    ModuleInterface(Module* themodule);
 
     virtual ~ModuleInterface() = default;
 
@@ -214,9 +210,6 @@ public:
     Portmap& getPortmapAt(int index){ return portmaps[index]; }
     bool addPortmap(Portmap &portmap);
     bool removePortmap(Portmap& portmap);
-
-    //void setModule(Module* mod) { module = mod; }
-    //Module* getModule() { return module;}
 
     GraphicModel& getModelBase() { return modelBase;}
     void setModelBase(GraphicModel& mdl) { modelBase = mdl; };
@@ -409,8 +402,7 @@ private:
 typedef std::vector<Application*> ApplicaitonPContainer;
 typedef std::vector<Application*>::iterator ApplicationPIterator;
 
-} // namespace yarp
-} // namespace manager
+} // namespace yarp::manager
 
 
 #endif // __YARP_MANAGER_APPLICATION__

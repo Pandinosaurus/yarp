@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/manager/yarpbroker.h>
@@ -37,7 +34,6 @@ const char* yarprun_err_msg[] = { " (Ok) ",
 
 using namespace yarp::os;
 using namespace yarp::os::impl;
-using namespace std;
 using namespace yarp::manager;
 
 
@@ -56,8 +52,9 @@ YarpBroker::~YarpBroker()
 
 void YarpBroker::fini()
 {
-    if(PeriodicThread::isRunning())
+    if (PeriodicThread::isRunning()) {
         PeriodicThread::stop();
+    }
     //port.close();
 }
 
@@ -68,7 +65,7 @@ bool YarpBroker::init()
 
     if(!NetworkBase::checkNetwork(CONNECTION_TIMEOUT))
     {
-        strError = "Yarp network server is not up.";
+        strError = "YARP network server is not up.";
         return false;
     }
     bInitialized = true;
@@ -116,45 +113,52 @@ bool YarpBroker::init(const char* szcmd, const char* szparam,
         return false;
     }
 
-    if(szhost[0] != '/')
-        strHost = string("/") + string(szhost);
-    else
+    if (szhost[0] != '/') {
+        strHost = std::string("/") + std::string(szhost);
+    } else {
         strHost = szhost;
+    }
 
     strCmd = szcmd;
-    if(strlen(szparam))
+    if (strlen(szparam)) {
         strParam = szparam;
-    if(strlen(szworkdir))
+    }
+    if (strlen(szworkdir)) {
         strWorkdir = szworkdir;
+    }
 
     if(strlen(szstdio))
     {
-        if(szstdio[0] != '/')
-            strStdio = string("/") + string(szstdio);
-        else
+        if (szstdio[0] != '/') {
+            strStdio = std::string("/") + std::string(szstdio);
+        } else {
             strStdio = szstdio;
+        }
     }
 
-    if(strlen(szenv))
+    if (strlen(szenv)) {
         strEnv = szenv;
+    }
 
     OSTRINGSTREAM sstrID;
     sstrID<<(int)ID;
     strTag = strHost + strCmd + strParam + strEnv + sstrID.str();
-    string::iterator itr;
-    for(itr=strTag.begin(); itr!=strTag.end(); itr++)
-        if(((*itr) == ' ') || ((*itr) == '/') )
+    std::string::iterator itr;
+    for (itr = strTag.begin(); itr != strTag.end(); itr++) {
+        if (((*itr) == ' ') || ((*itr) == '/')) {
             (*itr) = ':';
+        }
+    }
 
    __trace_message = "(init) checking yarp network";
     if(!NetworkBase::checkNetwork(5.0))
     {
-        strError = "Yarp network server is not up.";
+        strError = "YARP network server is not up.";
         __trace_message.clear();
         semParam.post();
         return false;
     }
-    __trace_message = string("(init) checking existence of ") + strHost;
+    __trace_message = std::string("(init) checking existence of ") + strHost;
     if(!exists(strHost.c_str()))
     {
         strError = szhost;
@@ -180,8 +184,12 @@ bool YarpBroker::init(const char* szcmd, const char* szparam,
 
 bool YarpBroker::start()
 {
-    if(!bInitialized) return false;
-    if(bOnlyConnector) return false;
+    if (!bInitialized) {
+        return false;
+    }
+    if (bOnlyConnector) {
+        return false;
+    }
 
     strError.clear();
     int ret = requestServer(runProperty());
@@ -192,8 +200,9 @@ bool YarpBroker::start()
         strError += " to run ";
         strError += strCmd;
         strError += yarprun_err_msg[ret];
-        if(ret == YARPRUN_SEMAPHORE_PARAM)
-            strError += string(" due to " + __trace_message);
+        if (ret == YARPRUN_SEMAPHORE_PARAM) {
+            strError += std::string(" due to " + __trace_message);
+        }
         return false;
     }
 
@@ -204,8 +213,9 @@ bool YarpBroker::start()
         {
             if(strStdioUUID.size())
             {
-                if(PeriodicThread::isRunning())
+                if (PeriodicThread::isRunning()) {
                     PeriodicThread::stop();
+                }
                 PeriodicThread::start();
             }
             return true;
@@ -221,8 +231,12 @@ bool YarpBroker::start()
 
 bool YarpBroker::stop()
 {
-    if(!bInitialized) return true;
-    if(bOnlyConnector) return false;
+    if (!bInitialized) {
+        return true;
+    }
+    if (bOnlyConnector) {
+        return false;
+    }
 
     strError.clear();
     yarp::os::Bottle msg,grp,response;
@@ -243,8 +257,9 @@ bool YarpBroker::stop()
         strError += " to stop ";
         strError += strCmd;
         strError += yarprun_err_msg[ret];
-        if(ret == YARPRUN_SEMAPHORE_PARAM)
-            strError += string(" due to " + __trace_message);
+        if (ret == YARPRUN_SEMAPHORE_PARAM) {
+            strError += std::string(" due to " + __trace_message);
+        }
         return false;
     }
 
@@ -268,8 +283,12 @@ bool YarpBroker::stop()
 
 bool YarpBroker::kill()
 {
-    if(!bInitialized) return true;
-    if(bOnlyConnector) return false;
+    if (!bInitialized) {
+        return true;
+    }
+    if (bOnlyConnector) {
+        return false;
+    }
 
     strError.clear();
 
@@ -291,8 +310,9 @@ bool YarpBroker::kill()
         strError += " to kill ";
         strError += strCmd;
         strError += yarprun_err_msg[ret];
-        if(ret == YARPRUN_SEMAPHORE_PARAM)
-            strError += string(" due to " + __trace_message);
+        if (ret == YARPRUN_SEMAPHORE_PARAM) {
+            strError += std::string(" due to " + __trace_message);
+        }
         return false;
     }
 
@@ -317,8 +337,12 @@ bool YarpBroker::kill()
 
 int YarpBroker::running()
 {
-    if(!bInitialized) return -1;
-    if(bOnlyConnector) return -1;
+    if (!bInitialized) {
+        return -1;
+    }
+    if (bOnlyConnector) {
+        return -1;
+    }
 
     strError.clear();
     yarp::os::Bottle msg,grp,response;
@@ -341,8 +365,9 @@ int YarpBroker::running()
         strError += " to check for status of ";
         strError += strCmd;
         strError += yarprun_err_msg[ret];
-        if(ret == YARPRUN_SEMAPHORE_PARAM)
-            strError += string(" due to " + __trace_message);
+        if (ret == YARPRUN_SEMAPHORE_PARAM) {
+            strError += std::string(" due to " + __trace_message);
+        }
         return -1;
     }
     return ((response.get(0).asString() == "running")?1:0);
@@ -362,16 +387,19 @@ void YarpBroker::detachStdout()
 Property& YarpBroker::runProperty()
 {
     command.clear();
-    string cmd = strCmd + string(" ") + strParam;
+    std::string cmd = strCmd + std::string(" ") + strParam;
     command.put("cmd", cmd);
     command.put("on", strHost);
     command.put("as", strTag);
-    if(!strWorkdir.empty())
+    if (!strWorkdir.empty()) {
         command.put("workdir", strWorkdir);
-    if(!strStdio.empty())
+    }
+    if (!strStdio.empty()) {
         command.put("stdio", strStdio);
-    if(!strEnv.empty())
+    }
+    if (!strEnv.empty()) {
         command.put("env", strEnv);
+    }
     //command.put("hold", "hold");
     return command;
 }
@@ -380,16 +408,15 @@ Property& YarpBroker::runProperty()
 /**
  *  connection broker
  */
-bool YarpBroker::connect(const char* from, const char* to,
-            const char* carrier, bool persist)
+bool YarpBroker::connect(const std::string& from, const std::string& to, const std::string& carrier, bool persist)
 {
-    if(!from)
+    if(from.empty())
     {
         strError = "no source port is introduced.";
         return false;
     }
 
-    if(!to)
+    if(to.empty())
     {
         strError = "no destination port is introduced.";
         return false;
@@ -406,12 +433,13 @@ bool YarpBroker::connect(const char* from, const char* to,
          * TODO: this check should be removed and
          *       the necessary modification should be done inside NetworkBase::isConnected!!!
          */
-        string strCarrier = carrier;
+        std::string strCarrier = carrier;
         bool needDisconnect = strCarrier.find("udp") == (size_t)0;
         needDisconnect |= strCarrier.find("mcast") == (size_t)0;
         if(needDisconnect == false) {
-            if(NetworkBase::isConnected(from, to, style))
+            if (NetworkBase::isConnected(from, to, style)) {
                 return true;
+            }
         }
 
         NetworkBase::connect(from, to, style);
@@ -419,20 +447,20 @@ bool YarpBroker::connect(const char* from, const char* to,
         {
             strError = "cannot connect ";
             strError +=from;
-            strError += " to " + string(to);
+            strError += " to " + std::string(to);
             return false;
         }
     }
     else
     {
-        string topic = string("topic:/") + string(from) + string(to);
+        std::string topic = std::string("topic:/") + std::string(from) + std::string(to);
         NetworkBase::connect(from, topic, style);
         NetworkBase::connect(topic, to, style);
         if(!connected(from, to, carrier))
         {
             strError = "a persistent connection from ";
             strError +=from;
-            strError += " to " + string(to);
+            strError += " to " + std::string(to);
             strError += " is created but not connected.";
             return false;
         }
@@ -442,16 +470,16 @@ bool YarpBroker::connect(const char* from, const char* to,
     return true;
 }
 
-bool YarpBroker::disconnect(const char* from, const char* to, const char* carrier)
+bool YarpBroker::disconnect(const std::string& from, const std::string& to, const std::string& carrier)
 {
 
-    if(!from)
+    if(from.empty())
     {
         strError = "no source port is introduced.";
         return false;
     }
 
-    if(!to)
+    if(to.empty())
     {
         strError = "no destination port is introduced.";
         return false;
@@ -473,8 +501,9 @@ bool YarpBroker::disconnect(const char* from, const char* to, const char* carrie
     }
     */
 
-    if(!connected(from, to, carrier))
+    if (!connected(from, to, carrier)) {
         return true;
+    }
 
     ContactStyle style;
     style.quiet = true;
@@ -484,14 +513,14 @@ bool YarpBroker::disconnect(const char* from, const char* to, const char* carrie
     {
         strError = "cannot disconnect ";
         strError +=from;
-        strError += " from " + string(to);
+        strError += " from " + std::string(to);
         return false;
     }
     return true;
 
 }
 
-bool YarpBroker::exists(const char* szport)
+bool YarpBroker::exists(const std::string& szport)
 {
     ContactStyle style;
     style.quiet = true;
@@ -499,19 +528,22 @@ bool YarpBroker::exists(const char* szport)
     return NetworkBase::exists(szport, style);
 }
 
-const char* YarpBroker::requestRpc(const char* szport, const char* request, double timeout)
+std::string YarpBroker::requestRpc(const std::string& szport, const std::string& request, double timeout)
 {
-    if((szport==nullptr) || (request==nullptr))
-        return nullptr;
+    if (szport.empty() || request.empty()) {
+        return {};
+    }
 
-    if(!exists(szport))
-        return nullptr;
+    if (!exists(szport)) {
+        return {};
+    }
 
     // opening the port
     yarp::os::Port port;
     port.setTimeout((float)((timeout>0.0) ? timeout : CONNECTION_TIMEOUT));
-    if(!port.open("..."))
-        return nullptr;
+    if (!port.open("...")) {
+        return {};
+    }
 
     ContactStyle style;
     style.quiet = true;
@@ -519,13 +551,15 @@ const char* YarpBroker::requestRpc(const char* szport, const char* request, doub
     bool ret;
     for(int i=0; i<10; i++) {
         ret = NetworkBase::connect(port.getName(), szport, style);
-        if(ret) break;
+        if (ret) {
+            break;
+        }
         SystemClock::delaySystem(1.0);
     }
 
     if(!ret) {
         port.close();
-        return nullptr;
+        return {};
     }
 
     Bottle msg, response;
@@ -534,17 +568,18 @@ const char* YarpBroker::requestRpc(const char* szport, const char* request, doub
     NetworkBase::disconnect(port.getName(), szport);
     if(!response.size() || !ret) {
         port.close();
-        return nullptr;
+        return {};
     }
 
     port.close();
     return response.toString().c_str();
 }
 
-bool YarpBroker::connected(const char* from, const char* to, const char* carrier)
+bool YarpBroker::connected(const std::string& from, const std::string& to, const std::string& carrier)
 {
-    if(!exists(from) || !exists(to))
+    if (!exists(from) || !exists(to)) {
         return false;
+    }
     ContactStyle style;
     style.quiet = true;
     style.timeout = CONNECTION_TIMEOUT;
@@ -552,12 +587,14 @@ bool YarpBroker::connected(const char* from, const char* to, const char* carrier
     return NetworkBase::isConnected(from, to, style);
 }
 
-bool YarpBroker::getSystemInfo(const char* server, SystemInfoSerializer& info)
+bool YarpBroker::getSystemInfo(const std::string& server, SystemInfo& info)
 {
-    if(!strlen(server))
+    if (server.empty()) {
         return false;
-    if(!semParam.check())
+    }
+    if (!semParam.check()) {
         return false;
+    }
 
     yarp::os::Port port;
     // opening the port
@@ -579,26 +616,26 @@ bool YarpBroker::getSystemInfo(const char* server, SystemInfoSerializer& info)
     //style.carrier = carrier;
 
 
-    __trace_message = "(getSystemInfo) connecting to " + string(port.getName());
+    __trace_message = "(getSystemInfo) connecting to " + std::string(port.getName());
     bool connected = yarp::os::NetworkBase::connect(port.getName(), server, style);
     if(!connected)
     {
         port.close();
-        strError = string("Cannot connect to ") + string(server);
+        strError = std::string("Cannot connect to ") + std::string(server);
         __trace_message.clear();
         semParam.post();
         return false;
     }
 
-    __trace_message = "(getSystemInfo) writing to " + string(port.getName());
+    __trace_message = "(getSystemInfo) writing to " + std::string(port.getName());
     bool ret = port.write(msg, info);
-    __trace_message = "(getSystemInfo) disconnecting from " + string(port.getName());
+    __trace_message = "(getSystemInfo) disconnecting from " + std::string(port.getName());
     NetworkBase::disconnect(port.getName(), server);
 
     if(!ret)
     {
         port.close();
-        strError = string(server) + string(" does not respond");
+        strError = std::string(server) + std::string(" does not respond");
         __trace_message.clear();
         semParam.post();
         return false;
@@ -610,7 +647,7 @@ bool YarpBroker::getSystemInfo(const char* server, SystemInfoSerializer& info)
     return true;
 }
 
-bool YarpBroker::getAllPorts(vector<string> &ports)
+bool YarpBroker::getAllPorts(std::vector<std::string> &ports)
 {
     ContactStyle style;
     style.quiet = true;
@@ -625,8 +662,9 @@ bool YarpBroker::getAllPorts(vector<string> &ports)
         return false;
     }
 
-    if((reply.size()!=1) || (!reply.get(0).isString()))
+    if ((reply.size() != 1) || (!reply.get(0).isString())) {
         return false;
+    }
 
     std::string str = reply.get(0).asString();
     const char* delm = "registration name ";
@@ -634,18 +672,20 @@ bool YarpBroker::getAllPorts(vector<string> &ports)
     while((pos1 = str.find(delm)) != std::string::npos)
     {
         str = str.substr(pos1+strlen(delm));
-        if((pos2 = str.find(' ')) != std::string::npos)
+        if ((pos2 = str.find(' ')) != std::string::npos) {
             ports.push_back(str.substr(0, pos2));
+        }
     }
 
     return true;
 }
 
-bool YarpBroker::getAllProcesses(const char* server,
+bool YarpBroker::getAllProcesses(const std::string& server,
                                  ProcessContainer& processes)
 {
-    if(!strlen(server))
+    if (server.empty()) {
         return false;
+    }
 
     processes.clear();
     strError.clear();
@@ -655,21 +695,32 @@ bool YarpBroker::getAllProcesses(const char* server,
     grp.addString("ps");
     msg.addList()=grp;
 
-    int ret = SendMsg(msg, server, response, 3.0);
+    std::string targetServer = server;
+    if (targetServer[0] != '/') {
+        targetServer = std::string("/") + targetServer;
+    }
+
+    int ret = SendMsg(msg, targetServer, response, 3.0);
     if((ret == YARPRUN_OK) || (ret == YARPRUN_NORESPONSE))
     {
         for(size_t i=0; i<response.size(); i++)
         {
             Process proc;
-            std::string sprc;
-            if(response.get(i).check("pid"))
+            if (response.get(i).check("pid")) {
                 proc.pid = response.get(i).find("pid").asInt32();
-            if(response.get(i).check("cmd"))
-               sprc = response.get(i).find("cmd").asString();
-            if(response.get(i).check("env") &&
-               response.get(i).find("env").asString().length())
-               sprc.append("; ").append(response.get(i).find("env").asString());
-            proc.command = sprc;
+            }
+            if (response.get(i).check("tag")) {
+                proc.tag = response.get(i).find("tag").asString();
+            }
+            if (response.get(i).check("status")) {
+                proc.status = response.get(i).find("status").asString();
+            }
+            if (response.get(i).check("cmd")) {
+                proc.command = response.get(i).find("cmd").asString();
+            }
+            if (response.get(i).check("env")) {
+                proc.env = response.get(i).find("env").asString();
+            }
             processes.push_back(proc);
         }
         return true;
@@ -679,15 +730,16 @@ bool YarpBroker::getAllProcesses(const char* server,
     strError += server;
     strError += " to give the list of running processes.";
     strError += yarprun_err_msg[ret];
-    if(ret == YARPRUN_SEMAPHORE_PARAM)
-        strError += string(" due to " + __trace_message);
+    if (ret == YARPRUN_SEMAPHORE_PARAM) {
+        strError += std::string(" due to " + __trace_message);
+    }
     return false;
 }
 
 
-bool YarpBroker::rmconnect(const char* from, const char* to)
+bool YarpBroker::rmconnect(const std::string& from, const std::string& to)
 {
-    string topic = string(from) + string(to);
+    std::string topic = from + to;
     Bottle cmd, reply;
     cmd.addString("untopic");
     cmd.addString(topic.c_str());
@@ -699,47 +751,51 @@ bool YarpBroker::rmconnect(const char* from, const char* to)
                                  CONNECTION_TIMEOUT);
 }
 
-bool YarpBroker::setQos(const char* from, const char *to,
-                        const char *qosFrom, const char *qosTo) {
+bool YarpBroker::setQos(const std::string& from, const std::string& to, const std::string& qosFrom, const std::string& qosTo)
+{
     strError.clear();
 
-    if(qosFrom && qosTo && !strlen(qosFrom) && !strlen(qosTo))
+    if (qosFrom.empty() && qosTo.empty()) {
         return true;
+    }
 
     QosStyle styleFrom;
     QosStyle styleTo;
-    if(qosFrom != nullptr && strlen(qosFrom)) {
+    if (qosFrom.empty() == false) {
         if(!getQosFromString(qosFrom, styleFrom)) {
-            strError = "Error in parsing Qos properties of " + string(from);
+            strError = "Error in parsing Qos properties of " + std::string(from);
             return false;
         }
     }
-    if(qosTo != nullptr && strlen(qosTo))
+    if (qosTo.empty() == false) {
         if(!getQosFromString(qosTo, styleTo)) {
-            strError = "Error in parsing Qos properties of " + string(to);
+            strError = "Error in parsing Qos properties of " + std::string(to);
             return false;
         }
+    }
     return NetworkBase::setConnectionQos(from, to, styleFrom, styleTo, true);
 }
 
-bool YarpBroker::getQosFromString(const char* qos, yarp::os::QosStyle& style) {
-    string strQos(qos);
+bool YarpBroker::getQosFromString(const std::string& qos, yarp::os::QosStyle& style)
+{
+    std::string strQos(qos);
     transform(strQos.begin(), strQos.end(), strQos.begin(),
               (int(*)(int))toupper);
     strQos.erase( std::remove_if( strQos.begin(), strQos.end(), ::isspace ), strQos.end() );
 
     //level:high; priority:10; policy:1
-    stringstream ss(strQos); // Turn the string into a stream.
-    string prop;
+    std::stringstream ss(strQos); // Turn the string into a stream.
+    std::string prop;
     while(getline(ss, prop, ';')) {
         size_t p = prop.find(':');
         if (p != prop.npos) {
-            string key = prop.substr(0, p);
-            string value = prop.substr(p+1);
+            std::string key = prop.substr(0, p);
+            std::string value = prop.substr(p+1);
             if (key.length() > 0 && value.length() > 0) {
                 if (key == "LEVEL" || key=="DSCP" || key == "TOS") {
-                    if(!style.setPacketPriority(prop))
+                    if (!style.setPacketPriority(prop)) {
                         return false;
+                    }
                 }
                 else if (key == "PRIORITY") {
                     char* p;
@@ -757,26 +813,28 @@ bool YarpBroker::getQosFromString(const char* qos, yarp::os::QosStyle& style) {
     return true;
 }
 
-const char* YarpBroker::error()
+std::string YarpBroker::error()
 {
-    return strError.c_str();
+    return strError;
 }
 
 
 bool YarpBroker::timeout(double base, double timeout)
 {
     SystemClock::delaySystem(1.0);
-    if((SystemClock::nowSystem()-base) > timeout)
+    if ((SystemClock::nowSystem() - base) > timeout) {
         return true;
+    }
     return false;
 }
 
 bool YarpBroker::threadInit()
 {
-    if(!strStdioUUID.size())
+    if (!strStdioUUID.size()) {
         return false;
+    }
 
-    string strStdioPort = strStdioUUID + "/stdout";
+    std::string strStdioPort = strStdioUUID + "/stdout";
     stdioPort.open("...");
 
     double base = SystemClock::nowSystem();
@@ -785,8 +843,9 @@ bool YarpBroker::threadInit()
     style.timeout = CONNECTION_TIMEOUT;
     while(!timeout(base, 5.0))
     {
-        if(NetworkBase::connect(strStdioPort, stdioPort.getName(), style))
+        if (NetworkBase::connect(strStdioPort, stdioPort.getName(), style)) {
             return true;
+        }
     }
 
     strError = "Cannot connect to stdio port ";
@@ -801,8 +860,9 @@ void YarpBroker::run()
     Bottle *input;
     if( (input=stdioPort.read(false)) && eventSink)
     {
-        for (size_t i=0; i<input->size(); i++)
+        for (size_t i = 0; i < input->size(); i++) {
             eventSink->onBrokerStdout(input->get(i).asString().c_str());
+        }
     }
 }
 
@@ -816,11 +876,13 @@ void YarpBroker::threadRelease()
 
 int YarpBroker::SendMsg(Bottle& msg, std::string target, Bottle& response, float fTimeout)
 {
-    if(!exists(target.c_str()))
+    if (!exists(target.c_str())) {
         return YARPRUN_NOCONNECTION;
+    }
 
-    if(!semParam.check())
+    if (!semParam.check()) {
         return YARPRUN_SEMAPHORE_PARAM;
+    }
 
     // opening the port
     yarp::os::Port port;
@@ -837,11 +899,13 @@ int YarpBroker::SendMsg(Bottle& msg, std::string target, Bottle& response, float
     style.timeout = CONNECTION_TIMEOUT;
 
     bool ret;
-    __trace_message = "(SendMsg) connecting to " + string(target);
+    __trace_message = "(SendMsg) connecting to " + std::string(target);
     for(int i=0; i<10; i++)
     {
         ret = NetworkBase::connect(port.getName(), target, style);
-        if(ret) break;
+        if (ret) {
+            break;
+        }
         SystemClock::delaySystem(1.0);
     }
 
@@ -853,9 +917,9 @@ int YarpBroker::SendMsg(Bottle& msg, std::string target, Bottle& response, float
         return YARPRUN_CONNECTION_TIMOUT;
     }
 
-    __trace_message = "(SendMsg) writing to " + string(target);
+    __trace_message = "(SendMsg) writing to " + std::string(target);
     ret = port.write(msg, response);
-    __trace_message = "(SendMsg) disconnecting from " + string(target);
+    __trace_message = "(SendMsg) disconnecting from " + std::string(target);
     NetworkBase::disconnect(port.getName(),target);
     __trace_message.clear();
     semParam.post();
@@ -891,19 +955,29 @@ int YarpBroker::requestServer(Property& config)
         msg.addList()=config.findGroup("as");
         msg.addList()=config.findGroup("on");
 
-        if (config.check("workdir")) msg.addList()=config.findGroup("workdir");
-        if (config.check("geometry")) msg.addList()=config.findGroup("geometry");
-        if (config.check("hold")) msg.addList()=config.findGroup("hold");
-        if (config.check("env")) msg.addList()=config.findGroup("env");
+        if (config.check("workdir")) {
+            msg.addList() = config.findGroup("workdir");
+        }
+        if (config.check("geometry")) {
+            msg.addList() = config.findGroup("geometry");
+        }
+        if (config.check("hold")) {
+            msg.addList() = config.findGroup("hold");
+        }
+        if (config.check("env")) {
+            msg.addList() = config.findGroup("env");
+        }
 
         Bottle response;
         int ret = SendMsg(msg, config.find("stdio").asString(),
                           response, CONNECTION_TIMEOUT);
-        if (ret != YARPRUN_OK)
+        if (ret != YARPRUN_OK) {
             return ret;
+        }
 
-        if(response.size() > 2)
+        if (response.size() > 2) {
             strStdioUUID = response.get(2).asString();
+        }
 
         return ((response.get(0).asInt32()>0)?YARPRUN_OK:YARPRUN_UNDEF);
     }
@@ -921,14 +995,19 @@ int YarpBroker::requestServer(Property& config)
         msg.addList()=config.findGroup("cmd");
         msg.addList()=config.findGroup("as");
 
-        if (config.check("workdir")) msg.addList()=config.findGroup("workdir");
-        if (config.check("env")) msg.addList()=config.findGroup("env");
+        if (config.check("workdir")) {
+            msg.addList() = config.findGroup("workdir");
+        }
+        if (config.check("env")) {
+            msg.addList() = config.findGroup("env");
+        }
 
         Bottle response;
         int ret = SendMsg(msg, config.find("on").asString(),
                           response, CONNECTION_TIMEOUT);
-        if (ret != YARPRUN_OK)
+        if (ret != YARPRUN_OK) {
             return ret;
+        }
 
         return ((response.get(0).asInt32()>0)?YARPRUN_OK:YARPRUN_UNDEF);
     }

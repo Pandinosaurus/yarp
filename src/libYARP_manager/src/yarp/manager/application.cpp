@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/manager/application.h>
@@ -13,31 +10,33 @@ using namespace yarp::manager;
 /**
  * Class  ModuleInterface
  */
-ModuleInterface::ModuleInterface(Module* module) :
+ModuleInterface::ModuleInterface(Module* themodule) :
     iRank(0),
     waitStart(0.0),
     waitStop(0.0)
 {
-    if(!module)
+    if (!themodule) {
         return;
+    }
 
-    strName = module->strName;
-    strHost = module->strHost;
-    strParam = module->strParam;
-    strWorkDir = module->strWorkDir;
-    strStdio = module->strStdio;
-    strBroker = module->strBroker;
-    strPrefix = module->strPrefix;
-    strEnvironment = module->strEnvironment;
-    iRank = module->iRank;
-    strTag = module->getLabel();
-    strDisplay = module->getDisplay();
-    waitStart = module->getPostExecWait();
-    waitStop = module->getPostStopWait();
-    if(module->getModel())
-        modelBase = *module->getModel();
-    else
-        modelBase = module->getModelBase();
+    strName = themodule->strName;
+    strHost = themodule->strHost;
+    strParam = themodule->strParam;
+    strWorkDir = themodule->strWorkDir;
+    strStdio = themodule->strStdio;
+    strBroker = themodule->strBroker;
+    strPrefix = themodule->strPrefix;
+    strEnvironment = themodule->strEnvironment;
+    iRank = themodule->iRank;
+    strTag = themodule->getLabel();
+    strDisplay = themodule->getDisplay();
+    waitStart = themodule->getPostExecWait();
+    waitStop = themodule->getPostStopWait();
+    if (themodule->getModel()) {
+        modelBase = *themodule->getModel();
+    } else {
+        modelBase = themodule->getModelBase();
+    }
 
    //TODO: resources should be added too
 }
@@ -52,8 +51,9 @@ bool ModuleInterface::addPortmap(Portmap &portmap)
 bool ModuleInterface::removePortmap(Portmap& portmap)
 {
     auto itr = findPortmap(portmap);
-    if(itr == portmaps.end())
+    if (itr == portmaps.end()) {
         return true;
+    }
     portmaps.erase(itr);
     return true;
 }
@@ -62,9 +62,11 @@ bool ModuleInterface::removePortmap(Portmap& portmap)
 PortmapIterator ModuleInterface::findPortmap(Portmap& portmap)
 {
     PortmapIterator itr;
-    for(itr=portmaps.begin(); itr<portmaps.end(); itr++)
-        if ((*itr) == portmap)
+    for (itr = portmaps.begin(); itr < portmaps.end(); itr++) {
+        if ((*itr) == portmap) {
             return itr;
+        }
+    }
     return portmaps.end();
 }
 
@@ -123,8 +125,9 @@ bool Application::addImodule(ModuleInterface &imod)
 bool Application::removeImodule(ModuleInterface& imod)
 {
     auto itr = findImodule(imod);
-    if(itr == Imodules.end())
+    if (itr == Imodules.end()) {
         return true;
+    }
     Imodules.erase(itr);
     return true;
 }
@@ -141,8 +144,9 @@ Connection& Application::addConnection(Connection &cnn)
 bool Application::removeConnection(Connection& cnn)
 {
     auto itr = findConnection(cnn);
-    if(itr == connections.end())
+    if (itr == connections.end()) {
         return true;
+    }
     connections.erase(itr);
     return true;
 
@@ -158,8 +162,9 @@ Arbitrator& Application::addArbitrator(Arbitrator &arb)
 bool Application::removeArbitrator(Arbitrator& arb)
 {
     auto itr = findArbitrator(arb);
-    if(itr == arbitrators.end())
+    if (itr == arbitrators.end()) {
         return true;
+    }
     arbitrators.erase(itr);
     return true;
 }
@@ -197,8 +202,9 @@ bool Application::addIapplication(ApplicationInterface &iapp)
 bool Application::removeIapplication(ApplicationInterface& iapp)
 {
     auto itr = findIapplication(iapp);
-    if(itr == Iapplications.end())
+    if (itr == Iapplications.end()) {
         return true;
+    }
     Iapplications.erase(itr);
     return true;
 }
@@ -213,8 +219,9 @@ bool Application::addResource(ResYarpPort &res)
 bool Application::removeResource(ResYarpPort& res)
 {
     auto itr = findResource(res);
-    if(itr == resources.end())
+    if (itr == resources.end()) {
         return true;
+    }
     resources.erase(itr);
     return true;
 }
@@ -222,12 +229,13 @@ bool Application::removeResource(ResYarpPort& res)
 bool Application::removeAuthor(Author& author)
 {
     AuthorIterator itr;
-    for(itr=authors.begin(); itr<authors.end(); itr++)
+    for (itr = authors.begin(); itr < authors.end(); itr++) {
         if((*itr) == author)
         {
             authors.erase(itr);
             return true;
         }
+    }
     return true;
 }
 
@@ -235,9 +243,11 @@ bool Application::removeAuthor(Author& author)
 IModuleIterator Application::findImodule(ModuleInterface& imod)
 {
     IModuleIterator itr;
-    for(itr=Imodules.begin(); itr<Imodules.end(); itr++)
-        if ((*itr) == imod)
+    for (itr = Imodules.begin(); itr < Imodules.end(); itr++) {
+        if ((*itr) == imod) {
             return itr;
+        }
+    }
     return Imodules.end();
 }
 
@@ -245,18 +255,22 @@ IModuleIterator Application::findImodule(ModuleInterface& imod)
 CnnIterator Application::findConnection(Connection& cnn)
 {
     CnnIterator itr;
-    for(itr=connections.begin(); itr<connections.end(); itr++)
-        if ((*itr) == cnn)
+    for (itr = connections.begin(); itr < connections.end(); itr++) {
+        if ((*itr) == cnn) {
             return itr;
+        }
+    }
     return connections.end();
 }
 
 ArbIterator Application::findArbitrator(Arbitrator& arb)
 {
     ArbIterator itr;
-    for(itr=arbitrators.begin(); itr<arbitrators.end(); itr++)
-        if ((*itr) == arb)
+    for (itr = arbitrators.begin(); itr < arbitrators.end(); itr++) {
+        if ((*itr) == arb) {
             return itr;
+        }
+    }
     return arbitrators.end();
 }
 
@@ -264,17 +278,21 @@ ArbIterator Application::findArbitrator(Arbitrator& arb)
 IApplicationIterator Application::findIapplication(ApplicationInterface& iapp)
 {
     IApplicationIterator itr;
-    for(itr=Iapplications.begin(); itr<Iapplications.end(); itr++)
-        if ((*itr) == iapp)
+    for (itr = Iapplications.begin(); itr < Iapplications.end(); itr++) {
+        if ((*itr) == iapp) {
             return itr;
+        }
+    }
     return Iapplications.end();
 }
 
 ResourceIterator Application::findResource(ResYarpPort& res)
 {
     ResourceIterator itr;
-    for(itr=resources.begin(); itr<resources.end(); itr++)
-        if ((*itr) == res)
+    for (itr = resources.begin(); itr < resources.end(); itr++) {
+        if ((*itr) == res) {
             return itr;
+        }
+    }
     return resources.end();
 }

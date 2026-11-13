@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/robottestingframework/JointsPosMotion.h>
@@ -12,12 +9,13 @@
 #include <yarp/sig/Vector.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
 #include <yarp/dev/PolyDriver.h>
+#include <yarp/dev/IControlMode.h>
 
 #include <robottestingframework/TestAssert.h>
 
 #include <cmath>
 
-using yarp::dev::VOCAB_IM_STIFF;
+using yarp::dev::InteractionModeEnum::VOCAB_IM_STIFF;
 
 class yarp::robottestingframework::jointsPosMotion::Private
 {
@@ -80,7 +78,7 @@ void yarp::robottestingframework::jointsPosMotion::Private::readJointsLimits()
     max_lims.resize(n_joints);
     min_lims.resize(n_joints);
     for (size_t i = 0; i < n_joints; i++) {
-        ilim->getLimits((int)jointsList[i], &min_lims[i], &max_lims[i]);
+        ilim->getPosLimits((int)jointsList[i], &min_lims[i], &max_lims[i]);
     }
 
 }
@@ -101,7 +99,7 @@ yarp::robottestingframework::jointsPosMotion::jointsPosMotion(yarp::dev::PolyDri
 
     //send default speed
     for (size_t i = 0; i < mPriv->n_joints; i++) {
-        mPriv->ipos->setRefSpeed((int)mPriv->jointsList[i], mPriv->speed[i]);
+        mPriv->ipos->setTrajSpeed((int)mPriv->jointsList[i], mPriv->speed[i]);
     }
     mPriv->readJointsLimits();
 }
@@ -123,21 +121,21 @@ void yarp::robottestingframework::jointsPosMotion::setTolerance(double tolerance
 bool yarp::robottestingframework::jointsPosMotion::setAndCheckPosControlMode()
 {
     for (size_t i = 0; i < mPriv->jointsList.size(); i++) {
-        mPriv->icmd->setControlMode((int)mPriv->jointsList[i], VOCAB_CM_POSITION);
-        mPriv->iimd->setInteractionMode((int)mPriv->jointsList[i], VOCAB_IM_STIFF);
+        mPriv->icmd->setControlMode((int)mPriv->jointsList[i], yarp::dev::SelectableControlModeEnum::VOCAB_CM_POSITION);
+        mPriv->iimd->setInteractionMode((int)mPriv->jointsList[i], yarp::dev::InteractionModeEnum::VOCAB_IM_STIFF);
         yarp::os::Time::delay(0.010);
     }
 
-    int cmode;
+    yarp::dev::ControlModeEnum cmode;
     yarp::dev::InteractionModeEnum imode;
     double time_started = yarp::os::Time::now();
 
     while (1) {
         size_t ok = 0;
         for (size_t i = 0; i < mPriv->n_joints; i++) {
-            mPriv->icmd->getControlMode ((int)mPriv->jointsList[i], &cmode);
-            mPriv->iimd->getInteractionMode((int)mPriv->jointsList[i], &imode);
-            if (cmode == VOCAB_CM_POSITION && imode == VOCAB_IM_STIFF) {
+            mPriv->icmd->getControlMode ((int)mPriv->jointsList[i], cmode);
+            mPriv->iimd->getInteractionMode((int)mPriv->jointsList[i], imode);
+            if (cmode == yarp::dev::ControlModeEnum::VOCAB_CM_POSITION && imode == yarp::dev::InteractionModeEnum::VOCAB_IM_STIFF) {
                 ok++;
             }
         }
@@ -168,7 +166,7 @@ void yarp::robottestingframework::jointsPosMotion::setSpeed(yarp::sig::Vector &s
     ROBOTTESTINGFRAMEWORK_ASSERT_ERROR_IF_FALSE((speedlist.size() != mPriv->jointsList.size()), "Speed list has a different size of joint list");
     mPriv->speed = speedlist;
     for (size_t i = 0; i < mPriv->n_joints; i++) {
-        mPriv->ipos->setRefSpeed((int)mPriv->jointsList[i], mPriv->speed[i]);
+        mPriv->ipos->setTrajSpeed((int)mPriv->jointsList[i], mPriv->speed[i]);
     }
 }
 
@@ -218,11 +216,13 @@ bool yarp::robottestingframework::jointsPosMotion::goTo(yarp::sig::Vector positi
         size_t in_position = 0;
         for (size_t i = 0; i < mPriv->n_joints; i++) {
             mPriv->ienc->getEncoder((int)mPriv->jointsList[i], &tmp[i]);
-            if (fabs(tmp[i]-positions[i])<mPriv->tolerance)
+            if (fabs(tmp[i] - positions[i]) < mPriv->tolerance) {
                 in_position++;
+            }
         }
-        if (in_position == mPriv->n_joints)
+        if (in_position == mPriv->n_joints) {
             break;
+        }
 
         if (yarp::os::Time::now()-time_started > mPriv->timeout) {
             ret = false;

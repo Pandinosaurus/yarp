@@ -1,19 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #ifndef PortAudioDeviceDriverh
@@ -63,9 +50,10 @@ class streamThread :
 };
 
 /**
- * @ingroup dev_impl_media
+ * @ingroup dev_impl_media dev_impl_deprecated
  *
- * \brief `portaudio`:  Documentation to be added
+ * \brief `portaudio` *deprecated*:  This device driver has been deprecated!
+ * Please use `PortAudioPlayerDeviceDriver` or  `PortAudioRecorderDeviceDriver`
  *
  * Requires the PortAudio library (http://www.portaudio.com), at least v19.
  */
@@ -119,18 +107,23 @@ public:
     bool stopRecording() override;
     bool startPlayback() override;
     bool stopPlayback() override;
+    bool isPlaying(bool& playback_enabled) override;
+    bool isRecording(bool& recording_enabled) override;
 
     bool abortSound();
     bool immediateSound(const yarp::sig::Sound& sound);
     bool appendSound(const yarp::sig::Sound& sound);
 
-    bool getPlaybackAudioBufferMaxSize(yarp::dev::AudioBufferSize& size) override;
-    bool getPlaybackAudioBufferCurrentSize(yarp::dev::AudioBufferSize& size) override;
+    bool getPlaybackAudioBufferMaxSize(yarp::sig::AudioBufferSize& size) override;
+    bool getPlaybackAudioBufferCurrentSize(yarp::sig::AudioBufferSize& size) override;
     bool resetPlaybackAudioBuffer() override;
 
-    bool getRecordingAudioBufferMaxSize(yarp::dev::AudioBufferSize& size) override;
-    bool getRecordingAudioBufferCurrentSize(yarp::dev::AudioBufferSize& size) override;
+    bool getRecordingAudioBufferMaxSize(yarp::sig::AudioBufferSize& size) override;
+    bool getRecordingAudioBufferCurrentSize(yarp::sig::AudioBufferSize& size) override;
     bool resetRecordingAudioBuffer() override;
+
+    bool setHWGain(double gain) override;
+    bool setSWGain(double gain) override;
 
 protected:
     void*   m_system_resource;

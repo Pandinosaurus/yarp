@@ -1,25 +1,25 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include "yarp/dev/ControlBoardInterfacesImpl.h"
 #include <yarp/dev/ControlBoardHelper.h>
+#include <yarp/dev/ControlBoardHelpers.h>
 
 #include <cstdio>
 using namespace yarp::dev;
+
+namespace {
+YARP_LOG_COMPONENT(IMPLEMENT_LAYER_COMPONENT, "yarp.ImplementRemoteVariables")
+}
 
 ////////////////////////
 // Encoder Interface Timed Implementation
 ImplementRemoteVariables::ImplementRemoteVariables(IRemoteVariablesRaw *y)
 {
-    ivar=y;
-    helper = nullptr;
-    temp1=nullptr;
-    temp2=nullptr;
+    m_iraw=y;
+    m_helper = nullptr;
 }
 
 ImplementRemoteVariables::~ImplementRemoteVariables()
@@ -29,15 +29,16 @@ ImplementRemoteVariables::~ImplementRemoteVariables()
 
 bool ImplementRemoteVariables::initialize(int size, const int *amap)
 {
-    if (helper!=nullptr)
+    if (m_helper != nullptr) {
         return false;
+    }
 
-    helper=(void *)(new ControlBoardHelper(size, amap));
-    yAssert (helper != nullptr);
-    temp1=new double [size];
-    yAssert (temp1 != nullptr);
-    temp2=new double [size];
-    yAssert (temp2 != nullptr);
+    m_helper=(void *)(new ControlBoardHelper(size, amap));
+    yAssert (m_helper != nullptr);
+
+    m_buffer_ints.resize   (size);
+    m_buffer_doubles.resize(size);
+
     return true;
 }
 
@@ -47,36 +48,39 @@ bool ImplementRemoteVariables::initialize(int size, const int *amap)
 */
 bool ImplementRemoteVariables::uninitialize()
 {
-    if (helper!=nullptr)
+    if (m_helper!=nullptr)
     {
-        delete castToMapper(helper);
-        helper=nullptr;
+        delete castToMapper(m_helper);
+        m_helper=nullptr;
     }
-
-    checkAndDestroy(temp1);
-    checkAndDestroy(temp2);
 
     return true;
 }
 
-bool ImplementRemoteVariables::getRemoteVariable(std::string key, yarp::os::Bottle& val)
+ReturnValue ImplementRemoteVariables::getRemoteVariable(std::string key, yarp::os::Bottle& val)
 {
-    bool ret;
-    ret = ivar->getRemoteVariableRaw(key, val);
+    std::lock_guard lock(m_imp_mutex);
+
+    ReturnValue ret;
+    ret = m_iraw->getRemoteVariableRaw(key, val);
     return ret;
 }
 
-bool ImplementRemoteVariables::setRemoteVariable(std::string key, const yarp::os::Bottle& val)
+ReturnValue ImplementRemoteVariables::setRemoteVariable(std::string key, const yarp::os::Bottle& val)
 {
-    bool ret;
-    ret = ivar->setRemoteVariableRaw(key, val);
+    std::lock_guard lock(m_imp_mutex);
+
+    ReturnValue ret;
+    ret = m_iraw->setRemoteVariableRaw(key, val);
     return ret;
 }
 
-
-bool ImplementRemoteVariables::getRemoteVariablesList(yarp::os::Bottle* listOfKeys)
+ReturnValue ImplementRemoteVariables::getRemoteVariablesList(yarp::os::Bottle* listOfKeys)
 {
-    bool ret;
-    ret = ivar->getRemoteVariablesListRaw(listOfKeys);
+    std::lock_guard lock(m_imp_mutex);
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,listOfKeys);
+
+    ReturnValue ret;
+    ret = m_iraw->getRemoteVariablesListRaw(listOfKeys);
     return ret;
 }

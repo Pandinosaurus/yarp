@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_SIG_IMAGE_H
@@ -18,59 +15,56 @@
 #include <yarp/sig/api.h>
 #include <map>
 
-namespace yarp {
-    /**
-     * Signal processing.
-     */
-    namespace sig {
-        class Image;
-        class FlexImage;
-        template <class T> class ImageOf;
+namespace yarp::sig {
+class Image;
+class FlexImage;
+template <class T>
+class ImageOf;
 
-        /**
-         * computes the padding of YARP images.
-         * @param len is the row length in bytes
-         * @param pad is the desired padding (e.g. 8 bytes)
-         * @return the number of extra bytes to add at the end of the image row
-         */
-        inline size_t PAD_BYTES (size_t len, size_t pad) {
-            const size_t rem = len % pad;
-            return (rem != 0) ? (pad - rem) : rem;
-        }
-    }
+/**
+ * computes the padding of YARP images.
+ * @param len is the row length in bytes
+ * @param pad is the desired padding (e.g. 8 bytes)
+ * @return the number of extra bytes to add at the end of the image row
+ */
+inline size_t PAD_BYTES(size_t len, size_t pad)
+{
+    const size_t rem = len % pad;
+    return (rem != 0) ? (pad - rem) : rem;
 }
+} // namespace yarp::sig
 
 // the image types partially reflect the IPL image types.
 // There must be a pixel type for every ImageType entry.
 enum YarpVocabPixelTypesEnum
 {
     VOCAB_PIXEL_INVALID = 0,
-    VOCAB_PIXEL_MONO = yarp::os::createVocab('m','o','n','o'),
-    VOCAB_PIXEL_MONO16 = yarp::os::createVocab('m','o','1','6'),
-    VOCAB_PIXEL_RGB = yarp::os::createVocab('r','g','b'),
-    VOCAB_PIXEL_RGBA = yarp::os::createVocab('r','g','b','a'),
-    VOCAB_PIXEL_BGRA = yarp::os::createVocab('b','g','r','a'),
-    VOCAB_PIXEL_INT = yarp::os::createVocab('i','n','t'),
-    VOCAB_PIXEL_HSV = yarp::os::createVocab('h','s','v'),
-    VOCAB_PIXEL_BGR = yarp::os::createVocab('b','g','r'),
-    VOCAB_PIXEL_MONO_SIGNED = yarp::os::createVocab('s','i','g','n'),
-    VOCAB_PIXEL_RGB_SIGNED = yarp::os::createVocab('r','g','b','-'),
-    VOCAB_PIXEL_RGB_INT = yarp::os::createVocab('r','g','b','i'),
-    VOCAB_PIXEL_MONO_FLOAT = yarp::os::createVocab('d','e','c'),
-    VOCAB_PIXEL_RGB_FLOAT = yarp::os::createVocab('r','g','b','.'),
-    VOCAB_PIXEL_HSV_FLOAT = yarp::os::createVocab('h','s','v','.'),
-    VOCAB_PIXEL_ENCODING_BAYER_GRBG8 = yarp::os::createVocab('g', 'r', 'b', 'g'),   //grbg8
-    VOCAB_PIXEL_ENCODING_BAYER_GRBG16 = yarp::os::createVocab('g', 'r', '1', '6'),  //grbg16
-    VOCAB_PIXEL_ENCODING_BAYER_BGGR8 = yarp::os::createVocab('b', 'g', 'g', 'r'),     //bggr8
-    VOCAB_PIXEL_ENCODING_BAYER_BGGR16 = yarp::os::createVocab('b', 'g', '1', '6'),  //bggr16
-    VOCAB_PIXEL_ENCODING_BAYER_GBRG8 = yarp::os::createVocab('g', 'b', 'r', 'g'),  //gbrg8
-    VOCAB_PIXEL_ENCODING_BAYER_GBRG16 = yarp::os::createVocab('g', 'b', '1', '6'),  //gbrg16
-    VOCAB_PIXEL_ENCODING_BAYER_RGGB8 = yarp::os::createVocab('r', 'g', 'g', 'b'),   //rggb8
-    VOCAB_PIXEL_ENCODING_BAYER_RGGB16 = yarp::os::createVocab('r', 'g', '1', '6'),  //rggb16
-    VOCAB_PIXEL_YUV_420 = yarp::os::createVocab('y','u','v','a'),
-    VOCAB_PIXEL_YUV_444 = yarp::os::createVocab('y','u','v','b'),
-    VOCAB_PIXEL_YUV_422 = yarp::os::createVocab('y','u','v','c'),
-    VOCAB_PIXEL_YUV_411 = yarp::os::createVocab('y','u','v','d')
+    VOCAB_PIXEL_MONO = yarp::os::createVocab32('m','o','n','o'),
+    VOCAB_PIXEL_MONO16 = yarp::os::createVocab32('m','o','1','6'),
+    VOCAB_PIXEL_RGB = yarp::os::createVocab32('r','g','b'),
+    VOCAB_PIXEL_RGBA = yarp::os::createVocab32('r','g','b','a'),
+    VOCAB_PIXEL_BGRA = yarp::os::createVocab32('b','g','r','a'),
+    VOCAB_PIXEL_INT = yarp::os::createVocab32('i','n','t'),
+    VOCAB_PIXEL_HSV = yarp::os::createVocab32('h','s','v'),
+    VOCAB_PIXEL_BGR = yarp::os::createVocab32('b','g','r'),
+    VOCAB_PIXEL_MONO_SIGNED = yarp::os::createVocab32('s','i','g','n'),
+    VOCAB_PIXEL_RGB_SIGNED = yarp::os::createVocab32('r','g','b','-'),
+    VOCAB_PIXEL_RGB_INT = yarp::os::createVocab32('r','g','b','i'),
+    VOCAB_PIXEL_MONO_FLOAT = yarp::os::createVocab32('d','e','c'),
+    VOCAB_PIXEL_RGB_FLOAT = yarp::os::createVocab32('r','g','b','.'),
+    VOCAB_PIXEL_HSV_FLOAT = yarp::os::createVocab32('h','s','v','.'),
+    VOCAB_PIXEL_ENCODING_BAYER_GRBG8 = yarp::os::createVocab32('g', 'r', 'b', 'g'),   //grbg8
+    VOCAB_PIXEL_ENCODING_BAYER_GRBG16 = yarp::os::createVocab32('g', 'r', '1', '6'),  //grbg16
+    VOCAB_PIXEL_ENCODING_BAYER_BGGR8 = yarp::os::createVocab32('b', 'g', 'g', 'r'),     //bggr8
+    VOCAB_PIXEL_ENCODING_BAYER_BGGR16 = yarp::os::createVocab32('b', 'g', '1', '6'),  //bggr16
+    VOCAB_PIXEL_ENCODING_BAYER_GBRG8 = yarp::os::createVocab32('g', 'b', 'r', 'g'),  //gbrg8
+    VOCAB_PIXEL_ENCODING_BAYER_GBRG16 = yarp::os::createVocab32('g', 'b', '1', '6'),  //gbrg16
+    VOCAB_PIXEL_ENCODING_BAYER_RGGB8 = yarp::os::createVocab32('r', 'g', 'g', 'b'),   //rggb8
+    VOCAB_PIXEL_ENCODING_BAYER_RGGB16 = yarp::os::createVocab32('r', 'g', '1', '6'),  //rggb16
+    VOCAB_PIXEL_YUV_420 = yarp::os::createVocab32('y','u','v','a'),
+    VOCAB_PIXEL_YUV_444 = yarp::os::createVocab32('y','u','v','b'),
+    VOCAB_PIXEL_YUV_422 = yarp::os::createVocab32('y','u','v','c'),
+    VOCAB_PIXEL_YUV_411 = yarp::os::createVocab32('y','u','v','d')
 };
 
 /**
@@ -122,6 +116,14 @@ public:
     Image& operator=(Image &&other) noexcept;
 
     /**
+     * Comparison operator.
+     * N.B. Comparing two images can be computationally intensive.
+     * This method is mainly used for CI purposes.
+     * @return true if the two images are identical
+     */
+    bool operator==(const Image& alt) const;
+
+    /**
      * Destructor.
      */
     ~Image() override;
@@ -144,6 +146,22 @@ public:
      * @param h target height for image
      */
     bool copy(const Image& alt, size_t w, size_t h);
+
+
+    /**
+     * move operator.
+     * Moves the content of another image.
+     * @param alt the image to move
+     */
+    bool move(Image&& alt) noexcept;
+
+
+    /**
+     * swap operator.
+     * Swap the content with another image.
+     * @param alt the image to swap with
+     */
+    bool swap(Image& alt);
 
 
     /**
@@ -282,43 +300,6 @@ public:
     */
     size_t getRawImageSize() const;
 
-#ifndef YARP_NO_DEPRECATED // Since YARP 3.2.0
-    /**
-     * Returns IPL/OpenCV view of image, if possible.
-     * Not possible if the image is the wrong size, with no padding.
-     * This method is currently not well documented.
-     * @return pointer to an IplImage structure or nullptr
-     */
-    YARP_DEPRECATED_MSG("Use yarp::cv::toCvMat instead")
-    void *getIplImage();
-
-    /**
-     * Returns IPL/OpenCV view of image, if possible.
-     * Not possible if the image is the wrong size, with no padding.
-     * This method is currently not well documented.
-     * @return pointer to an IplImage structure or nullptr
-     */
-    YARP_DEPRECATED_MSG("Use yarp::cv::toCvMat instead")
-    const void *getIplImage() const;
-
-    /**
-     * Act as a wrapper around an IPL/OpenCV image.  The wrapped
-     * image needs to exist for the rest of the lifetime of
-     * this oboject.  Be careful if you use this method on objects
-     * read from or written to a BufferedPort, since the lifetime
-     * of such objects can be longer than you expect (see the
-     * documentation for yarp::os::BufferedPort::read,
-     * yarp::os::BufferedPort::prepare, and yarp::os::BufferedPort::write).
-     *
-     * @param iplImage pointer to an IplImage structure
-     */
-    YARP_DEPRECATED_MSG("Use yarp::cv::fromCvMat instead")
-    void wrapIplImage(void *iplImage);
-#endif // YARP_NO_DEPRECATED
-
-    //void wrapRawImage(void *buf, int imgWidth, int imgHeight);
-
-
     /**
      * Read image from a connection.
      * @return true iff image was read correctly
@@ -332,27 +313,6 @@ public:
     bool write(yarp::os::ConnectionWriter& connection) const override;
 
     void setQuantum(size_t imgQuantum);
-
-    /**
-     * @return true if image has origin at top left (default); in other
-     * words when the y index is low, we are near the top of the image.
-     */
-    bool topIsLowIndex() const {
-        return topIsLow;
-    }
-
-    /**
-     * control whether image has origin at top left (default) or bottom
-     * left.
-     *
-     * @param flag true if image has origin at top left (default),
-     * false if image has origin at bottom left.
-     *
-     */
-    void setTopIsLowIndex(bool flag) {
-        topIsLow = flag;
-    }
-
 
     /**
      * Get an array of pointers to the rows of the image.
@@ -381,7 +341,6 @@ private:
     static const std::map<YarpVocabPixelTypesEnum, size_t> pixelCode2Size;
     size_t imgWidth, imgHeight, imgPixelSize, imgRowSize, imgQuantum;
     int imgPixelCode;
-    bool topIsLow;
 
     char **data;
     void *implementation;
@@ -391,8 +350,7 @@ private:
 
     void copyPixels(const unsigned char *src, size_t id1,
                     unsigned char *dest, size_t id2, size_t w, size_t h,
-                    size_t imageSize, size_t quantum1, size_t quantum2,
-                    bool topIsLow1, bool topIsLow2);
+                    size_t imageSize, size_t quantum1, size_t quantum2);
 };
 
 
@@ -427,207 +385,205 @@ private:
 
 #include <yarp/os/NetInt32.h>
 
-namespace yarp {
-    namespace sig {
+namespace yarp::sig {
 
-        /**
-         * Monochrome pixel type.
-         */
-        typedef unsigned char PixelMono;
+/**
+ * Monochrome pixel type.
+ */
+typedef unsigned char PixelMono;
 
-        /**
-         * 16-bit monochrome pixel type.
-         */
-        typedef yarp::os::NetUint16 PixelMono16;
+/**
+ * 16-bit monochrome pixel type.
+ */
+typedef yarp::os::NetUint16 PixelMono16;
 
-        /**
-         * 32-bit integer pixel type.
-         */
-        typedef yarp::os::NetInt32 PixelInt;
+/**
+ * 32-bit integer pixel type.
+ */
+typedef yarp::os::NetInt32 PixelInt;
 
-        /**
-         * Packed RGB pixel type.
-         */
-        YARP_BEGIN_PACK
-        struct YARP_sig_API PixelRgb
-        {
-            unsigned char r{0}; // NOLINT(misc-non-private-member-variables-in-classes)
-            unsigned char g{0}; // NOLINT(misc-non-private-member-variables-in-classes)
-            unsigned char b{0}; // NOLINT(misc-non-private-member-variables-in-classes)
+/**
+ * Packed RGB pixel type.
+ */
+YARP_BEGIN_PACK
+struct YARP_sig_API PixelRgb
+{
+    unsigned char r {0};
+    unsigned char g {0};
+    unsigned char b {0};
 
-            PixelRgb() = default;
-            PixelRgb(unsigned char n_r,
-                     unsigned char n_g,
-                     unsigned char n_b) :
-                    r(n_r),
-                    g(n_g),
-                    b(n_b)
-            {
-            }
-        };
-        YARP_END_PACK
-
-        /**
-         * Packed RGBA pixel type.
-         */
-        YARP_BEGIN_PACK
-        struct YARP_sig_API PixelRgba
-        {
-            PixelRgba() = default;
-            PixelRgba(unsigned char n_r,
-                      unsigned char n_g,
-                      unsigned char n_b,
-                      unsigned char n_a) :
-                    r(n_r),
-                    g(n_g),
-                    b(n_b),
-                    a(n_a)
-            {
-            }
-
-            unsigned char r{0}; // NOLINT(misc-non-private-member-variables-in-classes)
-            unsigned char g{0}; // NOLINT(misc-non-private-member-variables-in-classes)
-            unsigned char b{0}; // NOLINT(misc-non-private-member-variables-in-classes)
-            unsigned char a{0}; // NOLINT(misc-non-private-member-variables-in-classes)
-        };
-        YARP_END_PACK
-
-        /**
-         * Packed BGRA pixel type.
-         */
-        YARP_BEGIN_PACK
-        struct YARP_sig_API PixelBgra
-        {
-            unsigned char b{0}; // NOLINT(misc-non-private-member-variables-in-classes)
-            unsigned char g{0}; // NOLINT(misc-non-private-member-variables-in-classes)
-            unsigned char r{0}; // NOLINT(misc-non-private-member-variables-in-classes)
-            unsigned char a{0}; // NOLINT(misc-non-private-member-variables-in-classes)
-
-            PixelBgra() = default;
-            PixelBgra(unsigned char n_r,
-                      unsigned char n_g,
-                      unsigned char n_b,
-                      unsigned char n_a) :
-                    b(n_b),
-                    g(n_g),
-                    r(n_r),
-                    a(n_a)
-            {
-            }
-        };
-        YARP_END_PACK
-
-        /**
-         * Packed RGB pixel type, with pixels stored in reverse order.
-         */
-        YARP_BEGIN_PACK
-        struct YARP_sig_API PixelBgr
-        {
-            unsigned char b{0}; // NOLINT(misc-non-private-member-variables-in-classes)
-            unsigned char g{0}; // NOLINT(misc-non-private-member-variables-in-classes)
-            unsigned char r{0}; // NOLINT(misc-non-private-member-variables-in-classes)
-
-            PixelBgr() = default;
-            PixelBgr(unsigned char n_r, unsigned char n_g, unsigned char n_b) :
-                    b(n_b),
-                    g(n_g),
-                    r(n_r)
-            {
-            }
-        };
-        YARP_END_PACK
-
-        /**
-         * Packed HSV (hue/saturation/value pixel type.
-         */
-        YARP_BEGIN_PACK
-        struct YARP_sig_API PixelHsv
-        {
-            unsigned char h{0};
-            unsigned char s{0};
-            unsigned char v{0};
-        };
-        YARP_END_PACK
-
-        /**
-         * Signed byte pixel type.
-         */
-        typedef char PixelMonoSigned;
-
-        /**
-         * Signed, packed RGB pixel type.
-         */
-        YARP_BEGIN_PACK
-        struct YARP_sig_API PixelRgbSigned
-        {
-            char r{0};
-            char g{0};
-            char b{0};
-        };
-        YARP_END_PACK
-
-        /**
-         * Floating point pixel type.
-         */
-        typedef float PixelFloat;
-
-        /**
-         * Floating point RGB pixel type.
-         */
-        YARP_BEGIN_PACK
-        struct YARP_sig_API PixelRgbFloat
-        {
-            float r{0.0F}; // NOLINT(misc-non-private-member-variables-in-classes)
-            float g{0.0F}; // NOLINT(misc-non-private-member-variables-in-classes)
-            float b{0.0F}; // NOLINT(misc-non-private-member-variables-in-classes)
-
-            PixelRgbFloat() = default;
-            PixelRgbFloat(float n_r,
-                          float n_g,
-                          float n_b) :
-                    r(n_r),
-                    g(n_g),
-                    b(n_b)
-            {
-            }
-        };
-        YARP_END_PACK
-
-        /**
-         * Integer RGB pixel type.
-         */
-        YARP_BEGIN_PACK
-        struct YARP_sig_API PixelRgbInt
-        {
-            yarp::os::NetInt32 r{0}; // NOLINT(misc-non-private-member-variables-in-classes)
-            yarp::os::NetInt32 g{0}; // NOLINT(misc-non-private-member-variables-in-classes)
-            yarp::os::NetInt32 b{0}; // NOLINT(misc-non-private-member-variables-in-classes)
-
-            PixelRgbInt() = default;
-            PixelRgbInt(int n_r,
-                        int n_g,
-                        int n_b) :
-                    r(n_r),
-                    g(n_g),
-                    b(n_b)
-            {
-            }
-        };
-        YARP_END_PACK
-
-        /**
-         * Floating point HSV pixel type.
-         */
-        YARP_BEGIN_PACK
-        struct PixelHsvFloat
-        {
-            float h{0.0F};
-            float s{0.0F};
-            float v{0.0F};
-        };
-        YARP_END_PACK
+    PixelRgb() = default;
+    PixelRgb(unsigned char n_r,
+             unsigned char n_g,
+             unsigned char n_b) :
+            r(n_r),
+            g(n_g),
+            b(n_b)
+    {
     }
-}
+};
+YARP_END_PACK
+
+/**
+ * Packed RGBA pixel type.
+ */
+YARP_BEGIN_PACK
+struct YARP_sig_API PixelRgba
+{
+    PixelRgba() = default;
+    PixelRgba(unsigned char n_r,
+              unsigned char n_g,
+              unsigned char n_b,
+              unsigned char n_a) :
+            r(n_r),
+            g(n_g),
+            b(n_b),
+            a(n_a)
+    {
+    }
+
+    unsigned char r{0};
+    unsigned char g{0};
+    unsigned char b{0};
+    unsigned char a{0};
+};
+YARP_END_PACK
+
+/**
+ * Packed BGRA pixel type.
+ */
+YARP_BEGIN_PACK
+struct YARP_sig_API PixelBgra
+{
+    unsigned char b{0};
+    unsigned char g{0};
+    unsigned char r{0};
+    unsigned char a{0};
+
+    PixelBgra() = default;
+    PixelBgra(unsigned char n_r,
+              unsigned char n_g,
+              unsigned char n_b,
+              unsigned char n_a) :
+            b(n_b),
+            g(n_g),
+            r(n_r),
+            a(n_a)
+    {
+    }
+};
+YARP_END_PACK
+
+/**
+ * Packed RGB pixel type, with pixels stored in reverse order.
+ */
+YARP_BEGIN_PACK
+struct YARP_sig_API PixelBgr
+{
+    unsigned char b{0};
+    unsigned char g{0};
+    unsigned char r{0};
+
+    PixelBgr() = default;
+    PixelBgr(unsigned char n_r, unsigned char n_g, unsigned char n_b) :
+            b(n_b),
+            g(n_g),
+            r(n_r)
+    {
+    }
+};
+YARP_END_PACK
+
+/**
+ * Packed HSV (hue/saturation/value pixel type.
+ */
+YARP_BEGIN_PACK
+struct YARP_sig_API PixelHsv
+{
+    unsigned char h{0};
+    unsigned char s{0};
+    unsigned char v{0};
+};
+YARP_END_PACK
+
+/**
+ * Signed byte pixel type.
+ */
+typedef char PixelMonoSigned;
+
+/**
+ * Signed, packed RGB pixel type.
+ */
+YARP_BEGIN_PACK
+struct YARP_sig_API PixelRgbSigned
+{
+    char r{0};
+    char g{0};
+    char b{0};
+};
+YARP_END_PACK
+
+/**
+ * Floating point pixel type.
+ */
+typedef float PixelFloat;
+
+/**
+ * Floating point RGB pixel type.
+ */
+YARP_BEGIN_PACK
+struct YARP_sig_API PixelRgbFloat
+{
+    float r{0.0F};
+    float g{0.0F};
+    float b{0.0F};
+
+    PixelRgbFloat() = default;
+    PixelRgbFloat(float n_r,
+                  float n_g,
+                  float n_b) :
+            r(n_r),
+            g(n_g),
+            b(n_b)
+    {
+    }
+};
+YARP_END_PACK
+
+/**
+ * Integer RGB pixel type.
+ */
+YARP_BEGIN_PACK
+struct YARP_sig_API PixelRgbInt
+{
+    yarp::os::NetInt32 r{0};
+    yarp::os::NetInt32 g{0};
+    yarp::os::NetInt32 b{0};
+
+    PixelRgbInt() = default;
+    PixelRgbInt(int n_r,
+                int n_g,
+                int n_b) :
+            r(n_r),
+            g(n_g),
+            b(n_b)
+    {
+    }
+};
+YARP_END_PACK
+
+/**
+ * Floating point HSV pixel type.
+ */
+YARP_BEGIN_PACK
+struct PixelHsvFloat
+{
+    float h{0.0F};
+    float s{0.0F};
+    float v{0.0F};
+};
+YARP_END_PACK
+} // namespace yarp::sig
 
 
 /**
@@ -687,8 +643,7 @@ public:
     }
 };
 
-namespace yarp {
-namespace sig {
+namespace yarp::sig {
 
 template<>
 inline int ImageOf<yarp::sig::PixelMono>::getPixelCode() const {
@@ -765,7 +720,6 @@ inline int ImageOf<T>::getPixelCode() const {
     return -(static_cast<int>(sizeof(T)));
 }
 
-} // namespace sig
-} // namespace yarp
+} // namespace yarp::sig
 
 #endif // YARP_SIG_IMAGE_H

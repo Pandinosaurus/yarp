@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/Os.h>
@@ -28,13 +25,6 @@
 
 #if defined(__APPLE__)
 #    include <yarp/os/impl/macos/MacOSAPI.h>
-#endif
-
-#ifndef YARP_NO_DEPRECATED // Since YARP 3.4.0
-const char* yarp::os::getenv(const char* var)
-{
-    return std::getenv(var);
-}
 #endif
 
 int yarp::os::mkdir(const char* p)
@@ -129,46 +119,3 @@ void yarp::os::setEnergySavingModeState(bool enabled)
 
 #endif
 }
-
-
-#ifndef YARP_NO_DEPRECATED // Since YARP 3.0.0
-
-void yarp::os::setprogname(const char* progname)
-{
-#    ifdef YARP_HAS_ACE
-    ACE_OS::setprogname(ACE::basename(progname));
-#    else
-    // not available
-    YARP_UNUSED(progname);
-#    endif
-}
-
-void yarp::os::getprogname(char* progname, size_t size)
-{
-#    ifdef YARP_HAS_ACE
-    const char* tmp = ACE_OS::getprogname();
-    if (std::strlen(tmp) == 0) {
-        std::strncpy(progname, "no_progname", size);
-    } else {
-        std::strncpy(progname, tmp, size);
-    }
-#    else
-    // not available
-    *progname = '\0';
-    YARP_UNUSED(size);
-#    endif
-}
-
-int yarp::os::fork()
-{
-#    if defined(YARP_HAS_ACE)
-    pid_t pid = ACE_OS::fork();
-#    elif defined(__unix__)
-    pid_t pid = ::fork();
-#    else
-    YARP_COMPILER_ERROR(Cannot implement fork on this platform)
-#    endif
-    return pid;
-}
-
-#endif // YARP_NO_DEPRECATED

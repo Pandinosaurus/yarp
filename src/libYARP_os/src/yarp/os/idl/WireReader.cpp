@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/idl/WireReader.h>
@@ -12,27 +9,21 @@ using namespace yarp::os::idl;
 using namespace yarp::os;
 
 namespace {
-constexpr yarp::conf::vocab32_t VOCAB_FAIL = yarp::os::createVocab('f', 'a', 'i', 'l');
-constexpr yarp::conf::vocab32_t VOCAB_IS = yarp::os::createVocab('i', 's');
+constexpr yarp::conf::vocab32_t VOCAB_FAIL = yarp::os::createVocab32('f', 'a', 'i', 'l');
+constexpr yarp::conf::vocab32_t VOCAB_IS = yarp::os::createVocab32('i', 's');
 } // namespace
 
 WireReader::WireReader(ConnectionReader& reader) :
         reader(reader)
 {
     reader.convertTextMode();
-    state = &baseState;
-    flush_if_needed = false;
-    get_mode = false;
-    support_get_mode = false;
-    expecting = false;
-    get_is_vocab = false;
 }
 
 WireReader::~WireReader()
 {
     if (state->need_ok) {
         std::int32_t dummy;
-        readVocab(dummy);
+        readVocab32(dummy);
         state->need_ok = false;
     }
     if (flush_if_needed) {
@@ -105,7 +96,7 @@ bool WireReader::readBool(bool& x)
             return false;
         }
         std::int32_t tag = reader.expectInt32();
-        if (tag != BOTTLE_TAG_INT32 && tag != BOTTLE_TAG_VOCAB) {
+        if (tag != BOTTLE_TAG_INT32 && tag != BOTTLE_TAG_VOCAB32) {
             return false;
         }
     }
@@ -195,9 +186,7 @@ bool WireReader::readI32(std::int32_t& x)
         x = static_cast<std::int32_t>(reader.expectInt16());
         break;
     case BOTTLE_TAG_INT32:
-        x = reader.expectInt32();
-        break;
-    case BOTTLE_TAG_VOCAB:
+    case BOTTLE_TAG_VOCAB32:
         x = reader.expectInt32();
         break;
     default:
@@ -230,6 +219,7 @@ bool WireReader::readI64(std::int64_t& x)
         x = static_cast<std::int64_t>(reader.expectInt32());
         break;
     case BOTTLE_TAG_INT64:
+    case BOTTLE_TAG_VOCAB64:
         x = reader.expectInt64();
         break;
     default:
@@ -318,8 +308,27 @@ bool WireReader::readFloat64(yarp::conf::float64_t& x)
     return !reader.isError();
 }
 
+bool WireReader::readUI8(std::uint8_t& x)
+{
+    return readI8(reinterpret_cast<std::int8_t&>(x));
+}
 
-bool WireReader::readVocab(std::int32_t& x)
+bool WireReader::readUI16(std::uint16_t& x)
+{
+    return readI16(reinterpret_cast<std::int16_t&>(x));
+}
+
+bool WireReader::readUI32(std::uint32_t& x)
+{
+    return readI32(reinterpret_cast<std::int32_t&>(x));
+}
+
+bool WireReader::readUI64(std::uint64_t& x)
+{
+    return readI64(reinterpret_cast<std::int64_t&>(x));
+}
+
+bool WireReader::readVocab32(yarp::conf::vocab32_t& x)
 {
     std::int32_t tag = state->code;
     if (tag < 0) {
@@ -328,13 +337,58 @@ bool WireReader::readVocab(std::int32_t& x)
         }
         tag = reader.expectInt32();
     }
-    if (tag != BOTTLE_TAG_VOCAB) {
+    if (tag != BOTTLE_TAG_VOCAB32) {
         return false;
     }
     if (noMore()) {
         return false;
     }
     x = reader.expectInt32();
+    state->len--;
+    return !reader.isError();
+}
+
+bool WireReader::readVocab64(yarp::conf::vocab64_t& x)
+{
+    std::int32_t tag = state->code;
+    if (tag < 0) {
+        if (noMore()) {
+            return false;
+        }
+        tag = reader.expectInt32();
+    }
+    if (tag != BOTTLE_TAG_VOCAB64) {
+        return false;
+    }
+    if (noMore()) {
+        return false;
+    }
+    x = reader.expectInt64();
+    state->len--;
+    return !reader.isError();
+}
+
+bool WireReader::readSizeT(std::size_t& x)
+{
+    std::int32_t tag = state->code;
+    if (tag < 0) {
+        if (noMore()) {
+            return false;
+        }
+        tag = reader.expectInt32();
+    }
+    if (tag != BOTTLE_TAG_INT32) {
+        return false;
+    }
+    if (noMore()) {
+        return false;
+    }
+    std::int32_t tmp = reader.expectInt32();
+    if (tmp < 0) {
+        return false;
+    }
+
+    x = tmp;
     state->len--;
     return !reader.isError();
 }
@@ -350,12 +404,12 @@ bool WireReader::readString(std::string& str, bool* is_vocab)
             return false;
         }
         tag = reader.expectInt32();
-        if (tag != BOTTLE_TAG_STRING && tag != BOTTLE_TAG_VOCAB) {
+        if (tag != BOTTLE_TAG_STRING && tag != BOTTLE_TAG_VOCAB32) {
             return false;
         }
     }
     state->len--;
-    if (tag == BOTTLE_TAG_VOCAB) {
+    if (tag == BOTTLE_TAG_VOCAB32) {
         if (is_vocab != nullptr) {
             *is_vocab = true;
         }
@@ -366,7 +420,7 @@ bool WireReader::readString(std::string& str, bool* is_vocab)
         if (reader.isError()) {
             return false;
         }
-        str = Vocab::decode(v);
+        str = Vocab32::decode(v);
         return true;
     }
     if (is_vocab != nullptr) {
@@ -379,13 +433,26 @@ bool WireReader::readString(std::string& str, bool* is_vocab)
     if (reader.isError()) {
         return false;
     }
-    if (noMore()) {
+    if (len != 0 && noMore()) {
         return false;
     }
     str.resize(len);
     reader.expectBlock(const_cast<char*>(str.data()), len);
     return !reader.isError();
 }
+
+bool WireReader::readBlock(char* const data, size_t len)
+{
+    if (state->len <= 0) {
+        return false;
+    }
+    if (noMore()) {
+        return false;
+    }
+    reader.expectBlock(data, len);
+    return !reader.isError();
+}
+
 
 bool WireReader::readBinary(std::string& str)
 {
@@ -422,52 +489,6 @@ bool WireReader::readBinary(std::string& str)
     str.resize(len);
     reader.expectBlock(const_cast<char*>(str.data()), len);
     return !reader.isError();
-}
-
-bool WireReader::readEnum(std::int32_t& x, WireVocab& converter)
-{
-    std::int32_t tag = state->code;
-    if (tag < 0) {
-        if (noMore()) {
-            return false;
-        }
-        tag = reader.expectInt32();
-    }
-    if (tag == BOTTLE_TAG_INT32) {
-        if (noMore()) {
-            return false;
-        }
-        std::int32_t v = reader.expectInt32();
-        x = v;
-        state->len--;
-        return !reader.isError();
-    }
-    if (tag == BOTTLE_TAG_STRING) {
-        if (noMore()) {
-            return false;
-        }
-        std::int32_t len = reader.expectInt32();
-        if (reader.isError()) {
-            return false;
-        }
-        if (len < 1) {
-            return false;
-        }
-        if (noMore()) {
-            return false;
-        }
-        std::string str;
-        str.resize(len);
-        reader.expectBlock(const_cast<char*>(str.data()), len);
-        str.resize(len - 1);
-        state->len--;
-        if (reader.isError()) {
-            return false;
-        }
-        x = static_cast<std::int32_t>(converter.fromString(str));
-        return (x >= 0);
-    }
-    return false;
 }
 
 bool WireReader::readListHeader()
@@ -517,7 +538,7 @@ bool WireReader::readListReturn()
     }
     // possibly old-style return: [is] foo val [ok]
     std::int32_t v = 0;
-    if (!readVocab(v)) {
+    if (!readVocab32(v)) {
         return false;
     }
     if (v != VOCAB_IS) {
@@ -530,6 +551,11 @@ bool WireReader::readListReturn()
     // now we are ready to consume real result
     state->need_ok = true;
     return true;
+}
+
+ConnectionReader& WireReader::getReader()
+{
+    return reader;
 }
 
 ConnectionWriter& WireReader::getWriter()
@@ -552,7 +578,7 @@ bool WireReader::isError()
     return reader.isError();
 }
 
-std::string WireReader::readTag()
+std::string WireReader::readTag(size_t len)
 {
     flush_if_needed = true;
     std::string str;
@@ -565,16 +591,16 @@ std::string WireReader::readTag()
     if (!is_vocab) {
         return str;
     }
-    while (is_vocab && state->len > 0) {
+    while (--len > 0 && is_vocab && state->len > 0) {
         if (state->code >= 0) {
-            is_vocab = (state->code == BOTTLE_TAG_VOCAB);
+            is_vocab = (state->code == BOTTLE_TAG_VOCAB32);
         } else {
             if (noMore()) {
                 return {};
             }
             std::int32_t x = reader.expectInt32();
             reader.pushInt(x);
-            is_vocab = (x == BOTTLE_TAG_VOCAB);
+            is_vocab = (x == BOTTLE_TAG_VOCAB32);
         }
         if (is_vocab) {
             std::string str2;
@@ -589,7 +615,7 @@ std::string WireReader::readTag()
     return str;
 }
 
-void WireReader::readListBegin(WireState& nstate, std::uint32_t& len)
+void WireReader::readListBegin(WireState& nstate, size_t& len)
 {
     nstate.parent = state;
     state = &nstate;
@@ -597,17 +623,17 @@ void WireReader::readListBegin(WireState& nstate, std::uint32_t& len)
     if (!readListHeader()) {
         return;
     }
-    len = static_cast<std::uint32_t>(state->len);
+    len = static_cast<size_t>(state->len);
 }
 
-void WireReader::readSetBegin(WireState& nstate, std::uint32_t& len)
+void WireReader::readSetBegin(WireState& nstate, size_t& len)
 {
     readListBegin(nstate, len);
 }
 
 void WireReader::readMapBegin(WireState& nstate,
                               WireState& nstate2,
-                              std::uint32_t& len)
+                              size_t& len)
 {
     YARP_UNUSED(nstate2);
     readListBegin(nstate, len);
@@ -645,7 +671,7 @@ void WireReader::scanString(std::string& str, bool is_vocab)
     if (get_string.empty()) {
         if (get_mode && get_string.empty()) {
             get_string = str;
-            get_is_vocab = is_vocab;
+            get_is_vocab32 = is_vocab;
         } else if (str == "get") {
             get_mode = true;
         } else {
@@ -660,9 +686,9 @@ bool WireReader::getMode() const
     return get_mode;
 }
 
-bool WireReader::getIsVocab() const
+bool WireReader::getIsVocab32() const
 {
-    return get_is_vocab;
+    return get_is_vocab32;
 }
 
 const std::string& WireReader::getString() const

@@ -1,19 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #include <arpa/inet.h>
@@ -47,7 +34,6 @@ extern "C" {
 
 #include "imuBosch_BNO055.h"
 
-using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
 
@@ -61,10 +47,8 @@ constexpr uint8_t i2cAddrA = 0x28;
 BoschIMU::BoschIMU() : PeriodicThread(0.02),
     verbose(false),
     status(0),
-    nChannels(12),
     m_timeStamp(0.0),
     timeLastReport(0.0),
-    i2c_flag(false),
     checkError(false),
     fd(0),
     responseOffset(0),
@@ -89,35 +73,31 @@ bool BoschIMU::open(yarp::os::Searchable& config)
     //debug
     yCTrace(IMUBOSCH_BNO055, "Parameters are:\n\t%s", config.toString().c_str());
 
-    if(!config.check("comport") && !config.check("i2c"))
+    if (!this->parseParams(config)) { return false; }
+
+    if(m_comport.empty() && m_i2c.empty())
     {
-        yCError(IMUBOSCH_BNO055) << "Params 'comport' and 'i2c' not found";
+        yCError(IMUBOSCH_BNO055) << "Params 'comport' and 'i2c' not found. At least one of the two must be specified";
         return false;
     }
 
-    if (config.check("comport") && config.check("i2c"))
+    if (!m_comport.empty() && !m_i2c.empty())
     {
         yCError(IMUBOSCH_BNO055) << "Params 'comport' and 'i2c' both specified";
         return false;
     }
 
-    i2c_flag = config.check("i2c");
+    m_i2c_flag = !m_i2c.empty();
 
-    readFunc = i2c_flag ? &BoschIMU::sendReadCommandI2c : &BoschIMU::sendReadCommandSer;
+    readFunc = m_i2c_flag ? &BoschIMU::sendReadCommandI2c : &BoschIMU::sendReadCommandSer;
 
     // In case of reading through serial the first two bytes of the response are the ack, so
     // they need to be discarded when publishing the data.
-    responseOffset = i2c_flag ? 0 : 2;
+    responseOffset = m_i2c_flag ? 0 : 2;
 
-    if (i2c_flag)
+    if (m_i2c_flag)
     {
-        if (!config.find("i2c").isString())
-        {
-            yCError(IMUBOSCH_BNO055) << "i2c param malformed, it should be a string, aborting.";
-            return false;
-        }
-
-        std::string i2cDevFile = config.find("i2c").asString();
+        std::string i2cDevFile = m_i2c;
         fd = ::open(i2cDevFile.c_str(), O_RDWR);
 
         if (fd < 0)
@@ -135,9 +115,9 @@ bool BoschIMU::open(yarp::os::Searchable& config)
     }
     else
     {
-        fd = ::open(config.find("comport").toString().c_str(), O_RDWR | O_NOCTTY );
+        fd = ::open(m_comport.c_str(), O_RDWR | O_NOCTTY );
         if (fd < 0) {
-            yCError(IMUBOSCH_BNO055, "Can't open %s, %s", config.find("comport").toString().c_str(), strerror(errno));
+            yCError(IMUBOSCH_BNO055, "Can't open %s, %s", m_comport.c_str(), strerror(errno));
             return false;
         }
         //Get the current options for the port...
@@ -184,30 +164,8 @@ bool BoschIMU::open(yarp::os::Searchable& config)
 
     }
 
-    nChannels = config.check("channels", Value(12)).asInt32();
-
-    double period = config.check("period",Value(10),"Thread period in ms").asInt32() / 1000.0;
-    setPeriod(period);
-
-    if (config.check("sensor_name") && config.find("sensor_name").isString())
-    {
-        m_sensorName = config.find("sensor_name").asString();
-    }
-    else
-    {
-        m_sensorName = "sensor_imu_bosch_bno055";
-        yCWarning(IMUBOSCH_BNO055) << "Parameter \"sensor_name\" not set. Using default value  \"" << m_sensorName << "\" for this parameter.";
-    }
-
-    if (config.check("frame_name") && config.find("frame_name").isString())
-    {
-        m_frameName = config.find("frame_name").asString();
-    }
-    else
-    {
-        m_frameName = m_sensorName;
-        yCWarning(IMUBOSCH_BNO055) << "Parameter \"frame_name\" not set. Using the same value as \"sensor_name\" for this parameter.";
-    }
+    double period_d = m_period / 1000.0;
+    setPeriod(period_d);
 
     return PeriodicThread::start();
 }
@@ -346,8 +304,9 @@ bool BoschIMU::sendWriteCommandSer(unsigned char register_add, int len, unsigned
     command[1]= WRITE_CMD;      // read operation
     command[2]= register_add;   // operation mode register
     command[3]= (unsigned char) len;     // length 1 byte
-    for(int i=0; i<len; i++)
-        command[4+i] = cmd[i];  // data
+    for (int i = 0; i < len; i++) {
+        command[4 + i] = cmd[i]; // data
+    }
 
 //     yCTrace(IMUBOSCH_BNO055, "> WRITE_COMMAND:  %s ... ", comment.c_str());
 //     yCTrace(IMUBOSCH_BNO055, "Command is:");
@@ -384,8 +343,9 @@ int BoschIMU::readBytes(unsigned char* buffer, int bytes)
     do
     {
         r = ::read(fd, (void*)&buffer[bytesRead], 1);
-        if(r > 0)
+        if (r > 0) {
             bytesRead += r;
+        }
     }
     while(r!=0 && bytesRead < bytes);
 
@@ -404,16 +364,18 @@ void BoschIMU::dropGarbage()
 
 void BoschIMU::printBuffer(unsigned char* buffer, int length)
 {
-    for(int i=0; i< length; i++)
+    for (int i = 0; i < length; i++) {
         printf("\t0x%02X ", buffer[i]);
+    }
     printf("\n");
 }
 
 void BoschIMU::readSysError()
 {
     // avoid recursive error check
-    if(checkError)
+    if (checkError) {
         return;
+    }
 
     checkError = true;
     yarp::os::SystemClock::delaySystem(0.002);
@@ -455,7 +417,7 @@ bool BoschIMU::sendReadCommandI2c(unsigned char register_add, int len, unsigned 
 
 bool BoschIMU::threadInit()
 {
-    if (i2c_flag)
+    if (m_i2c_flag)
     {
         int trials = 0;
         // Make sure we have the right device
@@ -602,10 +564,11 @@ bool BoschIMU::threadInit()
     {
         // read data from IMU
         run();
-        if(dataIsValid)
+        if (dataIsValid) {
             break;
-        else
+        } else {
             yarp::os::SystemClock::delaySystem(0.01);
+        }
     }
 
     if(!dataIsValid)
@@ -715,11 +678,11 @@ void BoschIMU::run()
 bool BoschIMU::read(yarp::sig::Vector &out)
 {
     std::lock_guard<std::mutex> guard(mutex);
-    out.resize(nChannels);
+    out.resize(m_channels);
     out.zero();
 
     out = data;
-    if(nChannels == 16)
+    if(m_channels == 16)
     {
         out[12] = quaternion.w();
         out[13] = quaternion.x();
@@ -732,7 +695,7 @@ bool BoschIMU::read(yarp::sig::Vector &out)
 
 bool BoschIMU::getChannels(int *nc)
 {
-    *nc = nChannels;
+    *nc = m_channels;
     return true;
 }
 
@@ -757,34 +720,35 @@ yarp::dev::MAS_status BoschIMU::genericGetStatus(size_t sens_index) const
     return yarp::dev::MAS_status::MAS_OK;
 }
 
-bool BoschIMU::genericGetSensorName(size_t sens_index, string& name) const
+ReturnValue BoschIMU::genericGetSensorName(size_t sens_index, std::string& name) const
 {
     if (sens_index != 0)
     {
         yCError(IMUBOSCH_BNO055) << "sens_index must be equal to 0, since there is only one sensor in consideration";
-        return false;
+        return ReturnValue_error_input_out_of_bounds;
     }
 
-    name = m_sensorName;
-    return true;
+    name = m_sensor_name;
+    return ReturnValue_ok;
 }
 
-bool BoschIMU::genericGetFrameName(size_t sens_index, string& frameName) const
+ReturnValue BoschIMU::genericGetFrameName(size_t sens_index, std::string& frameName) const
 {
     if (sens_index != 0)
     {
         yCError(IMUBOSCH_BNO055) << "sens_index must be equal to 0, since there is only one sensor in consideration";
-        return false;
+        return ReturnValue_error_input_out_of_bounds;
     }
 
-    frameName = m_frameName;
-    return true;
+    frameName = m_frame_name;
+    return ReturnValue_ok;
 
 }
 
-size_t BoschIMU::getNrOfThreeAxisLinearAccelerometers() const
+ReturnValue BoschIMU::getNrOfThreeAxisLinearAccelerometers(size_t& num) const
 {
-    return 1;
+    num = 1;
+    return ReturnValue_ok;
 }
 
 
@@ -793,22 +757,22 @@ yarp::dev::MAS_status BoschIMU::getThreeAxisLinearAccelerometerStatus(size_t sen
     return genericGetStatus(sens_index);
 }
 
-bool BoschIMU::getThreeAxisLinearAccelerometerName(size_t sens_index, string& name) const
+ReturnValue BoschIMU::getThreeAxisLinearAccelerometerName(size_t sens_index, std::string& name) const
 {
     return genericGetSensorName(sens_index, name);
 }
 
-bool BoschIMU::getThreeAxisLinearAccelerometerFrameName(size_t sens_index, string& frameName) const
+ReturnValue BoschIMU::getThreeAxisLinearAccelerometerFrameName(size_t sens_index, std::string& frameName) const
 {
     return genericGetFrameName(sens_index, frameName);
 }
 
-bool BoschIMU::getThreeAxisLinearAccelerometerMeasure(size_t sens_index, yarp::sig::Vector& out, double& timestamp) const
+ReturnValue BoschIMU::getThreeAxisLinearAccelerometerMeasure(size_t sens_index, yarp::sig::Vector& out, double& timestamp) const
 {
     if (sens_index != 0)
     {
         yCError(IMUBOSCH_BNO055) << "sens_index must be equal to 0, since there is only one sensor in consideration";
-        return false;
+        return ReturnValue_error_input_out_of_bounds;
     }
 
     out.resize(3);
@@ -818,13 +782,13 @@ bool BoschIMU::getThreeAxisLinearAccelerometerMeasure(size_t sens_index, yarp::s
     out[2] = data[5];
 
     timestamp = m_timeStamp;
-    return true;
+    return ReturnValue_ok;
 }
 
 
-size_t BoschIMU::getNrOfThreeAxisGyroscopes() const
+ReturnValue BoschIMU::getNrOfThreeAxisGyroscopes(size_t& num) const
 {
-    return 1;
+    return ReturnValue_ok;
 }
 
 
@@ -833,22 +797,22 @@ yarp::dev::MAS_status BoschIMU::getThreeAxisGyroscopeStatus(size_t sens_index) c
     return genericGetStatus(sens_index);
 }
 
-bool BoschIMU::getThreeAxisGyroscopeName(size_t sens_index, string& name) const
+ReturnValue BoschIMU::getThreeAxisGyroscopeName(size_t sens_index, std::string& name) const
 {
     return genericGetSensorName(sens_index, name);
 }
 
-bool BoschIMU::getThreeAxisGyroscopeFrameName(size_t sens_index, string& frameName) const
+ReturnValue BoschIMU::getThreeAxisGyroscopeFrameName(size_t sens_index, std::string& frameName) const
 {
     return genericGetFrameName(sens_index, frameName);
 }
 
-bool BoschIMU::getThreeAxisGyroscopeMeasure(size_t sens_index, yarp::sig::Vector& out, double& timestamp) const
+ReturnValue BoschIMU::getThreeAxisGyroscopeMeasure(size_t sens_index, yarp::sig::Vector& out, double& timestamp) const
 {
     if (sens_index != 0)
     {
         yCError(IMUBOSCH_BNO055) << "sens_index must be equal to 0, since there is only one sensor in consideration";
-        return false;
+        return ReturnValue_error_input_out_of_bounds;
     }
 
     out.resize(3);
@@ -858,12 +822,13 @@ bool BoschIMU::getThreeAxisGyroscopeMeasure(size_t sens_index, yarp::sig::Vector
     out[2] = data[8];
 
     timestamp = m_timeStamp;
-    return true;
+    return ReturnValue_ok;
 }
 
-size_t BoschIMU::getNrOfOrientationSensors() const
+ReturnValue BoschIMU::getNrOfOrientationSensors(size_t& num) const
 {
-    return 1;
+    num =1;
+    return ReturnValue_ok;
 }
 
 yarp::dev::MAS_status BoschIMU::getOrientationSensorStatus(size_t sens_index) const
@@ -871,22 +836,22 @@ yarp::dev::MAS_status BoschIMU::getOrientationSensorStatus(size_t sens_index) co
     return genericGetStatus(sens_index);
 }
 
-bool BoschIMU::getOrientationSensorName(size_t sens_index, string& name) const
+ReturnValue BoschIMU::getOrientationSensorName(size_t sens_index, std::string& name) const
 {
     return genericGetSensorName(sens_index, name);
 }
 
-bool BoschIMU::getOrientationSensorFrameName(size_t sens_index, string& frameName) const
+ReturnValue BoschIMU::getOrientationSensorFrameName(size_t sens_index, std::string& frameName) const
 {
     return genericGetFrameName(sens_index, frameName);
 }
 
-bool BoschIMU::getOrientationSensorMeasureAsRollPitchYaw(size_t sens_index, yarp::sig::Vector& rpy, double& timestamp) const
+ReturnValue BoschIMU::getOrientationSensorMeasureAsRollPitchYaw(size_t sens_index, yarp::sig::Vector& rpy, double& timestamp) const
 {
     if (sens_index != 0)
     {
         yCError(IMUBOSCH_BNO055) << "sens_index must be equal to 0, since there is only one sensor in consideration";
-        return false;
+        return ReturnValue_error_input_out_of_bounds;
     }
 
     rpy.resize(3);
@@ -896,12 +861,13 @@ bool BoschIMU::getOrientationSensorMeasureAsRollPitchYaw(size_t sens_index, yarp
     rpy[2] = data[2];
 
     timestamp = m_timeStamp;
-    return true;
+    return ReturnValue_ok;
 }
 
-size_t BoschIMU::getNrOfThreeAxisMagnetometers() const
+ReturnValue BoschIMU::getNrOfThreeAxisMagnetometers(size_t& num) const
 {
-    return 1;
+    num = 1;
+    return ReturnValue_ok;
 }
 
 yarp::dev::MAS_status BoschIMU::getThreeAxisMagnetometerStatus(size_t sens_index) const
@@ -909,22 +875,22 @@ yarp::dev::MAS_status BoschIMU::getThreeAxisMagnetometerStatus(size_t sens_index
     return genericGetStatus(sens_index);
 }
 
-bool BoschIMU::getThreeAxisMagnetometerName(size_t sens_index, string& name) const
+ReturnValue BoschIMU::getThreeAxisMagnetometerName(size_t sens_index, std::string& name) const
 {
     return genericGetSensorName(sens_index, name);
 }
 
-bool BoschIMU::getThreeAxisMagnetometerFrameName(size_t sens_index, string& frameName) const
+ReturnValue BoschIMU::getThreeAxisMagnetometerFrameName(size_t sens_index, std::string& frameName) const
 {
     return genericGetFrameName(sens_index, frameName);
 }
 
-bool BoschIMU::getThreeAxisMagnetometerMeasure(size_t sens_index, yarp::sig::Vector& out, double& timestamp) const
+ReturnValue BoschIMU::getThreeAxisMagnetometerMeasure(size_t sens_index, yarp::sig::Vector& out, double& timestamp) const
 {
     if (sens_index != 0)
     {
         yCError(IMUBOSCH_BNO055) << "sens_index must be equal to 0, since there is only one sensor in consideration";
-        return false;
+        return ReturnValue_error_input_out_of_bounds;
     }
 
     out.resize(3);
@@ -935,7 +901,7 @@ bool BoschIMU::getThreeAxisMagnetometerMeasure(size_t sens_index, yarp::sig::Vec
     out[2] = data[11]/ 1000000;
 
     timestamp = m_timeStamp;
-    return true;
+    return ReturnValue_ok;
 }
 
 

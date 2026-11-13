@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/Network.h>
@@ -53,11 +50,11 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    IPositionControl* pos;
+    IPositionControl* pos=nullptr;
     dd.view(pos);
 
-    int jnts = 0;
-    pos->getAxes(&jnts);
+    size_t jnts = 0;
+    pos->getAxes(jnts);
     pos->positionMove(0, -45);
 
     yarp::os::Time::delay(1);

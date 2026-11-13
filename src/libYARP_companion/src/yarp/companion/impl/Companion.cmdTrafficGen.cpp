@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/companion/impl/Companion.h>
@@ -19,7 +16,6 @@
 using yarp::companion::impl::Companion;
 using yarp::os::Bottle;
 using yarp::os::Property;
-using namespace std;
 
 class datasender : public yarp::os::PeriodicThread
 {
@@ -31,7 +27,7 @@ private:
     yarp::os::Bottle pp;
 
 public:
-    datasender(double period, string portname, double data_size_MB) :
+    datasender(double period, std::string portname, double data_size_MB) :
             PeriodicThread (period),
             m_data_size_MB(data_size_MB),
             m_portname(std::move(portname))
@@ -57,8 +53,9 @@ public:
 
     void run() override
     {
-        if (outport.getOutputCount()>0)
+        if (outport.getOutputCount() > 0) {
             outport.write(pp);
+        }
     }
 
     void threadRelease() override
@@ -108,9 +105,9 @@ int Companion::cmdTrafficGen(int argc, char *argv[])
         return 0;
     }
 
-    string portname = argv[0];
+    std::string portname = argv[0];
 
-    yCInfo (COMPANION, "Starting trafficgen with the following options: period:%.3f(s), size:%.3f(MB), duration:%.3f(s), bandwidth:%.3f(Mb/s) ", period, size_MB, duration, period* size_MB *8);
+    yCInfo (COMPANION, "Starting trafficgen with the following options: period:%.3f(s), size:%.3f(MB), duration:%.3f(s), bandwidth:%.3f(Mb/s) ", period, size_MB, duration, size_MB / period *8);
 
     datasender pt(period, portname, size_MB);
     double start_time = yarp::os::Time::now();

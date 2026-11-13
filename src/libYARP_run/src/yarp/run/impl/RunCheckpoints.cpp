@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/run/impl/RunCheckpoints.h>
@@ -35,17 +32,23 @@ YarprunCheckpoints::YarprunCheckpoints()
 
     for (int t=10; t<256 && path[t]; ++t)
     {
-        if (path[t]=='\n' || path[t]=='\r' || path[t]==' ' || path[t]==':' || path[t]=='?') path[t]='_';
+        if (path[t] == '\n' || path[t] == '\r' || path[t] == ' ' || path[t] == ':' || path[t] == '?') {
+            path[t] = '_';
+        }
     }
 
     mLogFile=fopen(path, "w");
 
-    if (!mLogFile) perror(path);
+    if (!mLogFile) {
+        perror(path);
+    }
 }
 
 YarprunCheckpoints::~YarprunCheckpoints()
 {
-    if (mLogFile) fclose(mLogFile);
+    if (mLogFile) {
+        fclose(mLogFile);
+    }
 }
 
 YarprunCheckpoints& YarprunCheckpoints::instance()
@@ -57,7 +60,9 @@ YarprunCheckpoints& YarprunCheckpoints::instance()
 
 void YarprunCheckpoints::checkpoint(const char *prefix, const char* sFile, const char* sFunction, int line)
 {
-    if (!mLogFile) return;
+    if (!mLogFile) {
+        return;
+    }
 
     fprintf(mLogFile, "%s: file %s function %s line %d\n", prefix, sFile, sFunction, line);
     fflush(mLogFile);

@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_IMPLEMENTAMPLIFIERCONTROL_H
@@ -12,21 +9,18 @@
 #include <yarp/dev/ControlBoardInterfaces.h>
 #include <yarp/dev/api.h>
 
-namespace yarp
-{
-    namespace dev
-    {
-        class ImplementAmplifierControl;
-    }
+namespace yarp::dev {
+class ImplementAmplifierControl;
 }
 
 class YARP_dev_API yarp::dev::ImplementAmplifierControl : public IAmplifierControl
 {
 protected:
-    IAmplifierControlRaw *iAmplifier;
-    void *helper;
-    double *dTemp;
-    int *iTemp;
+    IAmplifierControlRaw*    m_iraw=nullptr;
+    void*                    m_helper=nullptr;
+    std::vector<int>         m_buffer_ints;
+    std::vector<double>      m_buffer_doubles;
+    std::mutex               m_imp_mutex;
 
     /**
      * Initialize the internal data and alloc memory.
@@ -61,13 +55,13 @@ public:
      * generating abrupt movements.
      * @return true/false on success/failure
      */
-    bool enableAmp(int j) override;
+    yarp::dev::ReturnValue enableAmp(int j) override;
 
     /** Disable the amplifier on a specific joint. All computations within the board
      * will be carried out normally, but the output will be disabled.
      * @return true/false on success/failure
      */
-    bool disableAmp(int j) override;
+    yarp::dev::ReturnValue disableAmp(int j) override;
 
     /* Get the status of the amplifiers, coded in a 32 bits integer for
      * each amplifier (at the moment contains only the fault, it will be
@@ -75,22 +69,22 @@ public:
      * @param st pointer to storage
      * @return true in good luck, false otherwise.
      */
-    bool getAmpStatus(int *st) override;
+    yarp::dev::ReturnValue getAmpStatus(int *st) override;
 
-    bool getAmpStatus(int j, int *st) override;
+    yarp::dev::ReturnValue getAmpStatus(int j, int *st) override;
 
     /* Read the electric current going to all motors.
      * @param vals pointer to storage for the output values
      * @return hopefully true, false in bad luck.
      */
-    bool getCurrents(double *vals) override;
+    yarp::dev::ReturnValue getCurrents(double *vals) override;
 
     /* Read the electric current going to a given motor.
      * @param j motor number
      * @param val pointer to storage for the output value
      * @return probably true, might return false in bad times
      */
-    bool getCurrent(int j, double *val) override;
+    yarp::dev::ReturnValue getCurrent(int j, double *val) override;
 
     /* Set the maximum electric current going to a given motor. The behavior
      * of the board/amplifier when this limit is reached depends on the
@@ -99,7 +93,7 @@ public:
      * @param v the new value
      * @return probably true, might return false in bad times
      */
-    bool setMaxCurrent(int j, double v) override;
+    yarp::dev::ReturnValue setMaxCurrent(int j, double v) override;
 
     /**
     * Returns the maximum electric current allowed for a given motor. The behavior
@@ -109,7 +103,7 @@ public:
     * @param v the return value
     * @return probably true, might return false in bad times
     */
-    bool getMaxCurrent(int j, double *v) override;
+    yarp::dev::ReturnValue getMaxCurrent(int j, double *v) override;
 
     /* Get the the nominal current which can be kept for an indefinite amount of time
      * without harming the motor. This value is specific for each motor and it is typically
@@ -120,7 +114,7 @@ public:
      * @param val storage for return value. [Ampere]
      * @return true/false success failure.
      */
-    bool getNominalCurrent(int m, double *val) override;
+    yarp::dev::ReturnValue getNominalCurrent(int m, double *val) override;
 
     /* Set the the nominal current which can be kept for an indefinite amount of time
     * without harming the motor. This value is specific for each motor and it is typically
@@ -131,7 +125,7 @@ public:
     * @param val storage for return value. [Ampere]
     * @return true/false success failure.
     */
-    bool setNominalCurrent(int m, const double val) override;
+    yarp::dev::ReturnValue setNominalCurrent(int m, const double val) override;
 
     /* Get the the peak current which causes damage to the motor if maintained
      * for a long amount of time.
@@ -142,7 +136,7 @@ public:
      * @param val storage for return value. [Ampere]
      * @return true/false success failure.
      */
-    bool getPeakCurrent(int m, double *val) override;
+    yarp::dev::ReturnValue getPeakCurrent(int m, double *val) override;
 
     /* Set the the peak current. This value  which causes damage to the motor if maintained
      * for a long amount of time.
@@ -153,7 +147,7 @@ public:
      * @param val storage for return value. [Ampere]
      * @return true/false success failure.
      */
-    bool setPeakCurrent(int m, const double val) override;
+    yarp::dev::ReturnValue setPeakCurrent(int m, const double val) override;
 
     /* Get the the current PWM value used to control the motor.
      * The units are firmware dependent, either machine units or percentage.
@@ -161,7 +155,7 @@ public:
      * @param val filled with PWM value.
      * @return true/false success failure.
      */
-    bool getPWM(int j, double* val) override;
+    yarp::dev::ReturnValue getPWM(int j, double* val) override;
 
     /* Get the PWM limit for the given motor.
      * The units are firmware dependent, either machine units or percentage.
@@ -169,7 +163,7 @@ public:
      * @param val filled with PWM limit value.
      * @return true/false success failure.
      */
-    bool getPWMLimit(int j, double* val) override;
+    yarp::dev::ReturnValue getPWMLimit(int j, double* val) override;
 
     /* Set the PWM limit for the given motor.
      * The units are firmware dependent, either machine units or percentage.
@@ -177,14 +171,14 @@ public:
      * @param val new value for the PWM limit.
      * @return true/false success failure.
      */
-    bool setPWMLimit(int j, const double val) override;
+    yarp::dev::ReturnValue setPWMLimit(int j, const double val) override;
 
     /* Get the power source voltage for the given motor in Volt.
      * @param j joint number
      * @param val filled with return value.
      * @return true/false success failure.
      */
-    bool getPowerSupplyVoltage(int j, double* val) override;
+    yarp::dev::ReturnValue getPowerSupplyVoltage(int j, double* val) override;
 };
 
 

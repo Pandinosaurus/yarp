@@ -1,27 +1,26 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include "yarp/dev/ControlBoardInterfacesImpl.h"
 #include <yarp/dev/ControlBoardHelper.h>
+#include <yarp/dev/ControlBoardHelpers.h>
 #include <yarp/dev/impl/FixedSizeBuffersManager.h>
 
 #include <cstdio>
 using namespace yarp::dev;
 using namespace yarp::os;
 
-#define JOINTIDCHECK if (m >= castToMapper(helper)->axes()){yError("motor id out of bound"); return false;}
+namespace {
+YARP_LOG_COMPONENT(IMPLEMENT_LAYER_COMPONENT, "yarp.ImplementMotorEncoders")
+}
 
 ////////////////////////
 // Encoder Interface Timed Implementation
 ImplementMotorEncoders::ImplementMotorEncoders(IMotorEncodersRaw *y):
-    iMotorEncoders(y),
-    helper(nullptr),
-    buffManager(nullptr)
+    m_iraw(y),
+    m_helper(nullptr)
 {;}
 
 ImplementMotorEncoders::~ImplementMotorEncoders()
@@ -31,14 +30,17 @@ ImplementMotorEncoders::~ImplementMotorEncoders()
 
 bool ImplementMotorEncoders:: initialize (int size, const int *amap, const double *enc, const double *zos)
 {
-    if (helper!=nullptr)
+    if (m_helper != nullptr) {
         return false;
+    }
 
-    helper=(void *)(new ControlBoardHelper(size, amap, enc, zos));
-    yAssert (helper != nullptr);
+    m_helper=(void *)(new ControlBoardHelper(size, amap, enc, zos));
+    yAssert (m_helper != nullptr);
 
-    buffManager = new yarp::dev::impl::FixedSizeBuffersManager<double> (size);
-    yAssert (buffManager != nullptr);
+    m_buffer_ints.resize   (size);
+    m_buffer_doubles.resize(size);
+    m_buffer_doubles2.resize(size);
+
     return true;
 }
 
@@ -48,183 +50,212 @@ bool ImplementMotorEncoders:: initialize (int size, const int *amap, const doubl
 */
 bool ImplementMotorEncoders::uninitialize ()
 {
-    if (helper!=nullptr)
+    if (m_helper!=nullptr)
     {
-        delete castToMapper(helper);
-        helper=nullptr;
-    }
-
-    if(buffManager)
-    {
-        delete buffManager;
-        buffManager=nullptr;
+        delete castToMapper(m_helper);
+        m_helper=nullptr;
     }
 
     return true;
 }
 
-bool ImplementMotorEncoders::getNumberOfMotorEncoders(int *num)
+ReturnValue ImplementMotorEncoders::getNumberOfMotorEncoders(int *num)
 {
-    (*num)=castToMapper(helper)->axes();
-    return true;
+    std::lock_guard lock(m_imp_mutex);
+
+    (*num)=castToMapper(m_helper)->axes();
+    return ReturnValue_ok;
 }
 
-bool ImplementMotorEncoders::resetMotorEncoder(int m)
+ReturnValue ImplementMotorEncoders::resetMotorEncoder(int m)
 {
-    JOINTIDCHECK
+    std::lock_guard lock(m_imp_mutex);
+    JOINTIDCHECK(IMPLEMENT_LAYER_COMPONENT,m)
+
     int k;
-    k=castToMapper(helper)->toHw(m);
+    k=castToMapper(m_helper)->toHw(m);
 
-    return iMotorEncoders->resetMotorEncoderRaw(k);
+    return m_iraw->resetMotorEncoderRaw(k);
 }
 
-bool ImplementMotorEncoders::resetMotorEncoders()
+ReturnValue ImplementMotorEncoders::resetMotorEncoders()
 {
-    return iMotorEncoders->resetMotorEncodersRaw();
+    std::lock_guard lock(m_imp_mutex);
+
+    return m_iraw->resetMotorEncodersRaw();
 }
 
-bool ImplementMotorEncoders::setMotorEncoder(int m, const double val)
+ReturnValue ImplementMotorEncoders::setMotorEncoder(int m, const double val)
 {
-    JOINTIDCHECK
-    int k;
-    double enc;
+    std::lock_guard lock(m_imp_mutex);
+    JOINTIDCHECK(IMPLEMENT_LAYER_COMPONENT,m)
 
-    castToMapper(helper)->posA2E(val, m, enc, k);
-
-    return iMotorEncoders->setMotorEncoderRaw(k, enc);
-}
-
-bool ImplementMotorEncoders::getMotorEncoderCountsPerRevolution(int m, double* cpr)
-{
-    JOINTIDCHECK
-    bool ret;
-    int k=castToMapper(helper)->toHw(m);
-
-    ret=iMotorEncoders->getMotorEncoderCountsPerRevolutionRaw(k, cpr);
-
-    return ret;
-}
-
-bool ImplementMotorEncoders::setMotorEncoderCountsPerRevolution(int m, double cpr)
-{
-    JOINTIDCHECK
-    int k;
-
-    k=castToMapper(helper)->toHw(m);
-
-    return iMotorEncoders->setMotorEncoderCountsPerRevolutionRaw(k, cpr);
-}
-
-bool ImplementMotorEncoders::setMotorEncoders(const double *val)
-{
-    yarp::dev::impl::Buffer<double> buffValues = buffManager->getBuffer();
-    castToMapper(helper)->posA2E(val, buffValues.getData());
-
-    bool ret = iMotorEncoders->setMotorEncodersRaw(buffValues.getData());
-    buffManager->releaseBuffer(buffValues);
-    return ret;
-}
-
-bool ImplementMotorEncoders::getMotorEncoder(int m, double *v)
-{
-    JOINTIDCHECK
     int k;
     double enc;
-    bool ret;
 
-    k=castToMapper(helper)->toHw(m);
+    castToMapper(m_helper)->posA2E(val, m, enc, k);
 
-    ret=iMotorEncoders->getMotorEncoderRaw(k, &enc);
+    return m_iraw->setMotorEncoderRaw(k, enc);
+}
 
-    *v=castToMapper(helper)->posE2A(enc, k);
+ReturnValue ImplementMotorEncoders::getMotorEncoderCountsPerRevolution(int m, double* cpr)
+{
+    std::lock_guard lock(m_imp_mutex);
+    JOINTIDCHECK(IMPLEMENT_LAYER_COMPONENT,m)
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,cpr)
+
+    ReturnValue ret;
+    int k=castToMapper(m_helper)->toHw(m);
+
+    ret=m_iraw->getMotorEncoderCountsPerRevolutionRaw(k, cpr);
 
     return ret;
 }
 
-bool ImplementMotorEncoders::getMotorEncoders(double *v)
+ReturnValue ImplementMotorEncoders::setMotorEncoderCountsPerRevolution(int m, double cpr)
 {
-    yarp::dev::impl::Buffer<double> buffValues = buffManager->getBuffer();
-    bool ret=iMotorEncoders->getMotorEncodersRaw(buffValues.getData());
-    castToMapper(helper)->posE2A(buffValues.getData(), v);
-    buffManager->releaseBuffer(buffValues);
+    std::lock_guard lock(m_imp_mutex);
+    JOINTIDCHECK(IMPLEMENT_LAYER_COMPONENT,m)
+
+    int k;
+
+    k=castToMapper(m_helper)->toHw(m);
+
+    return m_iraw->setMotorEncoderCountsPerRevolutionRaw(k, cpr);
+}
+
+ReturnValue ImplementMotorEncoders::setMotorEncoders(const double *val)
+{
+    std::lock_guard lock(m_imp_mutex);
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,val)
+
+    castToMapper(m_helper)->posA2E(val, m_buffer_doubles.data());
+
+    ReturnValue ret = m_iraw->setMotorEncodersRaw(m_buffer_doubles.data());
+
     return ret;
 }
 
-bool ImplementMotorEncoders::getMotorEncoderSpeed(int m, double *v)
+ReturnValue ImplementMotorEncoders::getMotorEncoder(int m, double *v)
 {
-    JOINTIDCHECK
+    std::lock_guard lock(m_imp_mutex);
+    JOINTIDCHECK(IMPLEMENT_LAYER_COMPONENT,m)
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,v)
+
     int k;
     double enc;
-    bool ret;
+    ReturnValue ret;
 
-    k=castToMapper(helper)->toHw(m);
+    k=castToMapper(m_helper)->toHw(m);
 
-    ret=iMotorEncoders->getMotorEncoderSpeedRaw(k, &enc);
+    ret=m_iraw->getMotorEncoderRaw(k, &enc);
 
-    *v=castToMapper(helper)->velE2A(enc, k);
+    *v=castToMapper(m_helper)->posE2A(enc, k);
 
     return ret;
 }
 
-bool ImplementMotorEncoders::getMotorEncoderSpeeds(double *v)
+ReturnValue ImplementMotorEncoders::getMotorEncoders(double *v)
 {
-    yarp::dev::impl::Buffer<double> buffValues = buffManager->getBuffer();
-    bool ret=iMotorEncoders->getMotorEncoderSpeedsRaw(buffValues.getData());
-    castToMapper(helper)->velE2A(buffValues.getData(), v);
-    buffManager->releaseBuffer(buffValues);
+    std::lock_guard lock(m_imp_mutex);
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,v)
+
+    ReturnValue ret=m_iraw->getMotorEncodersRaw(m_buffer_doubles.data());
+    castToMapper(m_helper)->posE2A(m_buffer_doubles.data(), v);
+
     return ret;
 }
 
-bool ImplementMotorEncoders::getMotorEncoderAcceleration(int m, double *v)
+ReturnValue ImplementMotorEncoders::getMotorEncoderSpeed(int m, double *v)
 {
-    JOINTIDCHECK
+    std::lock_guard lock(m_imp_mutex);
+    JOINTIDCHECK(IMPLEMENT_LAYER_COMPONENT,m)
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,v)
+
     int k;
     double enc;
-    bool ret;
+    ReturnValue ret;
 
-    k=castToMapper(helper)->toHw(m);
+    k=castToMapper(m_helper)->toHw(m);
 
-    ret=iMotorEncoders->getMotorEncoderAccelerationRaw(k, &enc);
+    ret=m_iraw->getMotorEncoderSpeedRaw(k, &enc);
 
-    *v=castToMapper(helper)->accE2A(enc, k);
+    *v=castToMapper(m_helper)->velE2A(enc, k);
 
     return ret;
 }
 
-bool ImplementMotorEncoders::getMotorEncoderAccelerations(double *v)
+ReturnValue ImplementMotorEncoders::getMotorEncoderSpeeds(double *v)
 {
-    yarp::dev::impl::Buffer<double> buffValues = buffManager->getBuffer();
-    bool ret=iMotorEncoders->getMotorEncoderAccelerationsRaw(buffValues.getData());
-    castToMapper(helper)->accE2A(buffValues.getData(), v);
-    buffManager->releaseBuffer(buffValues);
+    std::lock_guard lock(m_imp_mutex);
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,v)
+
+    ReturnValue ret=m_iraw->getMotorEncoderSpeedsRaw(m_buffer_doubles.data());
+    castToMapper(m_helper)->velE2A(m_buffer_doubles.data(), v);
+
     return ret;
 }
 
-bool ImplementMotorEncoders::getMotorEncoderTimed(int m, double *v, double *t)
+ReturnValue ImplementMotorEncoders::getMotorEncoderAcceleration(int m, double *v)
 {
-    JOINTIDCHECK
+    std::lock_guard lock(m_imp_mutex);
+    JOINTIDCHECK(IMPLEMENT_LAYER_COMPONENT,m)
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,v)
+
     int k;
     double enc;
-    bool ret;
+    ReturnValue ret;
 
-    k=castToMapper(helper)->toHw(m);
+    k=castToMapper(m_helper)->toHw(m);
 
-    ret=iMotorEncoders->getMotorEncoderTimedRaw(k, &enc, t);
+    ret=m_iraw->getMotorEncoderAccelerationRaw(k, &enc);
 
-    *v=castToMapper(helper)->posE2A(enc, k);
+    *v=castToMapper(m_helper)->accE2A(enc, k);
+
+    return ret;
+}
+
+ReturnValue ImplementMotorEncoders::getMotorEncoderAccelerations(double *v)
+{
+    std::lock_guard lock(m_imp_mutex);
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,v)
+
+    ReturnValue ret=m_iraw->getMotorEncoderAccelerationsRaw(m_buffer_doubles.data());
+    castToMapper(m_helper)->accE2A(m_buffer_doubles.data(), v);
+
+    return ret;
+}
+
+ReturnValue ImplementMotorEncoders::getMotorEncoderTimed(int m, double *v, double *t)
+{
+    std::lock_guard lock(m_imp_mutex);
+    JOINTIDCHECK(IMPLEMENT_LAYER_COMPONENT,m)
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,v)
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,t)
+
+    int k;
+    double enc;
+    ReturnValue ret;
+
+    k=castToMapper(m_helper)->toHw(m);
+
+    ret=m_iraw->getMotorEncoderTimedRaw(k, &enc, t);
+
+    *v=castToMapper(m_helper)->posE2A(enc, k);
 
     return ret;
 }
 
 
-bool ImplementMotorEncoders::getMotorEncodersTimed(double *v, double *t)
+ReturnValue ImplementMotorEncoders::getMotorEncodersTimed(double *v, double *t)
 {
-    yarp::dev::impl::Buffer<double>b_v = buffManager->getBuffer();
-    yarp::dev::impl::Buffer<double>b_t = buffManager->getBuffer();
-    bool ret=iMotorEncoders->getMotorEncodersTimedRaw(b_v.getData(), b_t.getData());
-    castToMapper(helper)->posE2A(b_v.getData(), v);
-    castToMapper(helper)->toUser(b_t.getData(), t);
-    buffManager->releaseBuffer(b_v);
-    buffManager->releaseBuffer(b_t);
+    std::lock_guard lock(m_imp_mutex);
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,v)
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,t)
+
+    ReturnValue ret=m_iraw->getMotorEncodersTimedRaw(m_buffer_doubles.data(), m_buffer_doubles2.data());
+    castToMapper(m_helper)->posE2A(m_buffer_doubles.data(), v);
+    castToMapper(m_helper)->toUser(m_buffer_doubles2.data(), t);
+
     return ret;
 }

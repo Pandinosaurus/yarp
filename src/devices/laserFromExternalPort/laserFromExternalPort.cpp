@@ -1,19 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #define _USE_MATH_DEFINES
@@ -33,7 +20,6 @@
 #include <limits>
 #include <mutex>
 
-using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
 
@@ -47,43 +33,21 @@ using namespace yarp::dev;
 
 YARP_LOG_COMPONENT(LASER_FROM_EXTERNAL_PORT, "yarp.devices.laserFromExternalPort")
 
-/*
-yarpdev --device Rangefinder2DWrapper --subdevice laserFromExternalPort \
---SENSOR::input_ports_name "(/port1 /port2)" \
---TRANSFORM_CLIENT::local /LaserFromExternalPort/tfClient \
---TRANSFORM_CLIENT::remote /transformServer \
---TRANSFORMS::src_frames "(/frame1 /frame2)" \
---TRANSFORMS::dst_frame /output_frame
---period 10 \
---name /outlaser:o
-
-yarpdev --device Rangefinder2DWrapper --subdevice laserFromExternalPort \
---SENSOR::min_angle 0
---SENSOR::max_angle 360
---SENSOR::resolution 0.5
---SENSOR::input_ports_name "(/port1 /port2)" \
---TRANSFORM_CLIENT::local /LaserFromExternalPort/tfClient \
---TRANSFORM_CLIENT::remote /transformServer \
---TRANSFORMS::src_frames "(/frame1 /frame2)" \
---TRANSFORMS::dst_frame /output_frame
---period 10 \
---name /outlaser:o
-*/
-
 double constrainAngle(double x)
 {
     x = fmod(x, 360);
-    if (x < 0)
+    if (x < 0) {
         x += 360;
+    }
     return x;
 }
 
-InputPortProcessor::InputPortProcessor()
+LaserFromExternalPort_InputPortProcessor::LaserFromExternalPort_InputPortProcessor()
 {
     m_contains_data=false;
 }
 
-void InputPortProcessor::onRead(yarp::dev::LaserScan2D& b)
+void LaserFromExternalPort_InputPortProcessor::onRead(yarp::sig::LaserScan2D& b)
 {
     m_port_mutex.lock();
         m_lastScan = b;
@@ -92,7 +56,7 @@ void InputPortProcessor::onRead(yarp::dev::LaserScan2D& b)
     m_port_mutex.unlock();
 }
 
-inline void InputPortProcessor::getLast(yarp::dev::LaserScan2D& data, Stamp& stmp)
+inline void LaserFromExternalPort_InputPortProcessor::getLast(yarp::sig::LaserScan2D& data, Stamp& stmp)
 {
     //this blocks untils the first data is received;
     size_t counter =0;
@@ -132,8 +96,9 @@ bool LaserFromExternalPort::open(yarp::os::Searchable& config)
         yarp::os::Bottle* portlist = general_config.find("input_ports_name").asList();
         if (portlist)
         {
-            for (size_t i = 0; i < portlist->size(); i++)
+            for (size_t i = 0; i < portlist->size(); i++) {
                 m_port_names.push_back(portlist->get(i).asString());
+            }
         }
         else
         {
@@ -142,7 +107,7 @@ bool LaserFromExternalPort::open(yarp::os::Searchable& config)
 
         for (size_t i = 0; i < m_port_names.size(); i++)
         {
-            InputPortProcessor proc;
+            LaserFromExternalPort_InputPortProcessor proc;
             m_input_ports.push_back(proc);
         }
         m_last_stamp.resize(m_port_names.size());
@@ -151,7 +116,7 @@ bool LaserFromExternalPort::open(yarp::os::Searchable& config)
 
     if (general_config.check("base_type")) //this parameter is optional
     {
-        string bt = general_config.find("base_type").asString();
+        std::string bt = general_config.find("base_type").asString();
         if (bt=="infinity") { m_base_type = base_enum::BASE_IS_INF; }
         else if (bt=="nan") { m_base_type = base_enum::BASE_IS_NAN; }
         else if (bt=="zero") {m_base_type = base_enum::BASE_IS_ZERO;}
@@ -163,15 +128,21 @@ bool LaserFromExternalPort::open(yarp::os::Searchable& config)
     m_empty_laser_data = m_laser_data;
     if (m_base_type == base_enum::BASE_IS_INF)
     {
-        for (size_t i = 0; i < m_empty_laser_data.size(); i++) m_empty_laser_data[i] = std::numeric_limits<double>::infinity();
+        for (size_t i = 0; i < m_empty_laser_data.size(); i++) {
+            m_empty_laser_data[i] = std::numeric_limits<double>::infinity();
+        }
     }
     else if (m_base_type == base_enum::BASE_IS_NAN)
     {
-        for (size_t i = 0; i < m_empty_laser_data.size(); i++) m_empty_laser_data[i] = std::nanf("");
+        for (size_t i = 0; i < m_empty_laser_data.size(); i++) {
+            m_empty_laser_data[i] = std::nanf("");
+        }
     }
     else if (m_base_type == base_enum::BASE_IS_ZERO)
     {
-        for (size_t i = 0; i < m_empty_laser_data.size(); i++) m_empty_laser_data[i] = 0;
+        for (size_t i = 0; i < m_empty_laser_data.size(); i++) {
+            m_empty_laser_data[i] = 0;
+        }
     }
     else
     {
@@ -278,35 +249,35 @@ bool LaserFromExternalPort::close()
 
 
 
-bool LaserFromExternalPort::setDistanceRange(double min, double max)
+ReturnValue LaserFromExternalPort::setDistanceRange(double min, double max)
 {
     std::lock_guard<std::mutex> guard(m_mutex);
     m_min_distance = min;
     m_max_distance = max;
-    return true;
+    return ReturnValue_ok;
 }
 
-bool LaserFromExternalPort::setScanLimits(double min, double max)
+ReturnValue LaserFromExternalPort::setScanLimits(double min, double max)
 {
     std::lock_guard<std::mutex> guard(m_mutex);
     yCWarning(LASER_FROM_EXTERNAL_PORT) << "setScanLimits not yet implemented";
-    return true;
+    return ReturnValue_ok;
 }
 
 
 
-bool LaserFromExternalPort::setHorizontalResolution(double step)
+ReturnValue LaserFromExternalPort::setHorizontalResolution(double step)
 {
     std::lock_guard<std::mutex> guard(m_mutex);
     yCWarning(LASER_FROM_EXTERNAL_PORT, "setHorizontalResolution not yet implemented");
-    return true;
+    return ReturnValue_ok;
 }
 
-bool LaserFromExternalPort::setScanRate(double rate)
+ReturnValue LaserFromExternalPort::setScanRate(double rate)
 {
     std::lock_guard<std::mutex> guard(m_mutex);
     yCWarning(LASER_FROM_EXTERNAL_PORT, "setScanRate not yet implemented");
-    return false;
+    return ReturnValue::return_code::return_value_error_not_implemented_by_device;
 }
 
 
@@ -321,7 +292,7 @@ bool LaserFromExternalPort::threadInit()
     return true;
 }
 
-void LaserFromExternalPort::calculate(yarp::dev::LaserScan2D scan_data, yarp::sig::Matrix m)
+void LaserFromExternalPort::calculate(yarp::sig::LaserScan2D scan_data, yarp::sig::Matrix m)
 {
     yarp::sig::Vector temp(3);
     temp = yarp::math::dcm2rpy(m);
@@ -416,7 +387,9 @@ bool LaserFromExternalPort::acquireDataFromHW()
             m_max_distance = m_last_scan_data[0].range_max;
             m_min_distance = m_last_scan_data[0].range_min;
             m_resolution = received_scans / (m_max_angle - m_min_angle);
-            if (m_laser_data.size() != m_sensorsNum) m_laser_data.resize(m_sensorsNum);
+            if (m_laser_data.size() != m_sensorsNum) {
+                m_laser_data.resize(m_sensorsNum);
+            }
         }
 
         if (m_iTc == nullptr)
@@ -456,10 +429,8 @@ bool LaserFromExternalPort::acquireDataFromHW()
 
 void LaserFromExternalPort::run()
 {
-    m_mutex.lock();
-    updateLidarData();
-    m_mutex.unlock();
-    return;
+    bool b = updateLidarData();
+    YARP_UNUSED(b);
 }
 
 void LaserFromExternalPort::threadRelease()

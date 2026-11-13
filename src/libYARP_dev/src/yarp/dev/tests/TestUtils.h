@@ -1,0 +1,25 @@
+/*
+ * SPDX-FileCopyrightText: 2025-2025 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
+#ifndef TESTUTILS_H
+#define TESTUTILS_H
+
+#include <vector>
+#include <yarp/dev/api.h>
+
+namespace yarp::dev::tests
+{
+    void YARP_dev_API wait_safe(double sec = 0.1);
+    bool YARP_dev_API vectors_equal(const std::vector<double>& a, const std::vector<double>& b);
+    bool YARP_dev_API vectors_equal(const std::vector<int>& a, const std::vector<int>& b);
+    bool YARP_dev_API vectors_equal(const std::size_t siz, const double* a, const double* b);
+    bool YARP_dev_API vectors_equal(const std::size_t siz, const int* a, const int* b);
+    bool YARP_dev_API check_approximate(double value, double expected, double tolerance=0.001);
+    void YARP_dev_API set_vector_crescent(std::vector<double>& a, double val);
+    void YARP_dev_API set_vector_crescent(const std::size_t siz, double* a, double val);
+    void YARP_dev_API set_vector_crescent(const std::size_t siz, int* a, int val);
+}
+
+#endif

@@ -1,33 +1,22 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include "ShmemInputStream.h"
 #include "ShmemLogComponent.h"
 
-#include <yarp/os/Bytes.h>
-#include <yarp/os/impl/PlatformTime.h>
+#include <yarp/os/Log.h>
 
-#include <ace/Lib_Find.h>
-// In one the ACE headers there is a definition of "main" for WIN32
-# ifdef main
-#  undef main
-# endif
-
+#include <cstring>
 
 
 ShmemInputStreamImpl::ShmemInputStreamImpl() :
         m_bOpen(false),
+        m_bInterrupt(false),
         m_ResizeNum(0),
         m_Port(-1),
-        m_pAccessMutex(nullptr),
-        m_pWaitDataMutex(nullptr),
-        m_pMap(nullptr),
         m_pData(nullptr),
         m_pHeader(nullptr),
         m_pSock(nullptr)
@@ -44,59 +33,48 @@ bool ShmemInputStreamImpl::isOk() const
     return m_bOpen;
 }
 
-bool ShmemInputStreamImpl::open(int port, ACE_SOCK_Stream* pSock, int size)
+bool ShmemInputStreamImpl::open(int port, shmem::Socket* pSock)
 {
-    m_pSock = pSock;
+    std::lock_guard<std::recursive_mutex> l_guard(m_generalMutex);
 
-    m_pAccessMutex = m_pWaitDataMutex = nullptr;
-    m_pMap = nullptr;
+    m_pSock = pSock;
+    m_bInterrupt = false;
+
     m_pData = nullptr;
     m_pHeader = nullptr;
     m_ResizeNum = 0;
 
     m_Port = port;
 
-    char obj_name[2048];
-    char temp_dir_path[1024];
-
-    if (ACE::get_temp_dir(temp_dir_path, 1024) == -1) {
-        yCError(SHMEMCARRIER, "ShmemHybridStream: no temp directory found.");
+    // The objects are created by the writer before the handshake. Once they
+    // are opened by the reader, their names are no longer needed, and they
+    // are removed, so that nothing is left behind if a process crashes.
+    const std::string data_name = shmem::objectName("data", port, 0);
+    auto map = std::make_unique<shmem::SharedMemory>();
+    if (!map->open(data_name)) {
+        yCError(SHMEMCARRIER, "ShmemInputStream can't open shared memory");
         return false;
     }
+    shmem::SharedMemory::unlink(data_name);
 
-#ifdef ACE_LACKS_SYSV_SHMEM
+    const std::string mtx_name = shmem::objectName("mtx", port);
+    const std::string sem_name = shmem::objectName("sem", port);
+    if (!m_AccessMutex.open(mtx_name) || !m_WaitDataSem.open(sem_name)) {
+        yCError(SHMEMCARRIER, "ShmemInputStream can't open semaphores");
+        m_AccessMutex.close();
+        m_WaitDataSem.close();
+        return false;
+    }
+    shmem::NamedSemaphore::unlink(mtx_name);
+    shmem::NamedSemaphore::unlink(sem_name);
 
-    snprintf(obj_name, 2048, "%sSHMEM_FILE_%d_%d", temp_dir_path, port, 0);
+    m_pMap = std::move(map);
+    m_pHeader = static_cast<ShmemHeader_t*>(m_pMap->data());
+    m_pData = reinterpret_cast<char*>(m_pHeader + 1);
 
-    m_pMap = new ACE_Shared_Memory_MM(obj_name, //const ACE_TCHAR *filename,
-                                      size + sizeof(ShmemHeader_t), //int len = -1,
-                                      O_RDWR, //int flags = O_RDWR | O_CREAT,
-                                      ACE_DEFAULT_FILE_PERMS, //int mode = ACE_DEFAULT_FILE_PERMS,
-                                      PROT_RDWR, //int prot = PROT_RDWR,
-                                      ACE_MAP_SHARED); //int share = ACE_MAP_PRIVATE,
-
-#else
-
-    m_pMap = new ACE_Shared_Memory_SV(port, size + sizeof(ShmemHeader_t));
-
-#endif
-
-    m_pHeader = (ShmemHeader_t*)m_pMap->malloc();
-    m_pData = (char*)(m_pHeader + 1);
-
-#ifdef _ACE_USE_SV_SEM
-    snprintf(obj_name, 2048, "%sSHMEM_ACCESS_MUTEX_%d", temp_dir_path, port);
-    m_pAccessMutex = new ACE_Mutex(USYNC_PROCESS, obj_name);
-    snprintf(obj_name, 2048, "%sSHMEM_WAITDATA_MUTEX_%d", temp_dir_path, port);
-    m_pWaitDataMutex = new ACE_Mutex(USYNC_PROCESS, obj_name);
-#else
-    snprintf(obj_name, 2048, "SHMEM_ACCESS_MUTEX_%d", port);
-    m_pAccessMutex = new ACE_Process_Mutex(obj_name);
-    snprintf(obj_name, 2048, "SHMEM_WAITDATA_MUTEX_%d", port);
-    m_pWaitDataMutex = new ACE_Process_Mutex(obj_name);
-#endif
-
-    m_pWaitDataMutex->acquire();
+    m_AccessMutex.wait();
+    m_pHeader->attached = true;
+    m_AccessMutex.post();
 
     m_bOpen = true;
 
@@ -105,73 +83,54 @@ bool ShmemInputStreamImpl::open(int port, ACE_SOCK_Stream* pSock, int size)
 
 bool ShmemInputStreamImpl::Resize()
 {
+    std::lock_guard<std::recursive_mutex> l_guard(m_generalMutex);
+
+    yCDebug(SHMEMCARRIER, "input stream resize %d to %d", m_ResizeNum + 1, m_pHeader->newsize);
+
+    const std::string data_name = shmem::objectName("data", m_Port, m_ResizeNum + 1);
+    auto pNewMap = std::make_unique<shmem::SharedMemory>();
+    if (!pNewMap->open(data_name)) {
+        yCError(SHMEMCARRIER, "ShmemInputStream can't open shared memory");
+        return false;
+    }
+    shmem::SharedMemory::unlink(data_name);
     ++m_ResizeNum;
 
-    ACE_Shared_Memory* pNewMap;
+    m_pMap = std::move(pNewMap);
+    m_pHeader = static_cast<ShmemHeader_t*>(m_pMap->data());
+    m_pData = reinterpret_cast<char*>(m_pHeader + 1);
 
-    yCDebug(SHMEMCARRIER, "input stream resize %d to %d", m_ResizeNum, m_pHeader->newsize);
-
-#ifdef ACE_LACKS_SYSV_SHMEM
-
-    char file_path[1024];
-
-    if (ACE::get_temp_dir(file_path, 1024) == -1) {
-        yCError(SHMEMCARRIER, "ShmemHybridStream: no temp directory found.");
-        return false;
-    }
-
-    char file_name[2048];
-    snprintf(file_name, 2048, "%sSHMEM_FILE_%d_%d", file_path, m_Port, m_ResizeNum);
-
-    pNewMap = new ACE_Shared_Memory_MM(file_name, //const ACE_TCHAR *filename,
-                                       m_pHeader->newsize + sizeof(ShmemHeader_t), //int len = -1,
-                                       O_RDWR, //int flags = O_RDWR | O_CREAT,
-                                       ACE_DEFAULT_FILE_PERMS, //int mode = ACE_DEFAULT_FILE_PERMS,
-                                       PROT_RDWR, //int prot = PROT_RDWR,
-                                       ACE_MAP_SHARED); //int share = ACE_MAP_PRIVATE,
-
-#else
-
-    int shmemkey = (m_ResizeNum << 16) + m_Port;
-
-    pNewMap = new ACE_Shared_Memory_SV(shmemkey, m_pHeader->size + sizeof(ShmemHeader_t));
-
-#endif
-
-    if (!pNewMap) {
-        yCError(SHMEMCARRIER, "ShmemOutputStream can't create shared memory");
-        return false;
-    }
-
-    auto* pNewHeader = (ShmemHeader_t*)pNewMap->malloc();
-    char* pNewData = (char*)(pNewHeader + 1);
-
-    m_pMap->close();
-    delete m_pMap;
-
-    m_pMap = pNewMap;
-    m_pHeader = pNewHeader;
-    m_pData = pNewData;
+    // Tell the writer that the previous segments can be released
+    m_pHeader->attached = true;
 
     return true;
 }
 
 int ShmemInputStreamImpl::read(char* data, int len)
 {
-    m_pAccessMutex->acquire();
+    std::lock_guard<std::recursive_mutex> l_guard(m_generalMutex);
+
+    if (!m_AccessMutex.wait()) {
+        return -1;
+    }
 
     if (m_pHeader->close) {
-        m_pAccessMutex->release();
+        m_AccessMutex.post();
         close();
         return -1;
     }
 
-    while (m_pHeader->resize)
-        Resize();
+    while (m_pHeader->resize) {
+        if (!Resize()) {
+            m_AccessMutex.post();
+            close();
+            return -1;
+        }
+    }
 
     if (m_pHeader->avail < len) {
         ++m_pHeader->waiting;
-        m_pAccessMutex->release();
+        m_AccessMutex.post();
         return 0;
     }
 
@@ -188,72 +147,72 @@ int ShmemInputStreamImpl::read(char* data, int len)
     m_pHeader->tail += len;
     m_pHeader->tail %= m_pHeader->size;
 
-    m_pAccessMutex->release();
+    m_AccessMutex.post();
 
     return len;
 }
 
 yarp::conf::ssize_t ShmemInputStreamImpl::read(yarp::os::Bytes& b)
 {
-    m_ReadSerializerMutex.lock();
+    std::lock_guard<std::recursive_mutex> l_guard(m_generalMutex);
+    std::lock_guard<std::mutex> l_serializer(m_ReadSerializerMutex);
 
     if (!m_bOpen) {
-        m_ReadSerializerMutex.unlock();
         return -1;
     }
 
     char* data = b.get();
-    char* buf;
     size_t len = b.length();
+    if (len == 0) {
+        return 0;
+    }
+
     yarp::conf::ssize_t ret;
-
     while (!(ret = read(data, (int)len))) {
-#ifdef _ACE_USE_SV_SEM
-        yarp::os::impl::YARP_timeval tv = ACE_OS::gettimeofday();
-        tv.sec(tv.sec() + 1);
-#else
-        yarp::os::impl::YARP_timeval tv(1);
-#endif
+        m_WaitDataSem.waitFor(1.0);
 
-        m_pWaitDataMutex->acquire(tv);
+        if (m_bInterrupt) {
+            return -1;
+        }
 
-        if (!m_pSock->recv(&buf, 1)) {
+        // The socket is used only to detect if the other side closed the
+        // connection or died
+        if (m_pSock->isPeerClosed()) {
             yCDebug(SHMEMCARRIER, "STREAM IS BROKEN");
             close();
-            m_ReadSerializerMutex.unlock();
             return -1;
         }
     }
-
-    m_ReadSerializerMutex.unlock();
 
     return ret;
 }
 
 void ShmemInputStreamImpl::close()
 {
-    if (!m_bOpen)
+    // Make a pending read give up, otherwise it would hold the lock until new
+    // data is available
+    m_bInterrupt = true;
+
+    std::lock_guard<std::recursive_mutex> l_guard(m_generalMutex);
+
+    if (!m_bOpen) {
         return;
+    }
 
     m_bOpen = false;
 
-    m_pAccessMutex->acquire();
+    m_AccessMutex.wait();
     while (m_pHeader->waiting > 0) {
         --m_pHeader->waiting;
-        m_pWaitDataMutex->release();
+        m_WaitDataSem.post();
     }
     m_pHeader->close = true;
-    m_pAccessMutex->release();
+    m_AccessMutex.post();
 
-    m_pAccessMutex->remove();
-    delete m_pAccessMutex;
-    m_pAccessMutex = nullptr;
+    m_AccessMutex.close();
+    m_WaitDataSem.close();
 
-    m_pWaitDataMutex->remove();
-    delete m_pWaitDataMutex;
-    m_pWaitDataMutex = nullptr;
-
-    m_pMap->close();
-    delete m_pMap;
-    m_pMap = nullptr;
+    m_pMap.reset();
+    m_pHeader = nullptr;
+    m_pData = nullptr;
 }

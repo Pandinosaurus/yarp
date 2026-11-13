@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include "SegFault.h"
@@ -27,9 +24,7 @@ SegFault::~SegFault()
 
 bool SegFault::open(yarp::os::Searchable& config)
 {
-    if (config.check("delay")) {
-        delay = config.find("delay").asFloat64();
-    }
+    if (!this->parseParams(config)) { return false; }
 
     yCInfo(SEGFAULT) << "Starting thread";
     start();
@@ -45,8 +40,8 @@ bool SegFault::close()
 
 void SegFault::run()
 {
-    yCInfo(SEGFAULT) << "Waiting for" << delay << "seconds before crashing";
-    yarp::os::Time::delay(delay);
+    yCInfo(SEGFAULT) << "Waiting for" << m_delay << "seconds before crashing";
+    yarp::os::Time::delay(m_delay);
     yCWarning(SEGFAULT) << "Crashing";
     *(int*) 0 = 0;
 }

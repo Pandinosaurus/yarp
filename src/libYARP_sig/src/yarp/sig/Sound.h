@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_SIG_SOUND_H
@@ -13,17 +10,31 @@
 #include <yarp/os/Portable.h>
 #include <yarp/conf/numeric.h>
 #include <yarp/sig/api.h>
+#include <yarp/sig/SoundMarkerData.h>
 #include <vector>
 #include <string>
 
-namespace yarp {
-namespace sig {
+#include <map>
+
+namespace yarp::sig {
+
+struct YARP_sig_API SoundMarker : public SoundMarkerData
+{
+public:
+    bool operator==(const SoundMarker& other) const
+    {
+        return label == other.label &&
+               channel == other.channel &&
+               sample_id == other.sample_id;
+    }
+};
 
 /**
  * \ingroup sig_class
  *
  * Class for storing sounds
- */
+ * See \ref AudioDoc for additional documentation on YARP audio.
+*/
 class YARP_sig_API Sound : public yarp::os::Portable
 {
 public:
@@ -61,12 +72,26 @@ public:
       */
     Sound& operator+=(const Sound& alt);
 
+    /**
+     * It overwrites the sound with another sound, starting from a specified offset.
+     * @param alt the sound that will overwrite a portion of the current sound.
+     * @param offset the starting sample for the overwrite operation. Default value = 0.
+     * @param len the size (in samples) for the overwrite operation. If not specified, the whole
+     * alt sound will be used.
+     */
+    void overwrite (const Sound& alt, size_t offset=0, size_t len=0);
+
      /**
       * Returns a subpart of the sound
       * @param first_sample the starting sample number
-      * @param last_sample the ending sample number
+      * @param len the max size (in samples) of the subSound
       */
-    Sound subSound(size_t first_sample, size_t last_sample);
+    Sound subSound(size_t first_sample, size_t len);
+
+    /*
+     *   Reset the sound (i.e. reset the number of samples, channels, frequency etc to zero)
+    */
+    void clear();
 
     /**
      * Set the sound size.
@@ -99,14 +124,68 @@ public:
     /**
      * set all the samples to zero (silence)
      */
-    void clear();
+    void zero();
+
+    /**
+     * Normalize a specific channel of the sound
+     * @param channel the channel to normalize
+     */
+    void normalizeChannel(size_t channel);
+
+    /**
+     * Normalize a sound (the peak is searched among all channels)
+     */
+    void normalize();
+
+    /**
+     * Amplify a specific channel of the sound
+     * @param[in] gain the gain (1.0 = no amplification. Minimum value: 0)
+     * @param[in] channel the sample id
+     */
+    void amplifyChannel(size_t channel, double gain);
+
+    /**
+     * amplify a sound
+     * @param[in] gain the gain (1.0 = no amplification. Minimum value: 0)
+     */
+    void amplify(double gain);
+
+    /**
+     * find the peak in a specific channel of the sound
+     * @param[in] channelId the channel in which the peak is searched
+     * @param[out] sampleId the returned sampleId in which the peak is detected
+     * @param[out] sampleValue the returned value of the sample in which the peak is detected
+     */
+    void findPeakInChannel(size_t channelId, size_t& sampleId, audio_sample& sampleValue) const;
+
+    /**
+     * find the peak in a sound
+     * @param[out] channelId the returned channelId in which the peak is detected
+     * @param[out] sampleId the returned sampleId in which the peak is detected
+     * @param[out] sampleValue the returned value of the sample in which the peak is detected
+     */
+    void findPeak(size_t& channelId, size_t& sampleId, audio_sample& sampleValue) const;
+
+    /**
+     * Utility function: return the timestamp (in seconds) given the sample id
+     * @param sampleid the sample id
+     * @return the timestamp of the sample
+     */
+    inline double sample2timestamp( size_t sampleid) const {return static_cast<double>(sampleid / m_frequency);}
+
+    /**
+     * Utility function: return the sample id given the timestamp (in seconds)
+     * @param time the timestamp
+     * @return the sample id
+     */
+    inline size_t timestamp2sample( double time) const { return static_cast<size_t>(time * m_frequency);}
 
     /**
      * set to zero all the samples of the specified channel
      * @ param channel the channel number
      * @return true iff operation is successful;
      */
-    bool clearChannel(size_t channel);
+    bool zeroChannel(size_t channel);
 
     /**
      * Get the frequency of the sound (i.e. the number of samples per second)
@@ -178,9 +257,68 @@ public:
     /**
      * Print matrix to a string. Useful for debugging.
      * The output string is represented in non-interleaved format
-     *
      */
     std::string toString() const;
+
+public:
+    /**
+     * Adds a marker to the sound, identified by a label, a sample id and an optional channel number (if not specified, the marker is valid for all channels).
+     * If a marker with the same label already exists, it will be overwritten.
+     * @param marker_label the label of the marker
+     * @param sample_id the sample id of the marker
+     * @param channel the channel number of the marker (optional, default value = -1, meaning that the marker is valid for all channels)
+     */
+    void  add_marker(const std::string& marker_label, size_t sample_id, int channel=-1);
+
+    /**
+     * Gets the sample id and channel number of a marker given its label. If the marker is not found, the method returns false and the output parameters are not modified.
+     * @param marker_label the label of the marker
+     * @param sample_id the sample id of the marker (output parameter)
+     * @param channel the channel number of the marker (output parameter)
+     * @return true if the marker is found, false otherwise
+     */
+    bool  get_marker(const std::string& marker_label, size_t&  sample_id, int& channel) const;
+
+    /**
+     * Gets the number of markers contained in the sound.
+     * @return the number of markers
+     */
+    size_t getMarkersCount() const;
+
+    /**
+     * Get the marker at the specified index. The order of the markers is not guaranteed and may change in the future.
+     * If the index is out of range, the method throws an std::out_of_range exception.
+     * Used by yarp bindings.
+     * @param index the index of the marker to retrieve
+     * @return the marker at the specified index
+     */
+    yarp::sig::SoundMarker getMarker(size_t index) const;
+
+    /**
+     * Get all the markers contained in the sound. The order of the markers is not guaranteed and may change in the future. Used by yarp bindings.
+     * @return a vector containing all the markers of the sound
+     */
+    std::vector<yarp::sig::SoundMarker> getMarkers() const;
+
+    /**
+     * Removes a marker given its label. If the marker is not found, the method does nothing.
+     * @param marker_label the label of the marker to remove
+     */
+    void  remove_marker(const std::string& marker_label);
+
+    /**
+     * Removes all the markers contained in the sound.
+     */
+    void  remove_all_markers();
+
+    /**
+     * Returns a subSound of the current sound, starting from the sample identified by marker_start and ending at the sample identified by marker_end (including the two markers).
+     * If one of the two markers is not found, or if marker_start is after marker_end, the method throws an std::invalid_argument exception.
+     * @param marker_start the label of the marker identifying the starting sample of the subSound
+     * @param marker_end the label of the marker identifying the ending sample of the subSound
+     * @return the subSound identified by the two markers
+     */
+    Sound subSound(std::string marker_start, std::string marker_end);
 
 private:
     /**
@@ -196,6 +334,8 @@ private:
      */
     size_t getRawDataSize() const;
 
+    void delete_implementation();
+
 public:
     bool read(yarp::os::ConnectionReader& connection) override;
 
@@ -203,16 +343,16 @@ public:
 
 private:
     void init(size_t bytesPerSample);
-    void synchronize();
 
-    void *implementation;
+    void *implementation =nullptr;
     size_t m_samples;
     size_t m_channels;
     size_t m_bytesPerSample;
     int    m_frequency;
+
+    std::map<std::string,yarp::sig::SoundMarker> m_markers;
 };
 
-} // namespace sig
-} // namespace yarp
+} // namespace yarp::sig
 
 #endif // YARP_SIG_SOUND_H

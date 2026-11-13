@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_IANALOGSENSOR_H
@@ -14,12 +11,11 @@
 #include <yarp/dev/api.h>
 #include <yarp/sig/Vector.h>
 
-constexpr yarp::conf::vocab32_t VOCAB_IANALOG           = yarp::os::createVocab('i','a','n','a');
+constexpr yarp::conf::vocab32_t VOCAB_IANALOG           = yarp::os::createVocab32('i','a','n','a');
 
 /*! \file IAnalogSensor.h analog sensor interface */
 
-namespace yarp {
-namespace dev {
+namespace yarp::dev {
 
 /**
  * @ingroup dev_iface_other
@@ -89,7 +85,6 @@ public:
     virtual int calibrateChannel(int ch, double value)=0;
 };
 
-} // namespace dev
-} // namespace yarp
+} // namespace yarp::dev
 
 #endif // YARP_DEV_IANALOGSENSOR_H

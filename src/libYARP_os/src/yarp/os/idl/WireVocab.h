@@ -1,21 +1,24 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_OS_IDL_WIREVOCAB_H
 #define YARP_OS_IDL_WIREVOCAB_H
 
+#include <yarp/conf/system.h>
+#if !defined(YARP_INCLUDING_DEPRECATED_HEADER_YARP_DEV_ICONTROLLIMITS2_H_ON_PURPOSE)
+YARP_COMPILER_WARNING("<yarp/os/idl/WireVocab.h> file is deprecated")
+#endif
+
+
 #include <yarp/os/api.h>
 
-namespace yarp {
-namespace os {
-namespace idl {
+#include <string>
 
-class YARP_os_API WireVocab
+namespace yarp::os::idl {
+
+class YARP_os_DEPRECATED_API WireVocab
 {
 public:
     virtual ~WireVocab() {}
@@ -23,8 +26,6 @@ public:
     virtual std::string toString(int input) const = 0;
 };
 
-} // namespace idl
-} // namespace os
-} // namespace yarp
+} // namespace yarp::os::idl
 
 #endif // YARP_OS_IDL_WIREVOCAB_H

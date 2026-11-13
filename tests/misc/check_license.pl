@@ -1,10 +1,7 @@
 #!/usr/bin/perl -w
 
-# Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
-# All rights reserved.
-#
-# This software may be modified and distributed under the terms of the
-# BSD-3-Clause license. See the accompanying LICENSE file for details.
+# SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+# SPDX-License-Identifier: BSD-3-Clause
 
 my $verbose_output = 0;
 
@@ -24,21 +21,15 @@ open my $handle, '<', "tests/misc/check_license_skip.txt";
 chomp(my @skip_files = <$handle>);
 close $handle;
 
-
-my $copyright_iit = "Copyright \\(C\\) 2006-2021 Istituto Italiano di Tecnologia \\(IIT\\)";
-my $copyright_robocub = "Copyright \\(C\\) 2006-2010 RobotCub Consortium";
-my $copyright_others = "Copyright \\(C\\) [^\n]+";
-
+my $copyright_iit = "(2006-2021|2006-2022|2006-2023|2006-2025|2006-2026|2023|2023-2023|2024|2024-2024|2025|2025-2025|2026|2026-2026) Istituto Italiano di Tecnologia \\(IIT\\)";
+my $copyright_robocub = "2006-2010 RobotCub Consortium";
 
 my $str_bsd3_cpp = <<END;
 ^/\\*
- \\* $copyright_iit(
- \\* $copyright_robocub)?(
- \\* $copyright_others)*
- \\* All rights reserved\\.
- \\*
- \\* This software may be modified and distributed under the terms of the
- \\* BSD-3-Clause license\\. See the accompanying LICENSE file for details\\.
+ \\* SPDX-FileCopyrightText: $copyright_iit(
+ \\* SPDX-FileCopyrightText: $copyright_robocub)?(
+ \\* SPDX-FileCopyrightText: [^\n]+)*
+ \\* SPDX-License-Identifier: BSD-3-Clause
  \\*/
 
 END
@@ -49,25 +40,21 @@ my $str_bsd3_script = <<END;
 )?(#\\.rst:(
 #[^\n]*)+
 
-)?# $copyright_iit(
-# $copyright_robocub)?(
-# $copyright_others)*
-# All rights reserved\\.
-#
-# This software may be modified and distributed under the terms of the
-# BSD-3-Clause license\\. See the accompanying LICENSE file for details\\.
+)?# SPDX-FileCopyrightText: $copyright_iit(
+# SPDX-FileCopyrightText: $copyright_robocub)?(
+# SPDX-FileCopyrightText: [^\n]+)*
+# SPDX-License-Identifier: BSD-3-Clause
 
 END
 
 my $str_bsd3_xml = <<END;
-^<!--
-  $copyright_iit(
-  $copyright_robocub)?(
-  $copyright_others)*
-  All rights reserved\\.
+^(<\\?xml[^<]+
 
-  This software may be modified and distributed under the terms of the
-  BSD-3-Clause license\\. See the accompanying LICENSE file for details\\.
+)?<!--
+  SPDX-FileCopyrightText: $copyright_iit(
+  SPDX-FileCopyrightText: $copyright_robocub)?(
+  SPDX-FileCopyrightText: [^\n]+)*
+  SPDX-License-Identifier: BSD-3-Clause
 -->
 
 END
@@ -75,227 +62,105 @@ END
 my $str_bsd3_lua = <<END;
 ^(#!.+
 
-)?-- $copyright_iit(
--- $copyright_robocub)?(
--- $copyright_others)*
--- All rights reserved\\.
---
--- This software may be modified and distributed under the terms of the
--- BSD-3-Clause license\\. See the accompanying LICENSE file for details\\.
+)?-- SPDX-FileCopyrightText: $copyright_iit(
+-- SPDX-FileCopyrightText: $copyright_robocub)?(
+-- SPDX-FileCopyrightText: [^\n]+)*
+-- SPDX-License-Identifier: BSD-3-Clause
 
 END
 
 my $str_bsd3_swig = <<END;
-^// $copyright_iit(
-// $copyright_robocub)?(
-// $copyright_others)*
-// All rights reserved\\.
-//
-// This software may be modified and distributed under the terms of the
-// BSD-3-Clause license\\. See the accompanying LICENSE file for details\\.
+^// SPDX-FileCopyrightText: $copyright_iit(
+// SPDX-FileCopyrightText: $copyright_robocub)?(
+// SPDX-FileCopyrightText: [^\n]+)*
+// SPDX-License-Identifier: BSD-3-Clause
 
 END
 
 my $str_bsd3_mat = <<END;
-^% $copyright_iit(
-% $copyright_robocub)?(
-% $copyright_others)*
-% All rights reserved\\.
-%
-% This software may be modified and distributed under the terms of the
-% BSD-3-Clause license\\. See the accompanying LICENSE file for details\\.
+^% SPDX-FileCopyrightText: $copyright_iit(
+% SPDX-FileCopyrightText: $copyright_robocub)?(
+% SPDX-FileCopyrightText: [^\n]+)*
+% SPDX-License-Identifier: BSD-3-Clause
 
 END
 
 my $str_lgpl2_1_or_later = <<END;
 ^/\\*
- \\* $copyright_iit(
- \\* $copyright_robocub)?
- \\*
- \\* This library is free software; you can redistribute it and/or
- \\* modify it under the terms of the GNU Lesser General Public
- \\* License as published by the Free Software Foundation; either
- \\* version 2\\.1 of the License, or \\(at your option\\) any later version\\.
- \\*
- \\* This library is distributed in the hope that it will be useful,
- \\* but WITHOUT ANY WARRANTY; without even the implied warranty of
- \\* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE\\.  See the GNU
- \\* Lesser General Public License for more details\\.
- \\*
- \\* You should have received a copy of the GNU Lesser General Public
- \\* License along with this library; if not, write to the Free Software
- \\* Foundation, Inc\\., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ \\* SPDX-FileCopyrightText: $copyright_iit(
+ \\* SPDX-FileCopyrightText: $copyright_robocub)?
+ \\* SPDX-License-Identifier: LGPL-2.1-or-later
  \\*/
 
 END
 
 my $str_lgpl2_1_or_later_other = <<END;
 ^/\\*
- \\* $copyright_iit(
- \\* $copyright_robocub)?(
- \\* $copyright_others)*
- \\*
- \\* This library is free software; you can redistribute it and/or
- \\* modify it under the terms of the GNU Lesser General Public
- \\* License as published by the Free Software Foundation; either
- \\* version 2\\.1 of the License, or \\(at your option\\) any later version\\.
- \\*
- \\* This library is distributed in the hope that it will be useful,
- \\* but WITHOUT ANY WARRANTY; without even the implied warranty of
- \\* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE\\.  See the GNU
- \\* Lesser General Public License for more details\\.
- \\*
- \\* You should have received a copy of the GNU Lesser General Public
- \\* License along with this library; if not, write to the Free Software
- \\* Foundation, Inc\\., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ \\* SPDX-FileCopyrightText: $copyright_iit(
+ \\* SPDX-FileCopyrightText: $copyright_robocub)?(
+ \\* SPDX-FileCopyrightText: [^\n]+)*
+ \\* SPDX-License-Identifier: LGPL-2.1-or-later
  \\*/
 
 END
 
 my $str_gpl2_or_later = <<END;
 ^/\\*
- \\* $copyright_iit(
- \\* $copyright_robocub)?
- \\*
- \\* This program is free software; you can redistribute it and/or modify it under
- \\* the terms of the GNU General Public License as published by the Free Software
- \\* Foundation; either version 2 of the License, or \\(at your option\\) any later
- \\* version\\.
- \\*
- \\* This program is distributed in the hope that it will be useful, but WITHOUT
- \\* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- \\* FOR A PARTICULAR PURPOSE\\.  See the GNU General Public License for more
- \\* details\\.
- \\*
- \\* You should have received a copy of the GNU General Public License along with
- \\* this program; if not, write to the Free Software Foundation, Inc\\.,
- \\* 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA\\.
+ \\* SPDX-FileCopyrightText: $copyright_iit(
+ \\* SPDX-FileCopyrightText: $copyright_robocub)?
+ \\* SPDX-License-Identifier: GPL-2.0-or-later
  \\*/
 
 END
 
 my $str_gpl2_or_later_other = <<END;
 ^/\\*
- \\* $copyright_iit(
- \\* $copyright_robocub)?(
- \\* $copyright_others)*
- \\*
- \\* This program is free software; you can redistribute it and/or modify it under
- \\* the terms of the GNU General Public License as published by the Free Software
- \\* Foundation; either version 2 of the License, or \\(at your option\\) any later
- \\* version\\.
- \\*
- \\* This program is distributed in the hope that it will be useful, but WITHOUT
- \\* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- \\* FOR A PARTICULAR PURPOSE\\.  See the GNU General Public License for more
- \\* details\\.
- \\*
- \\* You should have received a copy of the GNU General Public License along with
- \\* this program; if not, write to the Free Software Foundation, Inc\\.,
- \\* 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA\\.
+ \\* SPDX-FileCopyrightText: $copyright_iit(
+ \\* SPDX-FileCopyrightText: $copyright_robocub)?(
+ \\* SPDX-FileCopyrightText: [^\n]+)*
+ \\* SPDX-License-Identifier: GPL-2.0-or-later
  \\*/
 
 END
 
 my $str_apache_2 = <<END;
 ^/\\*
- \\* $copyright_iit
- \\*
- \\* Licensed under the Apache License, Version 2\\.0 \\(the "License"\\);
- \\* you may not use this file except in compliance with the License\\.
- \\* You may obtain a copy of the License at
- \\*
- \\*     http://www\\.apache\\.org/licenses/LICENSE-2\\.0
- \\*
- \\* Unless required by applicable law or agreed to in writing, software
- \\* distributed under the License is distributed on an "AS IS" BASIS,
- \\* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied\\.
- \\* See the License for the specific language governing permissions and
- \\* limitations under the License\\.
+ \\* SPDX-FileCopyrightText: $copyright_iit
+ \\* SPDX-License-Identifier: Apache-2.0
  \\*/
 
 END
 
 my $str_lgpl2_1_or_later_lua = <<END;
--- $copyright_iit(
--- $copyright_robocub)?
---
--- This library is free software; you can redistribute it and/or
--- modify it under the terms of the GNU Lesser General Public
--- License as published by the Free Software Foundation; either
--- version 2\\.1 of the License, or \\(at your option\\) any later version\\.
---
--- This library is distributed in the hope that it will be useful,
--- but WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE\\.  See the GNU
--- Lesser General Public License for more details\\.
---
--- You should have received a copy of the GNU Lesser General Public
--- License along with this library; if not, write to the Free Software
--- Foundation, Inc\\., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+-- SPDX-FileCopyrightText: $copyright_iit(
+-- SPDX-FileCopyrightText: $copyright_robocub)?
+-- SPDX-License-Identifier: LGPL-2.1-or-later
 
 END
 
 my $str_lgpl2_1_or_later_lua_other = <<END;
--- $copyright_iit(
--- $copyright_robocub)?(
--- $copyright_others)*
---
--- This library is free software; you can redistribute it and/or
--- modify it under the terms of the GNU Lesser General Public
--- License as published by the Free Software Foundation; either
--- version 2\\.1 of the License, or \\(at your option\\) any later version\\.
---
--- This library is distributed in the hope that it will be useful,
--- but WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE\\.  See the GNU
--- Lesser General Public License for more details\\.
---
--- You should have received a copy of the GNU Lesser General Public
--- License along with this library; if not, write to the Free Software
--- Foundation, Inc\\., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+-- SPDX-FileCopyrightText: $copyright_iit(
+-- SPDX-FileCopyrightText: $copyright_robocub)?(
+-- SPDX-FileCopyrightText: [^\n]+)*
+-- SPDX-License-Identifier: LGPL-2.1-or-later
 
 END
 
 my $str_gpl3_or_later = <<END;
 ^/\\*
- \\* $copyright_iit(
- \\* $copyright_robocub)?
- \\*
- \\* This program is free software: you can redistribute it and/or modify
- \\* it under the terms of the GNU General Public License as published by
- \\* the Free Software Foundation, either version 3 of the License, or
- \\* \\(at your option\\) any later version\\.
- \\*
- \\* This program is distributed in the hope that it will be useful,
- \\* but WITHOUT ANY WARRANTY; without even the implied warranty of
- \\* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE\\.  See the
- \\* GNU General Public License for more details\\.
- \\*
- \\* You should have received a copy of the GNU General Public License
- \\* along with this program\\.  If not, see <https://www\\.gnu\\.org/licenses/>\\.
+ \\* SPDX-FileCopyrightText: $copyright_iit(
+ \\* SPDX-FileCopyrightText: $copyright_robocub)?
+ \\* SPDX-License-Identifier: GPL-3.0-or-later
  \\*/
 
 END
 
 my $str_gpl3_or_later_other = <<END;
 ^/\\*
- \\* $copyright_iit(
- \\* $copyright_robocub)?(
- \\* $copyright_others)*
- \\*
- \\* This program is free software: you can redistribute it and/or modify
- \\* it under the terms of the GNU General Public License as published by
- \\* the Free Software Foundation, either version 3 of the License, or
- \\* \\(at your option\\) any later version\\.
- \\*
- \\* This program is distributed in the hope that it will be useful,
- \\* but WITHOUT ANY WARRANTY; without even the implied warranty of
- \\* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE\\.  See the
- \\* GNU General Public License for more details\\.
- \\*
- \\* You should have received a copy of the GNU General Public License
- \\* along with this program\\.  If not, see <https://www\\.gnu\\.org/licenses/>\\.
+ \\* SPDX-FileCopyrightText: $copyright_iit(
+ \\* SPDX-FileCopyrightText: $copyright_robocub)?(
+ \\* SPDX-FileCopyrightText: [^\n]+)*
+ \\* SPDX-License-Identifier: GPL-3.0-or-later
  \\*/
 
 END
@@ -305,27 +170,49 @@ my $ok = 0;
 my $skip = 0;
 my $errors = 0;
 my $known = 0;
+my $number_files_marked_to_skip = scalar(@skip_files);
+foreach my $skipline (@skip_files) {
+    if (substr ($skipline, -1) eq '/') {
+    $number_files_marked_to_skip--; }
+}
+
+use File::Spec;
 
 foreach my $filename (@files) {
     $files++;
 
-    # For now skip files known to have a broken license
-    my $match = 0;
+    my $match_filename = 0;
+    my $match_dir = 0;
     for (@skip_files) {
+        # skip files known to have a broken license
         if ("$filename" eq "$_") {
-            $match = 1;
+            $match_filename = 1;
+            last;
+        }
+        # skip directories known to contain files which have a broken license
+        my($vol,$dir,$file)    = File::Spec->splitpath($filename);
+        my($vol2,$dir2,$file2) = File::Spec->splitpath($_);
+        # print "testing $dir $dir2 \n";
+        if ("$dir" eq "$_") {
+            $match_dir = 1;
+            $number_files_marked_to_skip++;
             last;
         }
     }
 
-    if( $match ) {
-        print_if_verbose "[SKIP (known)] $filename\n";
+    if( $match_filename ) {
+        print "[SKIP (known file)] $filename\n";
+        $known++;
+        next;
+    }
+    elsif( $match_dir ) {
+        print "[SKIP (known dir)] $filename\n";
         $known++;
         next;
     }
 
     # Skip images and binary files
-    if ("$filename" =~ /\.(png|svg|jpg|ppm|bmp|ico|icns)$/) {
+    if ("$filename" =~ /\.(png|svg|jpg|ppm|pgm|bmp|ico|icns)$/) {
         print_if_verbose "[SKIP (image - $1)] $filename\n";
         $skip++;
         next;
@@ -345,6 +232,12 @@ foreach my $filename (@files) {
 
     if ("$filename" =~ /\.(rar)$/) {
         print_if_verbose "[SKIP (binary - $1)] $filename\n";
+        $skip++;
+        next;
+    }
+
+    if ("$filename" =~ /\.(clang-tidy|clang-format)$/) {
+        print_if_verbose "[SKIP (other - $1)] $filename\n";
         $skip++;
         next;
     }
@@ -387,7 +280,7 @@ foreach my $filename (@files) {
     }
 
     # Skip more files
-    if ("$filename" =~ /\.(ui|rc|qrc|xml|xml.template|xslt|xsl|msg|srv|ini|cfg|txt|TXT|dox|md|plist.in|tex|mdl)$/) {
+    if ("$filename" =~ /\.(ui|rc|qrc|xslt|xsl|msg|srv|ini|cfg|toml|txt|TXT|dox|md|plist.in|tex|mdl|map|yaml)$/) {
         if ("$filename" !~ /CMakeLists.txt$/) {
             print_if_verbose "[SKIP (.$1)] $filename\n";
             $skip++;
@@ -397,7 +290,7 @@ foreach my $filename (@files) {
 
     # C++ style BSD-3-Clause
     if ("$txt" =~ /$str_bsd3_cpp/s) {
-        if ("$filename" =~ /\.(cpp|cpp.in|c|h|h.in|thrift|mm|qml|java|cs)$/) {
+        if ("$filename" =~ /\.(cpp|cpp.in|c|h|hpp|h.in|thrift|mm|qml|java|cs)$/) {
             print_if_verbose "[OK - BSD (.$1)] $filename\n";
             $ok++;
         } elsif ("$filename" =~ /\/compiler\..+\.in$/) {
@@ -430,7 +323,7 @@ foreach my $filename (@files) {
 
     # Xml style BSD-3-Clause
     if ("$txt" =~ /$str_bsd3_xml/s) {
-        if ("$filename" =~ /\.xml$/) {
+        if ("$filename" =~ /\.(xml|xml.template)$/) {
             print_if_verbose "[OK - BSD (.xml)] $filename\n";
             $ok++;
         } else {
@@ -534,8 +427,8 @@ foreach my $filename (@files) {
 
     # GPL3+
     if ("$txt" =~ /$str_gpl3_or_later/s) {
-        if ("$filename" =~ /src\/yarpviz\/.*\.(cpp|h|qml)/ ||
-            "$filename" =~ /src\/yarpscope\/.*\.(cpp|h|qml)/ ||
+        if ("$filename" =~ /src\/guis\/yarpviz\/.*\.(cpp|h|qml)/ ||
+            "$filename" =~ /src\/guis\/yarpscope\/.*\.(cpp|h|qml)/ ||
             "$filename" =~ /example\/ContainerExample\/.*\.(cpp|h|qml)/) {
             # yarpviz and yarpscope are necessarily GPL3+
             print_if_verbose "[OK - GPL3+ (.$1)] $filename\n";
@@ -553,7 +446,7 @@ foreach my $filename (@files) {
 
     # Apache 2.0
     if ("$txt" =~ /$str_apache_2/s) {
-        if ("$filename" eq "src/idls/thrift/src/t_yarp_generator.cc") {
+        if ("$filename" eq "src/commands/yarpidl_thrift/src/t_yarp_generator.cc") {
             print_if_verbose "[OK - Apache 2.0] $filename\n";
             $ok++;
         } else {
@@ -573,28 +466,29 @@ print_if_verbose "---\n";
 print_if_verbose "FILES:  $files\n";
 print_if_verbose "OK:     $ok\n";
 print_if_verbose "SKIP:   $skip\n";
-print_if_verbose "KNOWN:  $known\n";
+print_if_verbose "KNOWN (COUNTED):  $known\n";
+print_if_verbose "KNOWN (DECLARED FROM FILE):  $number_files_marked_to_skip\n";
 print_if_verbose "ERRORS: $errors\n";
 print_if_verbose "---\n";
 print_if_verbose "\n";
 
 if ($ok + $skip + $known + $errors != $files) {
-    print_if_verbose "[ERROR: Some file was not counted]\n\n";
+    print "[ERROR: Some file was not counted]\n\n";
     exit 1;
 }
 
-if ($known < scalar(@skip_files)) {
-    print_if_verbose "[ERROR: Some known file was not found and the skip file was not updated]\n\n";
+if ($known < $number_files_marked_to_skip) {
+    print "[ERROR: Some known file was not found and the skip file was not updated]\n\n";
     exit 1;
 }
 
-if ($known > scalar(@skip_files)) {
-    print_if_verbose "[ERROR: Some new known file was added and the skip file was not updated]\n\n";
+if ($known > $number_files_marked_to_skip) {
+    print "[ERROR: Some new known file was added and the skip file was not updated]\n\n";
     exit 1;
 }
 
 if ($errors != 0) {
-    print_if_verbose "[ERROR: Some file has an invalid license]\n\n";
+    print "[ERROR: Some file has an invalid license]\n\n";
     exit 1;
 }
 

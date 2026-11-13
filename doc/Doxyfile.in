@@ -189,7 +189,7 @@ STRIP_FROM_INC_PATH    = @CMAKE_SOURCE_DIR@/src/libYARP_conf/src/ \
                          @CMAKE_SOURCE_DIR@/src/libYARP_run/src/ \
                          @CMAKE_SOURCE_DIR@/src/libYARP_manager/src/ \
                          @CMAKE_SOURCE_DIR@/src/libYARP_logger/src/ \
-                         @CMAKE_SOURCE_DIR@/src/libYARP_wire_rep_utils/src/ \
+                         @CMAKE_SOURCE_DIR@/src/libYARP_robotinterface/src/ \
                          @CMAKE_SOURCE_DIR@/src/libYARP_robottestingframework/src/ \
                          @CMAKE_BINARY_DIR@/src/libYARP_companion/src/ \
                          @CMAKE_SOURCE_DIR@/src/devices \
@@ -287,6 +287,7 @@ TAB_SIZE               = 4
 
 ALIASES                = "project=\par Project\n" \
                          "company=\par Company\n" \
+                         "zoomimage{2}=<a class=\"image-link\" href=\"\1\" target=\"_blank\" title=\"Click to open the full-size image\"><img class=\"doc-diagram\" src=\"\1\" alt=\"\2\" /></a>" \
                          case=
 
 # Set the OPTIMIZE_OUTPUT_FOR_C tag to YES if your project consists of C sources
@@ -900,12 +901,17 @@ INPUT                  = @CMAKE_SOURCE_DIR@/src/libYARP_conf/src \
                          @CMAKE_SOURCE_DIR@/src/libYARP_manager/src \
                          @CMAKE_SOURCE_DIR@/src/libYARP_logger/src \
                          @CMAKE_SOURCE_DIR@/src/libYARP_wire_rep_utils/src \
+                         @CMAKE_SOURCE_DIR@/src/libYARP_robotinterface/src \
                          @CMAKE_SOURCE_DIR@/src/libYARP_robottestingframework/src \
                          @CMAKE_BINARY_DIR@/src/libYARP_companion/src \
                          @CMAKE_SOURCE_DIR@/src/devices \
                          @CMAKE_SOURCE_DIR@/src/carriers \
+                         @CMAKE_SOURCE_DIR@/src/portmonitors \
+                         @CMAKE_SOURCE_DIR@/src/guis \
+                         @CMAKE_SOURCE_DIR@/src/commands \
                          @CMAKE_SOURCE_DIR@/doc \
                          @CMAKE_SOURCE_DIR@/doc/release \
+                         @CMAKE_SOURCE_DIR@/opt-modules \
                          @CMAKE_SOURCE_DIR@/.github
 
 # This tag can be used to specify the character encoding of the source files
@@ -950,7 +956,10 @@ RECURSIVE              = YES
 # Note that relative paths are relative to the directory from which doxygen is
 # run.
 
-EXCLUDE                = @CMAKE_SOURCE_DIR@/.github/workflow
+EXCLUDE                = @CMAKE_SOURCE_DIR@/.github/git-workflow \
+                         @CMAKE_SOURCE_DIR@/src/devices/README.md \
+                         @CMAKE_SOURCE_DIR@/src/portmonitors/README.md \
+                         @CMAKE_SOURCE_DIR@/src/carriers/README.md
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded
@@ -966,7 +975,19 @@ EXCLUDE_SYMLINKS       = NO
 # Note that the wildcards are matched against the file with absolute path, so to
 # exclude all test directories for example use the pattern */test/*
 
-EXCLUDE_PATTERNS       =
+EXCLUDE_PATTERNS       =  */doc/release/yarp_* \
+                          */opt-modules/*/README.md \
+                          */opt-modules/*/CHANGELOG.md \
+                          */opt-modules/*/*.md \
+                          */src/devices/*/README.md \
+                          */src/devices/*/*_params.* \
+                          */src/devices/*/*_ParamsParser.md \
+                          */src/devices/*/*extraComm* \
+                          */src/portmonitors/*/README.md \
+                          */src/carriers/*/README.md \
+                          */src/guis/*/doc/README.md \
+                          */src/commands/*/doc/README.md \
+                          */src/commands/yarpDeviceParamParserGenerator/tests/*
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the
@@ -1003,8 +1024,38 @@ EXAMPLE_RECURSIVE      = YES
 # that contain images that are to be included in the documentation (see the
 # \image command).
 
-IMAGE_PATH             = @CMAKE_SOURCE_DIR@/doc/images \
-                         @CMAKE_SOURCE_DIR@/.github
+IMAGE_PATH    = @CMAKE_SOURCE_DIR@/doc/images \
+                @CMAKE_SOURCE_DIR@/.github \
+                @CMAKE_SOURCE_DIR@/src/commands/yarp/doc \
+                @CMAKE_SOURCE_DIR@/src/commands/yarp-config/doc \
+                @CMAKE_SOURCE_DIR@/src/commands/yarpActionsPlayer/doc \
+                @CMAKE_SOURCE_DIR@/src/commands/yarpconnectionsinfo/doc \
+                @CMAKE_SOURCE_DIR@/src/commands/yarpdatadumper/doc \
+                @CMAKE_SOURCE_DIR@/src/commands/yarpdatadumperAppGenerator/doc \
+                @CMAKE_SOURCE_DIR@/src/commands/yarpdataplayer-console/doc \
+                @CMAKE_SOURCE_DIR@/src/commands/yarpdev/doc \
+                @CMAKE_SOURCE_DIR@/src/commands/yarpDeviceParamParserGenerator/doc \
+                @CMAKE_SOURCE_DIR@/src/commands/yarphear/doc \
+                @CMAKE_SOURCE_DIR@/src/commands/yarpidl_thrift/doc \
+                @CMAKE_SOURCE_DIR@/src/commands/yarplogger-console/doc \
+                @CMAKE_SOURCE_DIR@/src/commands/yarpmanager-console/doc \
+                @CMAKE_SOURCE_DIR@/src/commands/yarprobotinterface/doc \
+                @CMAKE_SOURCE_DIR@/src/commands/yarpRobotDescriptionInfo/doc \
+                @CMAKE_SOURCE_DIR@/src/commands/yarprun/doc \
+                @CMAKE_SOURCE_DIR@/src/commands/yarpserver/doc \
+                @CMAKE_SOURCE_DIR@/src/guis/yarpaudiocontrolgui/doc \
+                @CMAKE_SOURCE_DIR@/src/guis/yarpbatterygui/doc \
+                @CMAKE_SOURCE_DIR@/src/guis/yarpdataplayer/doc \
+                @CMAKE_SOURCE_DIR@/src/guis/yarplaserscannergui/doc \
+                @CMAKE_SOURCE_DIR@/src/guis/yarpllmgui/doc \
+                @CMAKE_SOURCE_DIR@/src/guis/yarplogger/doc \
+                @CMAKE_SOURCE_DIR@/src/guis/yarpmanager/doc \
+                @CMAKE_SOURCE_DIR@/src/guis/yarpmobilebasegui/doc \
+                @CMAKE_SOURCE_DIR@/src/guis/yarpmotorgui/doc \
+                @CMAKE_SOURCE_DIR@/src/guis/yarpopencvdisplay/doc \
+                @CMAKE_SOURCE_DIR@/src/guis/yarpscope/doc \
+                @CMAKE_SOURCE_DIR@/src/guis/yarpview/doc \
+                @CMAKE_SOURCE_DIR@/src/guis/yarpviz/doc
 
 # The INPUT_FILTER tag can be used to specify a program that doxygen should
 # invoke to filter for each input file. Doxygen will invoke the filter program
@@ -2257,6 +2308,7 @@ INCLUDE_PATH           = @CMAKE_SOURCE_DIR@/src/libYARP_conf/src \
                          @CMAKE_SOURCE_DIR@/src/libYARP_manager/src \
                          @CMAKE_SOURCE_DIR@/src/libYARP_logger/src \
                          @CMAKE_SOURCE_DIR@/src/libYARP_wire_rep_utils/src \
+                         @CMAKE_SOURCE_DIR@/src/libYARP_robotinterface/src \
                          @CMAKE_SOURCE_DIR@/src/libYARP_robottestingframework/src \
                          @CMAKE_BINARY_DIR@/src/libYARP_companion/src
 

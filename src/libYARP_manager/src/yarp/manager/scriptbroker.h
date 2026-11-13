@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_MANAGER_SCRIPT_BROKER
@@ -16,8 +13,7 @@
 #include <yarp/manager/yarpbroker.h>
 #include <yarp/manager/localbroker.h>
 
-namespace yarp {
-namespace manager {
+namespace yarp::manager {
 
 class ScriptLocalBroker: public LocalBroker
 {
@@ -51,12 +47,11 @@ public:
             const char* szhost, const char* szstdio,
             const char* szworkdir, const char* szenv) override;
 private:
-    bool whichFile(const char* server, const char* filename, std::string& filenameWithPath);
-    std::string script;
+     bool whichFile(const std::string& server, const std::string& filename, std::string& filenameWithPath);
+     std::string script;
 };
 
-} // namespace yarp
-} // namespace manager
+} // namespace yarp::manager
 
 
 #endif // __YARP_MANAGER_SCRIPT_BROKER__

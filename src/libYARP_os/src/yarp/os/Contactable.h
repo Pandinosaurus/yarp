@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_OS_CONTACTABLE_H
@@ -15,17 +12,10 @@
 #include <yarp/os/PortReport.h>
 #include <yarp/os/PortWriter.h>
 
-#ifndef YARP_NO_DEPRECATED // Since YARP 3.3
-#define YARP_INCLUDING_DEPRECATED_HEADER_ON_PURPOSE
-#  include <yarp/os/Mutex.h>
-#undef YARP_INCLUDING_DEPRECATED_HEADER_ON_PURPOSE
-#endif
-
 #include <mutex>
 
 // Forward declarations:
-namespace yarp {
-namespace os {
+namespace yarp::os {
 
 class Property;
 
@@ -275,32 +265,6 @@ public:
     virtual void promiseType(const Type& typ) = 0;
 
     /**
-     * Access unstructured port properties.
-     *
-     * @param readOnly set this if you won't be modifying the properties.
-     * @return the port properties (or nullptr if readOnly and none have
-     *         been set)
-     * @warning Must be called in the same thread as releaseProperties
-     */
-    virtual Property* acquireProperties(bool readOnly) = 0;
-
-    /**
-     * End access unstructured port properties.
-     *
-     * @param prop the port property object provided by acquireProperties()
-     * @warning Must be called in the same thread as acquireProperties
-     */
-    virtual void releaseProperties(Property* prop) = 0;
-
-    /**
-     * Choose whether to prepend a node name (if one is available) to
-     * the port's name. Node names are set using yarp::os::Node.
-     *
-     * @param flag true if the node name should be added to port names
-     */
-    virtual void includeNodeInName(bool flag) = 0;
-
-    /**
      * Shorthand for setInputMode(true), setOutputMode(false), setRpcMode(false)
      */
     void setReadOnly();
@@ -319,27 +283,6 @@ public:
      * Shorthand for setInputMode(false), setOutputMode(true), setRpcMode(true)
      */
     void setRpcClient();
-
-#ifndef YARP_NO_DEPRECATED // Since YARP 3.3
-YARP_WARNING_PUSH
-YARP_DISABLE_DEPRECATED_WARNING
-    /**
-     * Add a lock to use when invoking callbacks.
-     *
-     * mutex.lock() will be called before and mutex.unlock() will be called
-     * after the callback.
-     * This applies at least to callbacks set by setReader and setAdminReader,
-     * and in future may apply to other callbacks.
-     *
-     * @param mutex the lock to use. If nullptr, a mutex will be allocated
-     * internally by the port, and destroyed with the port.
-     *
-     * @deprecated since YARP 3.3
-     */
-    YARP_DEPRECATED_MSG("Use setCallbackLock with std::mutex instead")
-    virtual bool setCallbackLock(yarp::os::Mutex* mutex) = 0;
-YARP_WARNING_POP
-#endif
 
     /**
      * Add a lock to use when invoking callbacks.
@@ -386,7 +329,6 @@ YARP_WARNING_POP
     virtual void unlockCallback() = 0;
 };
 
-} // namespace os
-} // namespace yarp
+} // namespace yarp::os
 
 #endif // YARP_OS_CONTACTABLE_H

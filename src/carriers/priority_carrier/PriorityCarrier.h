@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef PRIORITYCARRIER_INC
@@ -70,6 +67,7 @@ public:
 
 
 /**
+ * \ingroup carriers_lists
  * Allow priority-based message selection.  Under development.
  * Affected by carrier modifiers.  Examples:
  *   tcp+recv.priority+level.15

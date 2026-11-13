@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/RFPlugin.h>
@@ -13,7 +10,6 @@
 #include <yarp/os/YarpPluginSelector.h>
 #include <yarp/os/impl/RFModuleFactory.h>
 
-using namespace std;
 using namespace yarp::os;
 
 class RFModuleSelector :
@@ -33,13 +29,14 @@ struct SharedRFPlugin
 };
 
 
-struct RFPlugin::Private
+class RFPlugin::Private
 {
+public:
     Private() = default;
 
-    string alias;
-    string name;
-    string command;
+    std::string alias;
+    std::string name;
+    std::string command;
     int threadID{0};
     SharedRFPlugin* shared{nullptr};
 
@@ -60,7 +57,7 @@ RFPlugin::~RFPlugin()
     delete mPriv;
 }
 
-string RFPlugin::getCmd()
+std::string RFPlugin::getCmd()
 {
     return mPriv->command;
 }
@@ -96,13 +93,13 @@ std::pair<int, char**> str2ArgcArgv(char* str)
         p2 = strtok(nullptr, " ");
     }
     argv[argc] = nullptr;
-    return make_pair(argc, argv);
+    return std::make_pair(argc, argv);
 }
 
-bool RFPlugin::open(const string& inCommand)
+bool RFPlugin::open(const std::string& inCommand)
 {
     ResourceFinder rf;
-    string name = inCommand.substr(0, inCommand.find(' '));
+    std::string name = inCommand.substr(0, inCommand.find(' '));
 
     char* str = new char[inCommand.size() + 1];
     memcpy(str, inCommand.c_str(), inCommand.size());
@@ -114,7 +111,7 @@ bool RFPlugin::open(const string& inCommand)
     delete[] str;
 
     RFModule* staticmodule{nullptr};
-    staticmodule = RFModuleFactory::GetInstance().GetModule(name);
+    staticmodule = yarp::os::impl::RFModuleFactory::GetInstance().GetModule(name);
     if (staticmodule != nullptr) {
         try {
             if (!staticmodule->configure(rf)) {

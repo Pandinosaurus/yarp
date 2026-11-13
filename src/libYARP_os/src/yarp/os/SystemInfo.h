@@ -1,22 +1,18 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_OS_SYSTEMINFO_H
 #define YARP_OS_SYSTEMINFO_H
 
-#include <yarp/os/Property.h>
+#include <yarp/os/SystemInfoData.h>
 
 #include <string>
 
 
-namespace yarp {
-namespace os {
+namespace yarp::os {
 
 /**
  * \ingroup key_class
@@ -25,101 +21,20 @@ namespace os {
  * available memory, storage, CPU load and etc.
  */
 
-class YARP_os_API SystemInfo
+class YARP_os_API SystemInfo : public yarp::os::SystemInfoData
 {
+private:
+    using SystemInfoData::read;
+    using SystemInfoData::write;
 public:
     typedef int capacity_t;
-
-    /**
-     * @brief The MemoryInfo struct holds the system memory information
-     */
-    typedef struct MemoryInfo
-    {
-        capacity_t totalSpace;
-        capacity_t freeSpace;
-    } MemoryInfo;
-
-
-    /**
-     * @brief The StorageInfo struct holds the system storage information
-     */
-    typedef struct StorageInfo
-    {
-        capacity_t totalSpace;
-        capacity_t freeSpace;
-    } StorageInfo;
-
-    /**
-     * @brief The ProcessorInfo struct holds the processor information
-     */
-    typedef struct ProcessorInfo
-    {
-        std::string architecture;
-        std::string model;
-        std::string vendor;
-        int family;
-        int modelNumber;
-        int cores;
-        int siblings;
-        double frequency;
-    } ProcessorInfo;
-
-
-    /**
-     * @brief The LoadInfo struct holds the current cpu load information
-     */
-    typedef struct LoadInfo
-    {
-        double cpuLoad1;
-        double cpuLoad5;
-        double cpuLoad15;
-        int cpuLoadInstant;
-    } LoadInfo;
-
-
-    /**
-     * @brief The PlatformInfo struct holds the operating system information
-     */
-    typedef struct PlatformInfo
-    {
-        std::string name;
-        std::string distribution;
-        std::string release;
-        std::string codename;
-        std::string kernel;
-        yarp::os::Property environmentVars;
-    } PlatformInfo;
-
-    /**
-     * @brief The UserInfo struct holds the current user information
-     */
-    typedef struct UserInfo
-    {
-        std::string userName;
-        std::string realName;
-        std::string homeDir;
-        int userID;
-    } UserInfo;
-
-    /*
-    typedef struct NetworkInfo {
-        std::string mac;
-        std::string ip4;
-        std::string ip6;
-    } NetworkInfo;
-    */
-
-    /**
-     * @brief The ProcessInfo struct provides the operating system process information.
-     */
-    typedef struct ProcessInfo
-    {
-        std::string name;
-        std::string arguments;
-        int schedPolicy;
-        int schedPriority;
-        int pid;
-    } ProcessInfo;
+    typedef yarp::os::ProcessInfoData    ProcessInfo;
+    typedef yarp::os::MemoryInfoData     MemoryInfo;
+    typedef yarp::os::StorageInfoData    StorageInfo;
+    typedef yarp::os::ProcessorInfoData  ProcessorInfo;
+    typedef yarp::os::LoadInfoData       LoadInfo;
+    typedef yarp::os::PlatformInfoData   PlatformInfo;
+    typedef yarp::os::UserInfoData       UserInfo;
 
 public:
     /**
@@ -168,10 +83,30 @@ public:
     static ProcessInfo getProcessInfo(int pid = 0);
 
     // static NetworkInfo getNetworkInfo();
+
+    /**
+     * @brief updates the system information by calling the static methods to
+     * retrieve the latest data.
+     */
+    void updateSystemInfo();
+
+    /**
+     * @brief reads from a ConnectionReader and fill into the SystemInfo structs.
+     * @param connection a ConnectionReader
+     * @return true/false upon success or failure
+     */
+    bool read(yarp::os::ConnectionReader& connection) override;
+
+    /**
+     * @brief write the SystemInfo structs using a ConnectionWriter.
+     * @param connection a ConnectionWriter
+     * @return true/false upon success or failure
+     */
+    bool write(yarp::os::ConnectionWriter& connection) const override;
+
 };
 
 
-} // namespace os
-} // namespace yarp
+} // namespace yarp::os
 
 #endif // YARP_OS_SYSTEMINFO_H

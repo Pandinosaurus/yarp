@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include "MjpegCarrier.h"
@@ -49,20 +46,23 @@ extern "C" {
 #include <yarp/os/Bytes.h>
 #include <yarp/os/Route.h>
 
-#include <yarp/wire_rep_utils/WireImage.h>
+#include "WireImage4mjpeg.h"
 
 #include <map>
 
 using namespace yarp::os;
 using namespace yarp::sig;
-using namespace yarp::wire_rep_utils;
 
 static const std::map<int, J_COLOR_SPACE> yarpCode2Mjpeg { {VOCAB_PIXEL_MONO, JCS_GRAYSCALE},
                                                            {VOCAB_PIXEL_MONO16, JCS_GRAYSCALE},
                                                            {VOCAB_PIXEL_RGB , JCS_RGB},
+#ifdef LIBJPEG_TURBO_VERSION
                                                            {VOCAB_PIXEL_RGBA , JCS_EXT_RGBA},
                                                            {VOCAB_PIXEL_BGRA , JCS_EXT_BGRA},
                                                            {VOCAB_PIXEL_BGR , JCS_EXT_BGR} };
+#else
+                                                           };
+#endif
 
 static const std::map<int, int> yarpCode2Channels { {VOCAB_PIXEL_MONO, 1},
                                                     {VOCAB_PIXEL_MONO16, 2},
@@ -158,10 +158,12 @@ void jpeg_net_dest(j_compress_ptr cinfo) {
 }
 
 bool MjpegCarrier::write(ConnectionState& proto, SizedWriter& writer) {
-    WireImage rep;
+    WireImage4mjpeg rep;
     FlexImage *img = rep.checkForImage(writer);
 
-    if (img==nullptr) return false;
+    if (img == nullptr) {
+        return false;
+    }
     int w = img->width();
     int h = img->height();
     int row_stride = img->getRowSize();
@@ -177,6 +179,14 @@ bool MjpegCarrier::write(ConnectionState& proto, SizedWriter& writer) {
     jpeg_net_dest(&cinfo);
     cinfo.image_width = w;
     cinfo.image_height = h;
+#ifndef LIBJPEG_TURBO_VERSION
+    if((img->getPixelCode() == VOCAB_PIXEL_RGBA) ||
+       (img->getPixelCode() == VOCAB_PIXEL_BGRA) ||
+       (img->getPixelCode() == VOCAB_PIXEL_BGR)) {
+        yCTrace(MJPEGCARRIER, "Pixel format not supported, please compile YARP with libjpeg-turbo to support it.");
+        return false;
+    }
+#endif
     cinfo.in_color_space = yarpCode2Mjpeg.at(img->getPixelCode());
     cinfo.input_components = yarpCode2Channels.at(img->getPixelCode());
     jpeg_set_defaults(&cinfo);

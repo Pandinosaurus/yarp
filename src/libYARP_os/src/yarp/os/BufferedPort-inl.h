@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_OS_BUFFEREDPORT_INL_H
@@ -326,35 +323,6 @@ void yarp::os::BufferedPort<T>::setRpcMode(bool expectRpc)
 {
     port.setRpcMode(expectRpc);
 }
-
-template <typename T>
-yarp::os::Property* yarp::os::BufferedPort<T>::acquireProperties(bool readOnly)
-{
-    return port.acquireProperties(readOnly);
-}
-
-template <typename T>
-void yarp::os::BufferedPort<T>::releaseProperties(Property* prop)
-{
-    port.releaseProperties(prop);
-}
-
-template <typename T>
-void yarp::os::BufferedPort<T>::includeNodeInName(bool flag)
-{
-    return port.includeNodeInName(flag);
-}
-
-#ifndef YARP_NO_DEPRECATED // Since YARP 3.3
-YARP_WARNING_PUSH
-YARP_DISABLE_DEPRECATED_WARNING
-template <typename T>
-bool yarp::os::BufferedPort<T>::setCallbackLock(yarp::os::Mutex* mutex)
-{
-    return port.setCallbackLock(mutex);
-}
-YARP_WARNING_POP
-#endif
 
 template <typename T>
 bool yarp::os::BufferedPort<T>::setCallbackLock(std::mutex* mutex)

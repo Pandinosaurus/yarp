@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DATAPLAYER
@@ -33,31 +30,21 @@
 #include <yarp/os/Log.h>
 #include <yarp/os/LogStream.h>
 
-#include <yarp/rosmsg/sensor_msgs/LaserScan.h>
-#include <yarp/rosmsg/nav_msgs/Odometry.h>
-#include <yarp/rosmsg/tf/tfMessage.h>
-#include <yarp/rosmsg/tf2_msgs/TFMessage.h>
-#include <yarp/rosmsg/geometry_msgs/Pose.h>
-#include <yarp/rosmsg/geometry_msgs/Pose2D.h>
-
 #include <list>
 #include <mutex>
 #include <vector>
 #include <string>
 #include <ctime>
+#include <chrono>
 
-namespace yarp
-{
-namespace yarpDataplayer
-{
+namespace yarp::yarpDataplayer {
 class  DataplayerEngine;
 class  DataplayerWorker;
 class  DataplayerUtilities;
 
 struct PartsData;
 struct RowInfo;
-}
-}
+} // namespace yarp::yarpDataplayer
 
 struct yarp::yarpDataplayer::PartsData
 {
@@ -272,7 +259,7 @@ protected:
     public:
         void SetDataplayerEngine(DataplayerEngine &dataplayerEngine)
         { this->dataplayerEngine = &dataplayerEngine; }
-        dataplayer_thread (double _period=0.002);
+        dataplayer_thread (double _period=0.0001);
 
         bool        threadInit() override;
         void        run() override;

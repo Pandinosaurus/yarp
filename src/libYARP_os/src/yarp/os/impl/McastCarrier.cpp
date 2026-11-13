@@ -1,15 +1,14 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/impl/McastCarrier.h>
 
 #include <yarp/conf/system.h>
+#include <yarp/conf/string.h>
+#include <yarp/conf/numeric.h>
 
 #include <yarp/os/ConnectionState.h>
 #include <yarp/os/Network.h>
@@ -118,16 +117,17 @@ bool yarp::os::impl::McastCarrier::sendHeader(ConnectionState& proto)
         }
     }
 
-    int ip[] = {224, 3, 1, 1};
-    int port = 11000;
+    constexpr size_t ipv4_size = 4;
+    int ip[ipv4_size] = {224, 3, 1, 1};
+    constexpr int default_port = 11000;
+    int port = default_port;
     if (addr.isValid()) {
-        SplitString ss(addr.getHost().c_str(), '.');
-        if (ss.size() != 4) {
+        auto ss = yarp::conf::string::split(addr.getHost(), '.');
+        if (ss.size() != ipv4_size) {
             addr = Contact();
         } else {
-            yCAssert(MCASTCARRIER, ss.size() == 4);
-            for (int i = 0; i < 4; i++) {
-                ip[i] = NetType::toInt(ss.get(i));
+            for (size_t i = 0; i < ipv4_size; ++i) {
+                ip[i] = yarp::conf::numeric::from_string<int>(ss[i]);
             }
             port = addr.getPort();
         }
@@ -140,7 +140,7 @@ bool yarp::os::impl::McastCarrier::sendHeader(ConnectionState& proto)
     }
 
     ManagedBytes block(6);
-    for (int i = 0; i < 4; i++) {
+    for (size_t i = 0; i < ipv4_size; i++) {
         ((unsigned char*)block.get())[i] = (unsigned char)ip[i];
     }
     block.get()[5] = (char)(port % 256);
@@ -160,12 +160,13 @@ bool yarp::os::impl::McastCarrier::expectExtraHeader(ConnectionState& proto)
         return false;
     }
 
+    constexpr size_t ipv4_size = 4;
     int ip[] = {0, 0, 0, 0};
     int port = -1;
 
     auto* base = (unsigned char*)block.get();
     std::string add;
-    for (int i = 0; i < 4; i++) {
+    for (size_t i = 0; i < ipv4_size; i++) {
         ip[i] = base[i];
         if (i != 0) {
             add += ".";

@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_OS_TYPEDREADERCALLBACK_H
@@ -12,8 +9,7 @@
 
 #include <yarp/os/api.h>
 
-namespace yarp {
-namespace os {
+namespace yarp::os {
 
 template <typename T>
 class TypedReader;
@@ -23,8 +19,7 @@ class TypedReader;
  *
  * If you want to get your data while leaving the port free to read more in the
  * background, you can create a callback that implements this interface, and
- * tell the port about it using BufferedPort::useCallback(callback) or
- * PortReaderBuffer::useCallback(callback)
+ * tell the port about it using BufferedPort::useCallback(callback).
  */
 template <typename T>
 class TypedReaderCallback
@@ -55,8 +50,7 @@ public:
     virtual void onRead(T& datum, const yarp::os::TypedReader<T>& reader);
 };
 
-} // namespace os
-} // namespace yarp
+} // namespace yarp::os
 
 #include <yarp/os/TypedReaderCallback-inl.h>
 

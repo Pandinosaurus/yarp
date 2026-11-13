@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_ICONTROLLIMITSIMPL_H
@@ -14,8 +11,7 @@
 #include <yarp/dev/api.h>
 #include <yarp/os/Log.h>
 
-namespace yarp {
-namespace dev {
+namespace yarp::dev {
 
 /**
  * @ingroup dev_iface_motor
@@ -28,8 +24,11 @@ namespace dev {
 class YARP_dev_API ImplementControlLimits: public IControlLimits
 {
 protected:
-    IControlLimitsRaw *iLimits2;
-    void    *helper;
+    IControlLimitsRaw*       m_iraw=nullptr;
+    void*                    m_helper=nullptr;
+    std::vector<int>         m_buffer_ints;
+    std::vector<double>      m_buffer_doubles;
+    std::mutex               m_imp_mutex;
 
     /**
      * Initialize the internal data and alloc memory.
@@ -61,10 +60,10 @@ public:
      * Destructor. Perform uninitialize if needed.
      */
     virtual ~ImplementControlLimits();
-    bool setLimits(int axis, double min, double max) override;
-    bool getLimits(int axis, double *min, double *max) override;
-    bool setVelLimits(int axis, double min, double max) override;
-    bool getVelLimits(int axis, double *min, double *max) override;
+    yarp::dev::ReturnValue setPosLimits(int axis, double min, double max) override;
+    yarp::dev::ReturnValue getPosLimits(int axis, double *min, double *max) override;
+    yarp::dev::ReturnValue setVelLimits(int axis, double min, double max) override;
+    yarp::dev::ReturnValue getVelLimits(int axis, double *min, double *max) override;
 };
 
 
@@ -89,14 +88,15 @@ private:
      * Helper for printing error message, see below.
      * Implemented in ControlBoardInterfacesImpl.cpp.
      */
-    bool NOT_YET_IMPLEMENTED(const char *func=0)
+    yarp::dev::ReturnValue NOT_YET_IMPLEMENTED(const char *func=0)
     {
-        if (func)
+        if (func) {
             yError("%s: not yet implemented\n", func);
-        else
+        } else {
             yError("Function not yet implemented\n");
+        }
 
-        return false;
+        return ReturnValue::return_code::return_value_error_not_implemented_by_device;
     }
 
 
@@ -106,29 +106,28 @@ public:
      */
     virtual ~StubImplControlLimitsRaw() {}
 
-    bool setLimitsRaw(int axis, double min, double max) override
+    yarp::dev::ReturnValue setPosLimitsRaw(int axis, double min, double max) override
     {
-        return NOT_YET_IMPLEMENTED("setLimitsRaw");
+        return NOT_YET_IMPLEMENTED("setPosLimitsRaw");
     }
 
-    bool getLimitsRaw(int axis, double *min, double *max) override
+    yarp::dev::ReturnValue getPosLimitsRaw(int axis, double *min, double *max) override
     {
-        return NOT_YET_IMPLEMENTED("getLimitsRaw");
+        return NOT_YET_IMPLEMENTED("getPosLimitsRaw");
     }
 
-    bool setVelLimitsRaw(int axis, double min, double max) override
+    yarp::dev::ReturnValue setVelLimitsRaw(int axis, double min, double max) override
     {
         return NOT_YET_IMPLEMENTED("setVelLimitsRaw");
     }
 
-    bool getVelLimitsRaw(int axis, double *min, double *max) override
+    yarp::dev::ReturnValue getVelLimitsRaw(int axis, double *min, double *max) override
     {
         return NOT_YET_IMPLEMENTED("getVelLimitsRaw");
     }
 
 };
 
-} // namespace dev
-} // namespace yarp
+} // namespace yarp::dev
 
 #endif // YARP_DEV_ICONTROLLIMITSIMPL_H

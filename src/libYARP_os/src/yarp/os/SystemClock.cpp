@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/conf/system.h>
@@ -36,5 +33,5 @@ void yarp::os::SystemClock::delaySystem(double seconds)
 
 double yarp::os::SystemClock::nowSystem()
 {
-    return std::chrono::time_point_cast<std::chrono::duration<double>>(std::chrono::high_resolution_clock::now()).time_since_epoch().count();
+    return std::chrono::time_point_cast<std::chrono::duration<double>>(std::chrono::system_clock::now()).time_since_epoch().count();
 }

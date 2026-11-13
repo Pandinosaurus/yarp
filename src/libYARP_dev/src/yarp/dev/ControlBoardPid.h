@@ -1,44 +1,34 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/dev/api.h>
+#include <yarp/dev/PidGainsData.h>
+#include <yarp/dev/PidExtraInfoData.h>
+#include <yarp/os/Portable.h>
+#include <string>
 
 #ifndef YARP_DEV_CONTROLBOARDPID_H
 #define YARP_DEV_CONTROLBOARDPID_H
 
 /*!
- * \file ControlBoardPid.h define control board standard interfaces
+ * \file ControlBoardPid.h defines yarp::dev::Pid datatype
  */
 
-namespace yarp{
-    namespace dev{
-        class Pid;
-    }
+namespace yarp::dev {
+class Pid;
+class PidWithExtraInfo;
+typedef yarp::dev::PidExtraInfoData PidExtraInfo;
 }
+
 
 /*!
  * \brief Contains the parameters for a PID
  */
-class YARP_dev_API yarp::dev::Pid
+class YARP_dev_API yarp::dev::Pid : public yarp::dev::PidGainsData
 {
-public:
-    double kp;                 //!< proportional gain
-    double kd;                 //!< derivative gain
-    double ki;                 //!< integrative gain
-    double max_int;            //!< saturation threshold for the integrator
-    double scale;              //!< scale for the pid output
-    double max_output;         //!< max output
-    double offset;             //!< pwm offset added to the pid output
-    double stiction_up_val;    //!< up stiction offset added to the pid output
-    double stiction_down_val;  //!< down stiction offset added to the pid output
-    double kff;                //!< feedforward gain
-
 public:
     /*!
      * \brief Default Constructor.
@@ -154,6 +144,25 @@ public:
     *
     */
     void clear();
+};
+
+class YARP_dev_API yarp::dev::PidWithExtraInfo
+{
+    public:
+    yarp::dev::Pid pid;
+    yarp::dev::PidExtraInfoData pidExtraInfo;
+
+    yarp::dev::PidWithExtraInfo& operator=(const yarp::dev::Pid& rhs)
+    {
+        pid = rhs;
+        return *this;
+    }
+
+    yarp::dev::PidWithExtraInfo& operator=(const yarp::dev::PidExtraInfoData& rhs)
+    {
+        pidExtraInfo = rhs;
+        return *this;
+    }
 };
 
 #endif // YARP_DEV_CONTROLBOARDPID_H

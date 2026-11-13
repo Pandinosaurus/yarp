@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/math/Rand.h>
@@ -105,11 +102,12 @@ Vector Rand::vector(const Vector &min, const Vector &max)
 Matrix Rand::matrix(int rows, int cols)
 {
     yarp::sig::Matrix ret(rows,cols);
-    for(int r=0;r<rows;r++)
+    for (int r = 0; r < rows; r++) {
         for(int c=0;c<cols;c++)
         {
             ret[r][c]=theRandScalar.get();
         }
+    }
 
     return ret;
 }

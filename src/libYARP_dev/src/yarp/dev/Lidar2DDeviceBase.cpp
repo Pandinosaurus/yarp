@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #define _USE_MATH_DEFINES
@@ -16,7 +13,7 @@
 
 using namespace yarp::os;
 using namespace yarp::dev;
-using namespace std;
+using namespace yarp::sig;
 
 #ifndef DEG2RAD
 #define DEG2RAD M_PI/180.0
@@ -24,58 +21,62 @@ using namespace std;
 
 YARP_LOG_COMPONENT(LASER_BASE, "yarp.devices.Lidar2DDeviceBase")
 
-bool Lidar2DDeviceBase::getScanLimits(double& min, double& max)
+ReturnValue Lidar2DDeviceBase::getScanLimits(double& min, double& max)
 {
     std::lock_guard<std::mutex> guard(m_mutex);
     min = m_min_angle;
     max = m_max_angle;
-    return true;
+    return ReturnValue_ok;
 }
 
-bool Lidar2DDeviceBase::getDistanceRange(double& min, double& max)
+ReturnValue Lidar2DDeviceBase::getDistanceRange(double& min, double& max)
 {
     std::lock_guard<std::mutex> guard(m_mutex);
     min = m_min_distance;
     max = m_max_distance;
-    return true;
+    return ReturnValue_ok;
 }
 
-bool Lidar2DDeviceBase::getHorizontalResolution(double& step)
+ReturnValue Lidar2DDeviceBase::getHorizontalResolution(double& step)
 {
     std::lock_guard<std::mutex> guard(m_mutex);
     step = m_resolution;
-    return true;
+    return ReturnValue_ok;
 }
 
-bool Lidar2DDeviceBase::getDeviceStatus(Device_status& status)
+ReturnValue Lidar2DDeviceBase::getDeviceStatus(Device_status& status)
 {
     std::lock_guard<std::mutex> guard(m_mutex);
     status = m_device_status;
-    return true;
+    return ReturnValue_ok;
 }
 
-bool Lidar2DDeviceBase::getRawData(yarp::sig::Vector& out)
+ReturnValue Lidar2DDeviceBase::getRawData(yarp::sig::Vector& out, double* timestamp)
 {
     std::lock_guard<std::mutex> guard(m_mutex);
     out = m_laser_data;
-    return true;
+    if (timestamp != nullptr)
+    {
+        *timestamp = m_timestamp.getTime();
+    }
+    return ReturnValue_ok;
 }
 
-bool Lidar2DDeviceBase::getScanRate(double& rate)
+ReturnValue Lidar2DDeviceBase::getScanRate(double& rate)
 {
     std::lock_guard<std::mutex> guard(m_mutex);
     rate = m_scan_rate;
-    return true;
+    return ReturnValue_ok;
 }
 
-bool Lidar2DDeviceBase::getDeviceInfo(std::string& device_info)
+ReturnValue Lidar2DDeviceBase::getDeviceInfo(std::string& device_info)
 {
     std::lock_guard<std::mutex> guard(m_mutex);
     device_info = m_info;
-    return true;
+    return ReturnValue_ok;
 }
 
-bool Lidar2DDeviceBase::getLaserMeasurement(std::vector<LaserMeasurementData>& data)
+ReturnValue Lidar2DDeviceBase::getLaserMeasurement(std::vector<LaserMeasurementData>& data, double* timestamp)
 {
     std::lock_guard<std::mutex> guard(m_mutex);
 #ifdef LASER_DEBUG
@@ -83,14 +84,22 @@ bool Lidar2DDeviceBase::getLaserMeasurement(std::vector<LaserMeasurementData>& d
 #endif
     size_t size = m_laser_data.size();
     data.resize(size);
-    if (m_max_angle < m_min_angle) { yCError(LASER_BASE) << "getLaserMeasurement failed"; return false; }
+    if (m_max_angle < m_min_angle)
+    {
+        yCError(LASER_BASE) << "getLaserMeasurement failed";
+        return ReturnValue::return_code::return_value_error_method_failed;
+    }
     double laser_angle_of_view = m_max_angle - m_min_angle;
     for (size_t i = 0; i < size; i++)
     {
         double angle = (i / double(size) * laser_angle_of_view + m_min_angle) * DEG2RAD;
         data[i].set_polar(m_laser_data[i], angle);
     }
-    return true;
+    if (timestamp!=nullptr)
+    {
+        *timestamp = m_timestamp.getTime();
+    }
+    return ReturnValue_ok;
 }
 
 Lidar2DDeviceBase::Lidar2DDeviceBase() :
@@ -109,6 +118,8 @@ Lidar2DDeviceBase::Lidar2DDeviceBase() :
 
 bool Lidar2DDeviceBase::parseConfiguration(yarp::os::Searchable& config)
 {
+    std::string config_str = config.toString();
+
     //sensor options (should be mandatory? TBD)
     {
         bool br = config.check("SENSOR");
@@ -202,8 +213,9 @@ bool Lidar2DDeviceBase::parseConfiguration(yarp::os::Searchable& config)
     yCInfo(LASER_BASE) << "allow_infinity:" << (m_do_not_clip_and_allow_infinity_enable ==true);
     if (m_range_skip_vector.size() >0)
     {
-        for (size_t i=0; i< m_range_skip_vector.size(); i++)
-        yCInfo(LASER_BASE) << "skip area:" << m_range_skip_vector[i].min << "->" << m_range_skip_vector[i].max;
+        for (size_t i = 0; i < m_range_skip_vector.size(); i++) {
+            yCInfo(LASER_BASE) << "skip area:" << m_range_skip_vector[i].min << "->" << m_range_skip_vector[i].max;
+        }
     }
     return true;
 }
@@ -230,8 +242,12 @@ bool Lidar2DDeviceBase::applyLimitsOnLaserData()
         double& distance = m_laser_data[i];
         double  angle = i * m_resolution;
 
-        if (std::isnan(distance)) continue;
-        if (checkSkipAngle(angle, distance)) continue;
+        if (std::isnan(distance)) {
+            continue;
+        }
+        if (checkSkipAngle(angle, distance)) {
+            continue;
+        }
 
         if (m_clip_min_enable)
         {
@@ -261,21 +277,27 @@ bool Lidar2DDeviceBase::applyLimitsOnLaserData()
     return true;
 }
 
-yarp::os::Stamp Lidar2DDeviceBase::getLastInputStamp()
-{
-    std::lock_guard<std::mutex> guard(m_mutex);
-    return m_timestamp;
-}
-
-
 bool Lidar2DDeviceBase::updateLidarData()
 {
+    std::lock_guard<std::mutex> lock(m_mutex);
     bool b = true;
     b &= acquireDataFromHW();
-    if (!b) return false;
+    if (!b) {
+        m_device_status = yarp::dev::IRangefinder2D::Device_status::DEVICE_GENERAL_ERROR;
+        return false;
+    }
     b &= applyLimitsOnLaserData();
-    if (!b) return false;
+    if (!b) {
+        m_device_status = yarp::dev::IRangefinder2D::Device_status::DEVICE_GENERAL_ERROR;
+        return false;
+    }
     b &= updateTimestamp();
+    if (!b) {
+        m_device_status = yarp::dev::IRangefinder2D::Device_status::DEVICE_GENERAL_ERROR;
+        return false;
+    }
+
+    m_device_status = yarp::dev::IRangefinder2D::Device_status::DEVICE_OK_IN_USE;
     return b;
 }
 

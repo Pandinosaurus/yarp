@@ -1,11 +1,8 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * Copyright (C) 2006, 2008 Arjan Gijsberts
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-FileCopyrightText: 2006, 2008 Arjan Gijsberts
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/impl/Storable.h>
@@ -30,7 +27,6 @@ using yarp::os::Value;
 using yarp::os::impl::BottleImpl;
 using yarp::os::impl::Storable;
 using yarp::os::impl::StoreBlob;
-using yarp::os::impl::StoreDict;
 using yarp::os::impl::StoreFloat32;
 using yarp::os::impl::StoreFloat64;
 using yarp::os::impl::StoreInt16;
@@ -39,7 +35,8 @@ using yarp::os::impl::StoreInt64;
 using yarp::os::impl::StoreInt8;
 using yarp::os::impl::StoreList;
 using yarp::os::impl::StoreString;
-using yarp::os::impl::StoreVocab;
+using yarp::os::impl::StoreVocab32;
+using yarp::os::impl::StoreVocab64;
 
 
 YARP_OS_LOG_COMPONENT(STORABLE, "yarp.os.impl.Storable")
@@ -51,11 +48,11 @@ const int StoreInt32::code = BOTTLE_TAG_INT32;
 const int StoreInt64::code = BOTTLE_TAG_INT64;
 const int StoreFloat32::code = BOTTLE_TAG_FLOAT32;
 const int StoreFloat64::code = BOTTLE_TAG_FLOAT64;
-const int StoreVocab::code = BOTTLE_TAG_VOCAB;
+const int StoreVocab32::code = BOTTLE_TAG_VOCAB32;
+const int StoreVocab64::code = BOTTLE_TAG_VOCAB64;
 const int StoreString::code = BOTTLE_TAG_STRING;
 const int StoreBlob::code = BOTTLE_TAG_BLOB;
 const int StoreList::code = BOTTLE_TAG_LIST;
-const int StoreDict::code = BOTTLE_TAG_LIST | BOTTLE_TAG_DICT;
 
 
 
@@ -81,8 +78,11 @@ Storable* Storable::createByCode(std::int32_t id)
     case StoreInt64::code:
         storable = new StoreInt64();
         break;
-    case StoreVocab::code:
-        storable = new StoreVocab();
+    case StoreVocab32::code:
+        storable = new StoreVocab32();
+        break;
+    case StoreVocab64::code:
+        storable = new StoreVocab64();
         break;
     case StoreFloat32::code:
         storable = new StoreFloat32();
@@ -105,15 +105,10 @@ Storable* Storable::createByCode(std::int32_t id)
         if ((id & GROUP_MASK) != 0) {
             // typed list
             subCode = (id & UNIT_MASK);
-            if ((id & BOTTLE_TAG_DICT) != 0) {
-                storable = new StoreDict();
-                yCAssert(STORABLE, storable != nullptr);
-            } else {
-                storable = new StoreList();
-                yCAssert(STORABLE, storable != nullptr);
-                storable->asList()->implementation->specialize(subCode);
-                storable->asList()->implementation->setNested(true);
-            }
+            storable = new StoreList();
+            yCAssert(STORABLE, storable != nullptr);
+            storable->asList()->implementation->specialize(subCode);
+            storable->asList()->implementation->setNested(true);
         }
         break;
     }
@@ -269,9 +264,9 @@ bool StoreInt64::writeRaw(ConnectionWriter& writer) const
 
 
 ////////////////////////////////////////////////////////////////////////////
-// StoreVocab
+// StoreVocab32
 
-std::string StoreVocab::toString() const
+std::string StoreVocab32::toString() const
 {
     if (x == 0) {
         return "false";
@@ -279,15 +274,15 @@ std::string StoreVocab::toString() const
     if (x == '1') {
         return "true";
     }
-    return Vocab::decode(x);
+    return Vocab32::decode(x);
 }
 
-void StoreVocab::fromString(const std::string& src)
+void StoreVocab32::fromString(const std::string& src)
 {
-    x = Vocab::encode(src);
+    x = Vocab32::encode(src);
 }
 
-std::string StoreVocab::toStringNested() const
+std::string StoreVocab32::toStringNested() const
 {
     if (x == 0) {
         return "false";
@@ -298,7 +293,7 @@ std::string StoreVocab::toStringNested() const
     return std::string("[") + toString() + "]";
 }
 
-void StoreVocab::fromStringNested(const std::string& src)
+void StoreVocab32::fromStringNested(const std::string& src)
 {
     x = 0;
     if (src.length() > 0) {
@@ -313,18 +308,74 @@ void StoreVocab::fromStringNested(const std::string& src)
     }
 }
 
-bool StoreVocab::readRaw(ConnectionReader& reader)
+bool StoreVocab32::readRaw(ConnectionReader& reader)
 {
     x = reader.expectInt32();
     return true;
 }
 
-bool StoreVocab::writeRaw(ConnectionWriter& writer) const
+bool StoreVocab32::writeRaw(ConnectionWriter& writer) const
 {
     writer.appendInt32(x);
     return true;
 }
 
+////////////////////////////////////////////////////////////////////////////
+// StoreVocab64
+
+std::string StoreVocab64::toString() const
+{
+    if (x == 0) {
+        return "false";
+    }
+    if (x == '1') {
+        return "true";
+    }
+    return Vocab64::decode64(x);
+}
+
+void StoreVocab64::fromString(const std::string& src)
+{
+    x = Vocab64::encode64(src);
+}
+
+std::string StoreVocab64::toStringNested() const
+{
+    if (x == 0) {
+        return "false";
+    }
+    if (x == '1') {
+        return "true";
+    }
+    return std::string("[") + toString() + "]";
+}
+
+void StoreVocab64::fromStringNested(const std::string& src)
+{
+    x = 0;
+    if (src.length() > 0) {
+        if (src[0] == '[') {
+            // ignore first [ and last ]
+            fromString(src.substr(1, src.length() - 2));
+        } else if (src == "true") {
+            x = static_cast<int>('1');
+        } else if (src == "false") {
+            x = 0;
+        }
+    }
+}
+
+bool StoreVocab64::readRaw(ConnectionReader& reader)
+{
+    x = reader.expectInt64();
+    return true;
+}
+
+bool StoreVocab64::writeRaw(ConnectionWriter& writer) const
+{
+    writer.appendInt64(x);
+    return true;
+}
 
 ////////////////////////////////////////////////////////////////////////////
 // StoreFloat32
@@ -332,12 +383,12 @@ bool StoreVocab::writeRaw(ConnectionWriter& writer) const
 
 std::string StoreFloat32::toString() const
 {
-    return NetType::toString(x);
+    return yarp::conf::numeric::to_string(x);
 }
 
 void StoreFloat32::fromString(const std::string& src)
 {
-    x = NetType::toFloat32(src);
+    x = yarp::conf::numeric::from_string<yarp::conf::float32_t>(src);
 }
 
 bool StoreFloat32::readRaw(ConnectionReader& reader)
@@ -358,12 +409,12 @@ bool StoreFloat32::writeRaw(ConnectionWriter& writer) const
 
 std::string StoreFloat64::toString() const
 {
-    return NetType::toString(x);
+    return yarp::conf::numeric::to_string(x);
 }
 
 void StoreFloat64::fromString(const std::string& src)
 {
-    x = NetType::toFloat64(src);
+    x = yarp::conf::numeric::from_string<yarp::conf::float64_t>(src);
 }
 
 bool StoreFloat64::readRaw(ConnectionReader& reader)
@@ -523,7 +574,7 @@ std::string StoreBlob::toString() const
             result += " ";
         }
         const auto* src = reinterpret_cast<const unsigned char*>(&x[i]);
-        result += NetType::toString(*src);
+        result += yarp::conf::numeric::to_string(*src);
     }
     return result;
 }
@@ -616,48 +667,4 @@ bool StoreList::writeRaw(ConnectionWriter& writer) const
 std::int32_t StoreList::subCode() const
 {
     return subCoder(*(content.implementation));
-}
-
-
-////////////////////////////////////////////////////////////////////////////
-// StoreDict
-
-std::string StoreDict::toString() const
-{
-    return std::string(content.toString());
-}
-
-std::string StoreDict::toStringNested() const
-{
-    return std::string("(") + content.toString() + ")";
-}
-
-void StoreDict::fromString(const std::string& src)
-{
-    content.fromString(src);
-}
-
-void StoreDict::fromStringNested(const std::string& src)
-{
-    if (src.length() > 0) {
-        if (src[0] == '(') {
-            // ignore first ( and last )
-            std::string buf = src.substr(1, src.length() - 2);
-            content.fromString(buf);
-        }
-    }
-}
-
-bool StoreDict::readRaw(ConnectionReader& reader)
-{
-    // not using the most efficient representation
-    content.read(reader);
-    return true;
-}
-
-bool StoreDict::writeRaw(ConnectionWriter& writer) const
-{
-    // not using the most efficient representation
-    content.write(writer);
-    return true;
 }

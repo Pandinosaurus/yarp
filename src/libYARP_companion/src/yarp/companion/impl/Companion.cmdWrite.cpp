@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/companion/impl/Companion.h>
@@ -12,11 +9,15 @@
 #include <yarp/os/Port.h>
 #include <yarp/os/SystemClock.h>
 #include <yarp/os/impl/Terminal.h>
+#include <yarp/os/Network.h>
+#include <yarp/os/LogStream.h>
+#include <yarp/os/PeriodicThread.h>
+#include <yarp/os/Semaphore.h>
 
 #ifdef YARP_HAS_Libedit
+#include <yarp/conf/dirs.h>
 #include <yarp/conf/filesystem.h>
 #include <yarp/os/Os.h>
-#include <yarp/os/ResourceFinder.h>
 #include <yarp/os/impl/PlatformUnistd.h>
 #include <yarp/os/impl/PlatformStdio.h>
 #include <algorithm>
@@ -27,13 +28,43 @@ using yarp::companion::impl::Companion;
 using yarp::os::Bottle;
 using yarp::os::Port;
 using yarp::os::SystemClock;
+using yarp::os::NetworkBase;
 
-#ifdef YARP_HAS_Libedit
-using yarp::os::ResourceFinder;
-#endif
+class writerThread : public yarp::os::PeriodicThread
+{
+    private:
+    Port* outport=nullptr;
+    Bottle bot;
+    std::mutex mut;
 
-int Companion::write(const char *name, int ntargets, char *targets[]) {
+    public:
+    writerThread (double period, Port* _outport) : yarp::os::PeriodicThread(period)
+    {
+        outport = _outport;
+    }
+
+    void run() override
+    {
+        mut.lock();
+        if (outport && bot.size()!=0)
+        {
+            outport->write(bot);
+        }
+        mut.unlock();
+    }
+
+    void write(Bottle& _bot)
+    {
+        mut.lock();
+        bot = _bot;
+        mut.unlock();
+    }
+};
+
+int Companion::write(const char *name, int ntargets, char *targets[], double period)
+{
     Port port;
+    writerThread* writer_thread = nullptr;
     applyArgs(port);
     port.setWriteOnly();
 #ifdef YARP_HAS_Libedit
@@ -41,14 +72,11 @@ int Companion::write(const char *name, int ntargets, char *targets[]) {
     bool disable_file_history=false;
     if (yarp::os::impl::isatty(yarp::os::impl::fileno(stdin))) //if interactive mode
     {
-        hist_file=yarp::os::ResourceFinder::getDataHome();
-        std::string slash{yarp::conf::filesystem::preferred_separator};
-        hist_file += slash;
-        hist_file += "yarp_write";
+        auto yarpdatahome = yarp::conf::dirs::yarpdatahome();
+        std::string hist_file = yarpdatahome + yarp::conf::filesystem::preferred_separator + "yarp_write";
         if (yarp::os::mkdir_p(hist_file.c_str(), 1) != 0)
         {
-            yCError(COMPANION, "Unable to create directory into \"%s\"",
-                    yarp::os::ResourceFinder::getDataHome().c_str());
+            yCError(COMPANION, "Unable to create directory into \"%s\"", yarpdatahome.c_str());
             return 1;
         }
         std::string temp;
@@ -58,13 +86,13 @@ int Companion::write(const char *name, int ntargets, char *targets[]) {
             temp = "any";
         }
         std::replace(temp.begin(), temp.end(), '/', '_');
-        hist_file += slash;
+        hist_file += yarp::conf::filesystem::preferred_separator;
         hist_file += temp;
         read_history(hist_file.c_str());
         disable_file_history=false;
+    } else {
+        disable_file_history = true;
     }
-    else
-        disable_file_history=true;
 #endif
     if (Companion::getActivePort() == nullptr) {
         Companion::installHandler();
@@ -90,6 +118,11 @@ int Companion::write(const char *name, int ntargets, char *targets[]) {
         }
     }
 
+    if (period>0)
+    {
+        writer_thread = new writerThread(period, &port);
+        writer_thread->start();
+    }
 
     while (!yarp::os::impl::Terminal::EOFreached()) {
         std::string txt = yarp::os::impl::Terminal::getStdin();
@@ -107,19 +140,31 @@ int Companion::write(const char *name, int ntargets, char *targets[]) {
             } else {
                 bot.fromString(txt);
             }
-            //core.send(bot);
+
             if (waitConnect) {
                 double delay = 0.1;
                 while (port.getOutputCount()<1) {
                     SystemClock::delaySystem(delay);
                     delay *= 2;
-                    if (delay>4) delay = 4;
+                    if (delay > 4) {
+                        delay = 4;
+                    }
                 }
             }
-            port.write(bot);
+
+            if (writer_thread)
+            {
+                writer_thread->write(bot);
+            }
+            else
+            {
+                port.write(bot);
+            }
+
 #ifdef YARP_HAS_Libedit
-            if (!disable_file_history)
+            if (!disable_file_history) {
                 write_history(hist_file.c_str());
+            }
 #endif
         }
     }
@@ -129,7 +174,9 @@ int Companion::write(const char *name, int ntargets, char *targets[]) {
         while (port.isWriting()) {
             SystemClock::delaySystem(delay);
             delay *= 2;
-            if (delay>4) delay = 4;
+            if (delay > 4) {
+                delay = 4;
+            }
         }
     }
 
@@ -139,13 +186,18 @@ int Companion::write(const char *name, int ntargets, char *targets[]) {
         Bottle bot;
         bot.addInt32(1);
         bot.addString("<EOF>");
-        //core.send(bot);
         port.write(bot);
     }
 
-    //core.close();
-    //core.join();
-    port.close();
+    if (writer_thread)
+    {
+        writer_thread->stop();
+        delete writer_thread;
+    }
+    else
+    {
+        port.close();
+    }
 
     return 0;
 }
@@ -153,11 +205,58 @@ int Companion::write(const char *name, int ntargets, char *targets[]) {
 
 int Companion::cmdWrite(int argc, char *argv[])
 {
-    if (argc<1) {
-        yCError(COMPANION, "Please supply the port name, and optionally some targets");
+    if (argc<1)
+    {
+        yCError(COMPANION, "Usage:");
+        yCError(COMPANION, "Please supply the port name, and optionally some targets, e.g.");
+        yCError(COMPANION, "  yarp write <port> [remote port1] [remote port2] [...] [--period <s>]");
+        yCError(COMPANION, "If the period optional parameter is given, then the message is written periodically");
         return 1;
     }
 
+    //get the name of the source port
     const char *src = argv[0];
-    return write(src, argc-1, argv+1);
+
+    //the following check prevents opening as local port a port which is already registered (and active) on the yarp nameserver
+    bool e = NetworkBase::exists(src, true);
+    if (e)
+    {
+        yCError(COMPANION) << "Port" << src << "already exists! Aborting...";
+        return 1;
+    }
+
+    if(argc >= 2) {
+        //parsing of the period option
+        double period = 0;
+        //check a malformed command line in which the --period is specified, but with no value.
+        if (strcmp(argv[argc - 1], "--period") == 0)
+        {
+            yCError(COMPANION, "Invalid period value");
+            return 1;
+        }
+        //check if the period option is the present
+        if (strcmp(argv[argc -2 ],"--period")==0)
+        {
+            //get the value of the --period option
+            double pp=atof(argv[argc - 1]);
+            if (pp>=0)
+            {
+                period = pp;
+                yCInfo(COMPANION, "Message will be published with a period of %f s", period);
+            }
+            else
+            {
+                yCError(COMPANION, "Invalid period value");
+                return 1;
+            }
+
+            //remove the --period option and its following value from argc, argv
+            argc--;
+            argc--;
+        }
+
+        return write(src, argc-1, argv+1, period);
+    }
+
+    return write(src, argc-1, argv+1, 0);
 }

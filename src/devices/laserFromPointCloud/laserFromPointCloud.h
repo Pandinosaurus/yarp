@@ -1,19 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #ifndef LASER_FROM_POINTCLOUDS_H
@@ -59,7 +46,6 @@ protected:
 
     size_t m_depth_width = 0;
     size_t m_depth_height = 0;
-    yarp::os::Property m_propIntrinsics;
     yarp::sig::IntrinsicParams m_intrinsics;
     yarp::sig::ImageOf<float> m_depth_image;
 
@@ -69,7 +55,6 @@ protected:
     yarp::sig::utils::PCL_ROI m_pc_roi;
 
     //frames and point cloud clipping planes
-    bool   m_publish_ros_pc;
     std::string m_ground_frame_id;
     std::string m_camera_frame_id;
     double m_floor_height;
@@ -94,14 +79,17 @@ public:
 
 public:
     //IRangefinder2D interface
-    bool setDistanceRange    (double min, double max) override;
-    bool setScanLimits        (double min, double max) override;
-    bool setHorizontalResolution      (double step) override;
-    bool setScanRate         (double rate) override;
+    yarp::dev::ReturnValue setDistanceRange    (double min, double max) override;
+    yarp::dev::ReturnValue setScanLimits        (double min, double max) override;
+    yarp::dev::ReturnValue setHorizontalResolution      (double step) override;
+    yarp::dev::ReturnValue setScanRate         (double rate) override;
 
 public:
     //Lidar2DDeviceBase
     bool acquireDataFromHW() override final;
+
+private:
+    bool utility_insideCameraFov (size_t i, double left_elem, double right_elem);
 };
 
 #endif

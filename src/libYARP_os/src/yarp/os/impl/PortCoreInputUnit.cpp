@@ -1,22 +1,17 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/impl/PortCoreInputUnit.h>
 
 #include <yarp/os/Name.h>
-#include <yarp/os/Os.h>
 #include <yarp/os/PortInfo.h>
 #include <yarp/os/PortReport.h>
 #include <yarp/os/Time.h>
 #include <yarp/os/impl/BufferedConnectionWriter.h>
 #include <yarp/os/impl/LogComponent.h>
-#include <yarp/os/impl/PlatformSignal.h>
 #include <yarp/os/impl/PortCommand.h>
 
 #include <cstdio>
@@ -44,7 +39,7 @@ PortCoreInputUnit::PortCoreInputUnit(PortCore& owner,
         localReader(nullptr),
         reversed(reversed)
 {
-    yCAssert(PORTCOREINPUTUNIT, ip != nullptr);
+    yCIAssert(PORTCOREINPUTUNIT, getName(), ip != nullptr);
 
     yarp::os::PortReaderCreator* creator = owner.getReadCreator();
     if (creator != nullptr) {
@@ -64,17 +59,17 @@ PortCoreInputUnit::~PortCoreInputUnit()
 
 bool PortCoreInputUnit::start()
 {
-    yCDebug(PORTCOREINPUTUNIT, "new input connection to %s starting", getOwner().getName().c_str());
+    yCIDebug(PORTCOREINPUTUNIT, getName(), "new input connection to %s starting", getOwner().getName().c_str());
 
     phase.wait();
 
     bool result = PortCoreUnit::start();
     if (result) {
-        yCDebug(PORTCOREINPUTUNIT, "new input connection to %s started ok", getOwner().getName().c_str());
+        yCIDebug(PORTCOREINPUTUNIT, getName(), "new input connection to %s started ok", getOwner().getName().c_str());
         phase.wait();
         phase.post();
     } else {
-        yCDebug(PORTCOREINPUTUNIT, "new input connection to %s failed to start", getOwner().getName().c_str());
+        yCIDebug(PORTCOREINPUTUNIT, getName(), "new input connection to %s failed to start", getOwner().getName().c_str());
         phase.post();
     }
 
@@ -93,7 +88,7 @@ void PortCoreInputUnit::run()
 
     bool done = false;
 
-    yCAssert(PORTCOREINPUTUNIT, ip != nullptr);
+    yCIAssert(PORTCOREINPUTUNIT, getName(), ip != nullptr);
 
     PortCommand cmd;
 
@@ -102,7 +97,7 @@ void PortCoreInputUnit::run()
         ip->open(getName());
     }
     if (!ok) {
-        yCDebug(PORTCOREINPUTUNIT, "new input connection to %s is broken", getOwner().getName().c_str());
+        yCIDebug(PORTCOREINPUTUNIT, getName(), "new input connection to %s is broken", getOwner().getName().c_str());
         done = true;
     } else {
         route = ip->getRoute();
@@ -110,7 +105,7 @@ void PortCoreInputUnit::run()
         // just before going official, tag any lurking inputs from
         // the same source as undesired
         if (Name(route.getFromName()).isRooted()) {
-            yCDebug(PORTCOREINPUTUNIT, "Port %s starting up, flushing routes %s->*->%s",
+            yCIDebug(PORTCOREINPUTUNIT, getName(), "Port %s starting up, flushing routes %s->*->%s",
                         getOwner().getName().c_str(),
                         route.getFromName().c_str(),
                         route.getToName().c_str());
@@ -125,10 +120,10 @@ void PortCoreInputUnit::run()
 
         std::string msg = "Receiving input from " + route.getFromName() + " to " + route.getToName() + " using " + route.getCarrierName();
         if (Name(route.getFromName()).isRooted() && (reversed || ip->getConnection().isPush())) {
-            yCInfo(PORTCOREINPUTUNIT, "%s", msg.c_str());
+            yCIInfo(PORTCOREINPUTUNIT, getName(), "%s", msg.c_str());
             posted = true;
         } else {
-            yCDebug(PORTCOREINPUTUNIT, "%s", msg.c_str());
+            yCIDebug(PORTCOREINPUTUNIT, getName(), "%s", msg.c_str());
         }
 
         // Report the new connection
@@ -237,7 +232,8 @@ void PortCoreInputUnit::run()
 
         switch (key) {
         case '/':
-            yCDebug(PORTCOREINPUTUNIT,
+            yCIDebug(PORTCOREINPUTUNIT,
+                     getName(),
                     "Port command (%s): %s should add connection: %s",
                     route.toString().c_str(),
                     getOwner().getName().c_str(),
@@ -245,7 +241,8 @@ void PortCoreInputUnit::run()
             man.addOutput(cmd.getText(), id, os);
             break;
         case '!':
-            yCDebug(PORTCOREINPUTUNIT,
+            yCIDebug(PORTCOREINPUTUNIT,
+                     getName(),
                     "Port command (%s): %s should remove output: %s",
                     route.toString().c_str(),
                     getOwner().getName().c_str(),
@@ -253,7 +250,8 @@ void PortCoreInputUnit::run()
             man.removeOutput(cmd.getText().substr(1, std::string::npos), id, os);
             break;
         case '~':
-            yCDebug(PORTCOREINPUTUNIT,
+            yCIDebug(PORTCOREINPUTUNIT,
+                     getName(),
                     "Port command (%s): %s should remove input: %s",
                     route.toString().c_str(),
                     getOwner().getName().c_str(),
@@ -271,7 +269,7 @@ void PortCoreInputUnit::run()
 
             std::string env = cmd.getText();
             if (env.length() > 2) {
-                yCTrace(PORTCOREINPUTUNIT, "***** received an envelope! [%s]", env.c_str());
+                yCITrace(PORTCOREINPUTUNIT, getName(), "***** received an envelope! [%s]", env.c_str());
                 std::string env2 = env.substr(2, env.length());
                 man.setEnvelope(env2);
                 ip->setEnvelope(env2);
@@ -336,14 +334,6 @@ void PortCoreInputUnit::run()
         case 'q':
             done = true;
             break;
-#if !defined(NDEBUG)
-        case 'i':
-            printf("Interrupt requested\n");
-            //yarp::os::impl::kill(0, 2); // SIGINT
-            //yarp::os::impl::kill(yarp::os::getpid(), 2); // SIGINT
-            yarp::os::impl::kill(yarp::os::getpid(), 15); // SIGTERM
-            break;
-#endif
         case '?':
         case 'h':
             if (os != nullptr) {
@@ -353,9 +343,6 @@ void PortCoreInputUnit::run()
                 bw.appendLine("d       Signals the beginning of input for the port's owner");
                 bw.appendLine(R"(do      The same as "d" except replies should be suppressed ("data-only"))");
                 bw.appendLine("q       Disconnects");
-#if !defined(NDEBUG)
-                bw.appendLine("i       Interrupt parent process (unix only)");
-#endif
                 bw.appendLine("r       Reverse connection type to be a reader");
                 bw.appendLine("/port   Requests to send output to /port");
                 bw.appendLine("!/port  Requests to stop sending output to /port");
@@ -388,22 +375,22 @@ void PortCoreInputUnit::run()
 
     setDoomed();
 
-    yCDebug(PORTCOREINPUTUNIT, "Closing ip");
+    yCIDebug(PORTCOREINPUTUNIT, getName(), "Closing ip");
     access.wait();
     if (ip != nullptr) {
         ip->close();
     }
     access.post();
-    yCDebug(PORTCOREINPUTUNIT, "Closed ip");
+    yCIDebug(PORTCOREINPUTUNIT, getName(), "Closed ip");
 
     std::string msg = std::string("Removing input from ") + route.getFromName() + " to " + route.getToName();
 
     if (Name(route.getFromName()).isRooted()) {
         if (posted) {
-            yCInfo(PORTCOREINPUTUNIT, "%s", msg.c_str());
+            yCIInfo(PORTCOREINPUTUNIT, getName(), "%s", msg.c_str());
         }
     } else {
-        yCDebug(PORTCOREINPUTUNIT, "(unrooted) shutting down");
+        yCIDebug(PORTCOREINPUTUNIT, getName(), "(unrooted) shutting down");
     }
 
     getOwner().reportUnit(this, false);
@@ -498,13 +485,13 @@ void PortCoreInputUnit::closeMain()
     Route r = getRoute();
     access.post();
 
-    yCDebug(PORTCOREINPUTUNIT, "[%s] closing", r.toString().c_str());
+    yCIDebug(PORTCOREINPUTUNIT, getName(), "[%s] closing", r.toString().c_str());
 
     if (running) {
-        yCDebug(PORTCOREINPUTUNIT, "[%s] joining", r.toString().c_str());
+        yCIDebug(PORTCOREINPUTUNIT, getName(), "[%s] joining", r.toString().c_str());
         interrupt();
         join();
-        yCDebug(PORTCOREINPUTUNIT, "[%s] joined", r.toString().c_str());
+        yCIDebug(PORTCOREINPUTUNIT, getName(), "[%s] joined", r.toString().c_str());
     }
 
     if (ip != nullptr) {

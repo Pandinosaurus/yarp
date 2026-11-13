@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_OS_TIME_H
@@ -16,8 +13,7 @@
 
 #include <string>
 
-namespace yarp {
-namespace os {
+namespace yarp::os {
 
 enum class ShouldUseSystemClock
 {
@@ -130,22 +126,7 @@ YARP_os_API std::string clockTypeToString(yarpClockType type);
  */
 YARP_os_API bool isValid();
 
-#ifndef YARP_NO_DEPRECATED // Since YARP 3.0.0
-/**
- * For OS where it makes sense sets the scheduler to be called more often.
- * This sets the scheduler to be run to the maximum possible rate based
- * on the capability of the hardware.
- * Specifically, on Microsoft Windows, high resolution scheduling is
- * used.
- *
- * @deprecated Since YARP 3.0.0
- */
-YARP_DEPRECATED
-YARP_os_API void turboBoost();
-#endif
-
 } // namespace Time
-} // namespace os
-} // namespace yarp
+} // namespace yarp::os
 
 #endif // YARP_OS_TIME_H

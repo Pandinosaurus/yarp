@@ -1,0 +1,245 @@
+/*
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: LGPL-2.1-or-later
+ */
+
+#ifndef PARTITEM_H
+#define PARTITEM_H
+
+#include "flowlayout.h"
+#include "sequencewindow.h"
+#include "jointitem.h"
+#include "piddlg.h"
+#include "yarpmotorgui.h"
+
+#include <yarp/os/BufferedPort.h>
+#include <yarp/os/Port.h>
+#include <yarp/os/Network.h>
+#include <yarp/dev/ControlBoardInterfaces.h>
+#include <yarp/dev/IControlLimits.h>
+#include <yarp/dev/IControlMode.h>
+#include <yarp/dev/PolyDriver.h>
+#include <yarp/sig/Vector.h>
+#include <yarp/os/Time.h>
+#include <yarp/os/ResourceFinder.h>
+#include <yarp/os/Stamp.h>
+
+#include <QWidget>
+#include <QTimer>
+
+
+
+using namespace yarp::dev;
+using namespace yarp::sig;
+using namespace yarp::os;
+
+#define     MAX_WIDTH_JOINT 320
+
+class PartItem : public QWidget
+{
+    Q_OBJECT
+public:
+    explicit PartItem(std::string robotName,
+                      int partId,
+                      std::string partName,
+                      ResourceFinder& _finder,
+                      bool debug_param_enabled,
+                      bool speedview_param_enabled,
+                      bool enable_calib_all,
+                      std::string rcb_protocol,
+                      QWidget *parent = 0);
+
+
+    ~PartItem();
+    bool openPolyDrivers();
+    void initInterfaces();
+    bool openInterfaces();
+    bool getInterfaceError();
+    void openSequenceWindow();
+    void closeSequenceWindow();
+    bool cycleAllSeq();
+    bool checkAndRunAllSeq();
+    bool checkAndRunTimeAllSeq();
+    bool checkAndCycleAllSeq();
+    bool checkAndCycleTimeAllSeq();
+    void runPart();
+    void idlePart();
+    bool homeJoint(int joint);
+    bool homePart();
+    bool homeToCustomPosition(const yarp::os::Bottle& positionElement);
+    void calibratePart();
+    bool checkAndGo();
+    void stopSequence();
+    void setTreeWidgetModeNode(QTreeWidgetItem *node);
+    void loadSequence();
+    void saveSequence(QString global_filename);
+    QTreeWidgetItem *getTreeWidgetModeNode();
+    std::string getPartName();
+    const QVector<JointItem::JointState>& getPartModes();
+    void resizeWidget(int w);
+    int getNumberOfJoints();
+    QString getJointName(int joint);
+    JointItem* getJointWidget(int jointIndex);
+
+
+private:
+    void fixedTimeMove(SequenceItem sequence);
+
+protected:
+    void resizeEvent(QResizeEvent *event) override;
+    void changeEvent(QEvent *event) override;
+
+private:
+    FlowLayout *m_layout;
+    SequenceWindow *m_sequenceWindow;
+    std::string m_robotPartPort;
+    std::string m_robotName;
+    std::string m_partName;
+    int     m_partId;
+    bool   m_mixedEnabled;
+    bool   m_positionDirectEnabled;
+    bool   m_pwmEnabled;
+    bool   m_currentEnabled;
+    PidDlg *m_currentPidDlg;
+    Stamp  m_sequence_port_stamp;
+    QTimer m_runTimer;
+    QTimer m_runTimeTimer;
+    QTimer m_cycleTimer;
+    QTimer m_cycleTimeTimer;
+
+    QList<SequenceItem> m_runValues;
+    QList<SequenceItem> m_runTimeValues;
+    QList<SequenceItem> m_cycleValues;
+    QList<SequenceItem> m_cycleTimeValues;
+    std::vector<ControlModeEnum> m_controlModes;
+    std::vector<double> m_refTrajectorySpeeds;
+    std::vector<double> m_refTrajectoryPositions;
+    std::vector<double> m_refTorques;
+    std::vector<double> m_refVelocitySpeeds;
+    std::vector<double> m_refVelocityAccelerations;
+    std::vector<double> m_torques;
+    std::vector<double> m_positions;
+    std::vector<double> m_speeds;
+    std::vector<double> m_currents;
+    std::vector<double> m_motorPositions;
+    std::vector<double> m_dutyCycles;
+    std::vector<bool>   m_done;
+    std::vector<bool>   m_braked;
+    bool    m_part_speedVisible;
+    bool    m_part_motorPositionVisible;
+    bool    m_part_dutyVisible;
+    bool    m_part_currentVisible;
+    std::vector<InteractionModeEnum>  m_interactionModes;
+    QVector<JointItem::JointState> m_modesList;
+
+    ResourceFinder* m_finder = nullptr;
+    PolyDriver*     m_partsdd=nullptr;
+    Property        m_partOptions;
+    Port            m_sequence_port;
+    bool            m_interfaceError;
+
+    IPositionControl* m_iPos = nullptr;
+    IJointBrake* m_ijointbrake = nullptr;
+    IPositionDirect* m_iPosDir = nullptr;
+    IVelocityControl* m_iVel = nullptr;
+    IVelocityDirect* m_iVelDir = nullptr;
+    IRemoteVariables* m_iVar = nullptr;
+    IEncoders* m_iencs = nullptr;
+    IMotorEncoders* m_iMot = nullptr;
+    IAmplifierControl* m_iAmp = nullptr;
+    IPidControl* m_iPid = nullptr;
+    ICurrentControl* m_iCur = nullptr;
+    IPWMControl* m_iPWM = nullptr;
+    ITorqueControl* m_iTrq = nullptr;
+    IImpedanceControl* m_iImp = nullptr;
+    IAxisInfo* m_iinfo = nullptr;
+    IControlLimits* m_iLim = nullptr;
+    IControlCalibration* m_ical = nullptr;
+    IControlMode* m_ictrlmode = nullptr;
+    IInteractionMode* m_iinteract = nullptr;
+    IJointFault* m_ijointfault = nullptr;
+    IRemoteCalibrator* m_iremCalib = nullptr;
+    int m_slow_k;
+
+signals:
+    void sendPartJointsValues(int,QList<double>,QList<double>);
+    void stoppedSequence();
+    void cycleSequence();
+    void cycleTimeSequence();
+    void runTimeSequence();
+    void runSequence();
+    void setCurrentIndex(int);
+    void sequenceActivated();
+    void sequenceStopped();
+
+public slots:
+    void updateControlMode();
+    bool updatePart();
+    void onViewSpeedValues(bool);
+    void onViewMotorPositions(bool);
+    void onViewDutyCycles(bool);
+    void onViewCurrentValues(bool);
+    void onSetPosSliderOptionPI(int mode, double step, int numOfDec);
+    void onSetVelSliderOptionPI(int mode, double step, int numOfDec);
+    void onSetAccSliderOptionPI(int mode, double step, int numOfDec);
+    void onSetTrqSliderOptionPI(int mode, double step, int numOfDec);
+    void onSetCurSliderOptionPI(int mode, double step, int numOfDec);
+    void onViewPositionTargetBox(bool);
+    void onViewPositionTargetValue(bool);
+    void onEnableControlVelocity(bool control);
+    void onEnableControlMixed(bool control);
+    void onEnableControlPositionDirect(bool control);
+    void onEnableControlPWM(bool control);
+    void onEnableControlCurrent(bool control);
+    void onEnableControlTorque(bool control);
+    void onEnableControlVelocityDirect(bool control);
+
+private slots:
+    void onSequenceActivated();
+    void onSequenceStopped();
+    void onStopSequence();
+    void onCycleTimeTimerTimeout();
+    void onCycleTimerTimeout();
+    void onRunTimerTimeout();
+    void onRunTimeout();
+    void onGo(SequenceItem);
+    void onOpenSequence();
+    void onSaveSequence(QList<SequenceItem> values, QString fileName);
+    void onSequenceRunTime(QList<SequenceItem>);
+    void onSequenceRun(QList<SequenceItem> values);
+    void onSequenceCycle(QList<SequenceItem>);
+    void onSequenceCycleTime(QList<SequenceItem>);
+    void onCalibClicked(JointItem *joint);
+    void onJointChangeMode(int mode,JointItem *joint);
+    void onJointInteraction(int interaction,JointItem *joint);
+    void onSliderDirectPositionCommand(double dirpos, int index);
+    void onSliderMixedPositionCommand(double pos, int index);
+    void onSliderMixedVelocityCommand(double vel, int index);
+    void onSliderTorqueCommand(double torqueVal, int index);
+    void onSliderPosTrajectoryPositionCommand(double pos, int index);
+    void onSliderPosTrajectoryVelocityCommand(double speedVal, int index);
+    void onSliderPWMCommand(double dutyVal, int index);
+    void onSliderCurrentCommand(double current, int index);
+    void onSliderVelTrajectoryVelocityCommand(double speedVal, int index);
+    void onSliderVelTrajectoryAccelerationCommand(double accVal, int index);
+    void onSliderVelocityDirectCommand(double speedVal, int index);
+    void onSequenceWindowDoubleClicked(int sequenceNum);
+    void onHomeClicked(JointItem *joint);
+    void onIdleClicked(JointItem *joint);
+    void onRunClicked(JointItem *joint);
+    void onPidClicked(JointItem *joint);
+    void onSendPid(PidControlTypeEnum pidtype, int jointIndex, Pid newPid);
+    void onSendSingleRemoteVariable(std::string key, yarp::os::Bottle val);
+    void onUpdateAllRemoteVariables();
+    void onSendMotorParameters(int jointIndex, MotorTorqueParameters newTorqueParam);
+    void onSendStiffness(int jointIdex, double stiff, double damp);
+    void onSendForceOffset(int jointIdex, double force);
+    void onSendPWM(int jointIndex, double dutyVal);
+    void onRefreshPids(int jointIndex);
+    void onDumpAllRemoteVariables();
+
+
+};
+
+#endif // PARTITEM_H

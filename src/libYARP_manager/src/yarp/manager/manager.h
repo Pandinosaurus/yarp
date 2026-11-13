@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_MANAGER_MANAGER
@@ -14,9 +11,9 @@
 #include <yarp/manager/utility.h>
 #include <yarp/manager/executable.h>
 #include <yarp/manager/yarpbroker.h>
+#include <map>
 
-namespace yarp {
-namespace manager {
+namespace yarp::manager {
 
 /**
  * Class Manager
@@ -80,6 +77,8 @@ public:
     bool waitingModuleStop(unsigned int id);
     bool waitingModuleKill(unsigned int id);
     bool loadBalance();
+    void collectYarprunProcessesByHost(std::map<std::string, ProcessContainer>& hostProcesses,
+                                       std::map<std::string, bool>& hostQueryOk);
 
     void setDefaultBroker(const char* szBroker) { if(szBroker) { strDefBroker = szBroker; } }
     const char* defaultBroker() { return strDefBroker.c_str(); }
@@ -137,7 +136,7 @@ private:
 
     bool createKnowledgeBase(AppLoader &appLoader);
     void clearExecutables();
-    bool isServer(Module* module);
+    bool isServer(Module* themodule);
     bool connectExtraPorts();
     bool checkPortsAvailable(Broker* broker);
     bool allRunning();
@@ -146,12 +145,11 @@ private:
     bool prepare(bool silent=true);
     bool timeout(double base, double t);
     bool updateResource(GenericResource* resource);
-    Broker* createBroker(Module* module);
+    Broker* createBroker(Module* themodule);
     bool removeBroker(Executable* exe);
 };
 
-} // namespace yarp
-} // namespace manager
+} // namespace yarp::manager
 
 
 #endif // __YARP_MANAGER_MANAGER__

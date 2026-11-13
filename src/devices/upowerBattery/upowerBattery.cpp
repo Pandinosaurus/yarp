@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include "upowerBattery.h"
@@ -20,7 +17,6 @@
 #include <QDBusInterface>
 #include <QDBusReply>
 
-using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
 
@@ -52,13 +48,13 @@ bool UpowerBattery::close()
     return true;
 }
 
-bool UpowerBattery::getBatteryVoltage(double& voltage)
+yarp::dev::ReturnValue UpowerBattery::getBatteryVoltage(double& voltage)
 {
     voltage = m_interface->property("Voltage").toDouble();
-    return true;
+    return ReturnValue_ok;
 }
 
-bool UpowerBattery::getBatteryCurrent(double& current)
+yarp::dev::ReturnValue UpowerBattery::getBatteryCurrent(double& current)
 {
     auto energyrate = m_interface->property("EnergyRate").toDouble();
     auto voltage = m_interface->property("Voltage").toDouble();
@@ -67,18 +63,18 @@ bool UpowerBattery::getBatteryCurrent(double& current)
     if (current > 0 && state == 1 /* Charging */) {
         current = -current;
     }
-    return true;
+    return ReturnValue_ok;
 }
 
-bool UpowerBattery::getBatteryCharge(double& charge)
+yarp::dev::ReturnValue UpowerBattery::getBatteryCharge(double& charge)
 {
     charge = m_interface->property("Percentage").toInt();
-    return true;
+    return ReturnValue_ok;
 }
 
-bool UpowerBattery::getBatteryStatus(Battery_status& status)
+yarp::dev::ReturnValue UpowerBattery::getBatteryStatus(Battery_status& status)
 {
-    status = yarp::dev::IBattery::BATTERY_OK_STANBY;
+    status = yarp::dev::IBattery::BATTERY_OK_STANDBY;
     auto st = m_interface->property("State").toUInt();
     auto wl = m_interface->property("WarningLevel").toUInt();
 
@@ -110,7 +106,7 @@ bool UpowerBattery::getBatteryStatus(Battery_status& status)
         status = yarp::dev::IBattery::BATTERY_CRITICAL_WARNING;
         break;
     case 4 /* Fully charged */:
-        status = yarp::dev::IBattery::BATTERY_OK_STANBY;
+        status = yarp::dev::IBattery::BATTERY_OK_STANDBY;
         break;
     case 0 /* Unknown */: [[fallthrough]];
     default:
@@ -118,16 +114,16 @@ bool UpowerBattery::getBatteryStatus(Battery_status& status)
         break;
     }
 
-    return true;
+    return ReturnValue_ok;
 }
 
-bool UpowerBattery::getBatteryTemperature(double& temperature)
+yarp::dev::ReturnValue UpowerBattery::getBatteryTemperature(double& temperature)
 {
     temperature = m_interface->property("Temperature").toDouble();
-    return true;
+    return ReturnValue_ok;
 }
 
-bool UpowerBattery::getBatteryInfo(string& info)
+yarp::dev::ReturnValue UpowerBattery::getBatteryInfo(std::string& info)
 {
     info = QStringLiteral("Vendor: %1, Model: %2, Serial: %3")
                 .arg(m_interface->property("Vendor").toString())
@@ -135,5 +131,5 @@ bool UpowerBattery::getBatteryInfo(string& info)
                 .arg(m_interface->property("Serial").toString())
                 .toStdString();
     yCDebug(UPOWERBATTERY) << info;
-    return true;
+    return ReturnValue_ok;
 }

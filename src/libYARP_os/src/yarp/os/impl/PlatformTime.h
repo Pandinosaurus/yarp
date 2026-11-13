@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2011 Anne van Rossum <anne@almende.com>
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2011 Anne van Rossum <anne@almende.com>
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_OS_IMPL_PLATFORMTIME_H
@@ -25,9 +22,7 @@
 #    define PLATFORM_TIME_SET(x, y) fromDouble(x, y)
 #endif
 
-namespace yarp {
-namespace os {
-namespace impl {
+namespace yarp::os::impl {
 
 #ifdef YARP_HAS_ACE
 typedef ACE_Time_Value YARP_timeval;
@@ -43,8 +38,6 @@ void subtractTime(YARP_timeval& val,
 double toDouble(const YARP_timeval& v);
 void fromDouble(YARP_timeval& v, double x, int unit = 1);
 
-} // namespace impl
-} // namespace os
-} // namespace yarp
+} // namespace yarp::os::impl
 
 #endif // YARP_OS_IMPL_PLATFORMTIME_H

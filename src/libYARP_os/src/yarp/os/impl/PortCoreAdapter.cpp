@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/impl/PortCoreAdapter.h>
@@ -267,25 +264,9 @@ void yarp::os::impl::PortCoreAdapter::configWaitAfterSend(bool waitAfterSend)
     setWaitAfterSend(waitAfterSend);
 }
 
-#ifndef YARP_NO_DEPRECATED // Since YARP 3.3
-YARP_WARNING_PUSH
-YARP_DISABLE_DEPRECATED_WARNING
-bool yarp::os::impl::PortCoreAdapter::configCallbackLock(Mutex* lock)
-{
-    recCallbackLock = nullptr;
-    old_recCallbackLock = lock;
-    haveCallbackLock = true;
-    return setCallbackLock(lock);
-}
-YARP_WARNING_POP
-#endif
-
 bool yarp::os::impl::PortCoreAdapter::configCallbackLock(std::mutex* lock)
 {
     recCallbackLock = lock;
-#ifndef YARP_NO_DEPRECATED // Since YARP 3.3
-    old_recCallbackLock = nullptr;
-#endif
     haveCallbackLock = true;
     return setCallbackLock(lock);
 }
@@ -293,9 +274,6 @@ bool yarp::os::impl::PortCoreAdapter::configCallbackLock(std::mutex* lock)
 bool yarp::os::impl::PortCoreAdapter::unconfigCallbackLock()
 {
     recCallbackLock = nullptr;
-#ifndef YARP_NO_DEPRECATED // Since YARP 3.3
-    old_recCallbackLock = nullptr;
-#endif
     haveCallbackLock = false;
     return removeCallbackLock();
 }
@@ -329,9 +307,4 @@ bool yarp::os::impl::PortCoreAdapter::isOpened()
 void yarp::os::impl::PortCoreAdapter::setOpen(bool opened)
 {
     this->opened = opened;
-}
-
-void yarp::os::impl::PortCoreAdapter::includeNodeInName(bool flag)
-{
-    includeNode = flag;
 }

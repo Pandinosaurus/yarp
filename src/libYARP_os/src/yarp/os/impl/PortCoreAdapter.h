@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_OS_IMPL_PORTCOREADAPTER_H
@@ -13,18 +10,9 @@
 #include <yarp/os/Port.h>
 #include <yarp/os/Semaphore.h>
 #include <yarp/os/impl/PortCore.h>
-
-#ifndef YARP_NO_DEPRECATED // Since YARP 3.3
-#define YARP_INCLUDING_DEPRECATED_HEADER_ON_PURPOSE
-#include <yarp/os/Mutex.h>
-#undef YARP_INCLUDING_DEPRECATED_HEADER_ON_PURPOSE
-#endif // YARP_NO_DEPRECATED
-
 #include <mutex>
 
-namespace yarp {
-namespace os {
-namespace impl {
+namespace yarp::os::impl {
 
 class PortCoreAdapter :
         public PortCore
@@ -54,18 +42,11 @@ private:
     bool usedForRpc { false };
 
 public:
-    bool includeNode { false };
     bool commitToRead { false };
     bool commitToWrite { false };
     bool commitToRpc { false };
     bool active { false };
     std::mutex* recCallbackLock { nullptr };
-#ifndef YARP_NO_DEPRECATED // Since YARP 3.3
-YARP_WARNING_PUSH
-YARP_DISABLE_DEPRECATED_WARNING
-    yarp::os::Mutex* old_recCallbackLock { nullptr };
-YARP_WARNING_POP
-#endif
     bool haveCallbackLock { false };
 
     PortCoreAdapter(Port& owner);
@@ -86,13 +67,6 @@ YARP_WARNING_POP
     void configAdminReader(PortReader& reader);
     void configReadCreator(PortReaderCreator& creator);
     void configWaitAfterSend(bool waitAfterSend);
-#ifndef YARP_NO_DEPRECATED // Since YARP 3.3
-YARP_WARNING_PUSH
-YARP_DISABLE_DEPRECATED_WARNING
-    YARP_DEPRECATED
-    bool configCallbackLock(Mutex* lock);
-YARP_WARNING_POP
-#endif
     bool configCallbackLock(std::mutex* lock);
     bool unconfigCallbackLock();
     PortReader* checkPortReader();
@@ -101,11 +75,8 @@ YARP_WARNING_POP
     int checkWaitAfterSend();
     bool isOpened();
     void setOpen(bool opened);
-    void includeNodeInName(bool flag);
 };
 
-} // namespace impl
-} // namespace os
-} // namespace yarp
+} // namespace yarp::os::impl
 
 #endif // YARP_OS_IMPL_PORTCOREADAPTER_H

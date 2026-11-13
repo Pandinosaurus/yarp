@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2010 Ze Ji
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2010 Ze Ji
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include "DynamixelAX12FtdiDriver.h"
@@ -161,12 +158,15 @@ bool DynamixelAX12FtdiDriver::open(yarp::os::Searchable& config) {
 
     // We have an open device and it is accessible, so set parameters
 
-    if ((retCode = ftdi_set_baudrate(&ftdic, ftdiSetting.baudrate)) != 0)
+    if ((retCode = ftdi_set_baudrate(&ftdic, ftdiSetting.baudrate)) != 0) {
         yCError(DYNAMIXELAX12FTDIDRIVER, "Error setting baudrate, ret=%d", retCode);
-    if (ftdi_set_line_property(&ftdic, BITS_8, STOP_BIT_1, NONE) == -1)
+    }
+    if (ftdi_set_line_property(&ftdic, BITS_8, STOP_BIT_1, NONE) == -1) {
         yCError(DYNAMIXELAX12FTDIDRIVER, "Error setting connection properties");
-    if (ftdi_setflowctrl(&ftdic, SIO_DISABLE_FLOW_CTRL) == -1)
+    }
+    if (ftdi_setflowctrl(&ftdic, SIO_DISABLE_FLOW_CTRL) == -1) {
         yCError(DYNAMIXELAX12FTDIDRIVER, "Error setting flow control");
+    }
 
     // Set chunk sizes for in and out
     ftdi_write_data_set_chunksize(&ftdic, ftdiSetting.write_chunksize);
@@ -290,7 +290,9 @@ int DynamixelAX12FtdiDriver::sendCommand(unsigned char id, unsigned char inst[],
                 } else {
                     //check checksum
                     chksum = 0;
-                    for (i = 0; i < retCode - 1; i++) chksum += body[i];
+                    for (i = 0; i < retCode - 1; i++) {
+                        chksum += body[i];
+                    }
                     if (body[retCode - 1] != (unsigned char) ~(chksum + header[2] + header[3])) {
                         badAnswer = true;
                         yCInfo(DYNAMIXELAX12FTDIDRIVER, "Received data with wrong checksum (%X != %X): ", body[retCode - 1], (unsigned char) ~(chksum + header[2] + header[3]));
@@ -389,150 +391,156 @@ int DynamixelAX12FtdiDriver::readParameter(unsigned char id, unsigned char param
     }
 }
 
-bool DynamixelAX12FtdiDriver::getAxes(int *ax) {
-    *ax = numOfAxes;
-    return true;
+ReturnValue DynamixelAX12FtdiDriver::getAxes(size_t& ax) {
+    ax = numOfAxes;
+    return ReturnValue_ok;
 }
 
-bool DynamixelAX12FtdiDriver::positionMove(int j, double ref) {
+ReturnValue DynamixelAX12FtdiDriver::positionMove(int j, double ref) {
     double speed;
     int blankReturnSize = -1;
     unsigned char blankReturn[] = {0, 0, 0};
-    getRefSpeed(j, &speed);
+    getTrajSpeed(j, &speed);
     const int instl = 5 + 1;
 
     unsigned char inst[instl] = {INST_WRITE, CT_GOAL_POSITION, (unsigned char) (normalisePosition(ref)&0xFF), (unsigned char) ((normalisePosition(ref) >> 8) & 0xFF), (unsigned char) (normaliseSpeed(speed)&0xFF), (unsigned char) ((normaliseSpeed(speed) >> 8)&0xFF)};
 
     positions[j] = ref;
 
-    return syncSendCommand(jointNumbers[j], inst, instl, blankReturn, blankReturnSize);
+    if (syncSendCommand(jointNumbers[j], inst, instl, blankReturn, blankReturnSize))
+    {return ReturnValue_ok;}
+    return yarp::dev::ReturnValue::return_code::return_value_error_not_implemented_by_device;
 }
 
 /**
  * @param refs should be in range [1 300]
  */
-bool DynamixelAX12FtdiDriver::positionMove(const double *refs) {
-    bool t = true;
-    for (int k = 0; k < numOfAxes; k++) {
-        if (!this->positionMove(k, refs[k]))
-            t = false;
+ReturnValue DynamixelAX12FtdiDriver::positionMove(const double *refs) {
+    ReturnValue t = ReturnValue_ok;
+    for (int k = 0; k < numOfAxes; k++)
+    {
+        t &= this->positionMove(k, refs[k]);
     }
     return t;
 }
 
-bool DynamixelAX12FtdiDriver::relativeMove(int j, double delta) {
+ReturnValue DynamixelAX12FtdiDriver::relativeMove(int j, double delta) {
     double v = positions[j];
     if (getEncoder(j, &v)) {
         return this->positionMove(j, v + delta);
-    } else
-        return false;
+    } else {
+        return ReturnValue::return_code::return_value_error_method_failed;
+    }
 }
 
-bool DynamixelAX12FtdiDriver::relativeMove(const double *deltas) {
-    bool t = true;
+ReturnValue DynamixelAX12FtdiDriver::relativeMove(const double *deltas) {
+    ReturnValue t = ReturnValue_ok;
     for (int k = 0; k < numOfAxes; k++) {
-        if (!this->positionMove(k, positions[k] + deltas[k]))
-            t = false;
+        if (!this->positionMove(k, positions[k] + deltas[k])) {
+            t = ReturnValue::return_code::return_value_error_method_failed;
+        }
     }
     return t;
 }
 
-bool DynamixelAX12FtdiDriver::checkMotionDone(int j, bool *flag) {
+ReturnValue DynamixelAX12FtdiDriver::checkMotionDone(int j, bool& flag) {
     double v = 0;
-    bool t = true;
+    ReturnValue t = ReturnValue_ok;
 
     t = getEncoder(j, &v);
-    *flag = (std::fabs(v - positions[j]) < MOTION_COMPLETION_TOLERANCE);
+    flag = (std::fabs(v - positions[j]) < MOTION_COMPLETION_TOLERANCE);
     return t;
 }
 
-bool DynamixelAX12FtdiDriver::checkMotionDone(bool *flag) {
-    bool t = true;
+ReturnValue DynamixelAX12FtdiDriver::checkMotionDone(bool& flag) {
+    ReturnValue t = ReturnValue_ok;
     bool tmp_done(false), all_done(true);
     for (int k = 0; k < numOfAxes; k++)
     {
-        if (!this->checkMotionDone(k, &tmp_done))
-            t = false;
+        if (!this->checkMotionDone(k, tmp_done)) {
+            t = ReturnValue::return_code::return_value_error_method_failed;
+        }
         all_done &= tmp_done;
     }
-    *flag = all_done;
+    flag = all_done;
     return t;
 }
 
-bool DynamixelAX12FtdiDriver::setRefSpeed(int j, double sp) {
+ReturnValue DynamixelAX12FtdiDriver::setTrajSpeed(int j, double sp) {
     if (sp < 1) {
         yCInfo(DYNAMIXELAX12FTDIDRIVER, "Invalid speed value, should be from 1 to 114");
         speeds[j] = 1;
-        return false;
+        return ReturnValue::return_code::return_value_error_method_failed;
     } else if (sp > 114) {
         yCInfo(DYNAMIXELAX12FTDIDRIVER, "Invalid speed value, should be from 1 to 114");
         speeds[j] = 114;
-        return false;
+        return ReturnValue::return_code::return_value_error_method_failed;
     } else {
         speeds[j] = sp;
-        return true;
+        return ReturnValue_ok;
     }
 }
 
-bool DynamixelAX12FtdiDriver::setRefSpeeds(const double *spds) {
-    bool t = true;
-    for (int k = 0; k < numOfAxes; k++) {
-        if (!setRefSpeed(k, spds[k]))
-            t = false;
+ReturnValue DynamixelAX12FtdiDriver::setTrajSpeeds(const double *spds) {
+    ReturnValue ret = ReturnValue_ok;
+    for (int k = 0; k < numOfAxes; k++)
+    {
+        ret &= setTrajSpeed(k, spds[k]);
     }
-    return t;
+    return ret;
 }
 
 /**
  * not implemented
  */
-bool DynamixelAX12FtdiDriver::setRefAcceleration(int j, double acc) {
-    return NOT_YET_IMPLEMENTED("setRefAcceleration");
+ReturnValue DynamixelAX12FtdiDriver::setTrajAcceleration(int j, double acc) {
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
 }
 
 /**
  * not implemented
  */
-bool DynamixelAX12FtdiDriver::setRefAccelerations(const double *accs) {
-    return NOT_YET_IMPLEMENTED("setRefAccelerations");
+ReturnValue DynamixelAX12FtdiDriver::setTrajAccelerations(const double *accs) {
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
 }
 
-bool DynamixelAX12FtdiDriver::getRefSpeed(int j, double *ref) {
+ReturnValue DynamixelAX12FtdiDriver::getTrajSpeed(int j, double *ref) {
     *ref = speeds[j];
-    return true;
+    return ReturnValue_ok;
 }
 
-bool DynamixelAX12FtdiDriver::getRefSpeeds(double *spds) {
+ReturnValue DynamixelAX12FtdiDriver::getTrajSpeeds(double *spds) {
     for (int k = 0; k < numOfAxes; k++) {
         spds[k] = speeds[k];
     }
-    return true;
+    return ReturnValue_ok;
 }
 
 /**
  * not implemented
  */
-bool DynamixelAX12FtdiDriver::getRefAcceleration(int j, double *acc) {
-    return NOT_YET_IMPLEMENTED("getRefAcceleration");
+ReturnValue DynamixelAX12FtdiDriver::getTrajAcceleration(int j, double *acc) {
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
 }
 
 /**
  * not implemented
  */
-bool DynamixelAX12FtdiDriver::getRefAccelerations(double *accs) {
-    return NOT_YET_IMPLEMENTED("getRefAccelerations");
+ReturnValue DynamixelAX12FtdiDriver::getTrajAccelerations(double *accs) {
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
 }
 
-bool DynamixelAX12FtdiDriver::stop(int j) {
-    return NOT_YET_IMPLEMENTED("stop");
+ReturnValue DynamixelAX12FtdiDriver::stop(int j) {
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
 }
 
-bool DynamixelAX12FtdiDriver::stop() {
+ReturnValue DynamixelAX12FtdiDriver::stop() {
     for (int i = 0; i < numOfAxes; i++) {
-        if (!stop(i))
-            return false;
+        if (!stop(i)) {
+            return ReturnValue::return_code::return_value_error_method_failed;
+        }
     }
-    return true;
+    return ReturnValue_ok;
 }
 
 int DynamixelAX12FtdiDriver::normalisePosition(double position) {
@@ -560,34 +568,34 @@ int DynamixelAX12FtdiDriver::normaliseSpeed(double speed) {
     return (int) (1024 * speed / 114 - 1);
 }
 
-bool DynamixelAX12FtdiDriver::getRefTorques(double *t) {
+ReturnValue DynamixelAX12FtdiDriver::getRefTorques(double *t) {
     for (int k = 0; k < numOfAxes; k++) {
         t[k] = torques[k];
     }
     yCError(DYNAMIXELAX12FTDIDRIVER, "Note: AX12 does not support torque control mode. This is just the MAX tourque set for the ax12 servo.");
-    return true;
+    return ReturnValue_ok;
 }
 
-bool DynamixelAX12FtdiDriver::getRefTorque(int j, double *t) {
+ReturnValue DynamixelAX12FtdiDriver::getRefTorque(int j, double *t) {
     *t = torques[j];
     yCError(DYNAMIXELAX12FTDIDRIVER, "Note: AX12 does not support torque control mode. This is just the MAX tourque set for the ax12 servo.");
-    return true;
+    return ReturnValue_ok;
 }
 
-bool DynamixelAX12FtdiDriver::setTorques(const double *t) {
-    bool tt = true;
-    for (int k = 0; k < numOfAxes; k++) {
-        if (!this->setTorque(k, t[k]))
-            tt = false;
+ReturnValue DynamixelAX12FtdiDriver::setTorques(const double *t) {
+    ReturnValue ret = ReturnValue_ok;
+    for (int k = 0; k < numOfAxes; k++)
+    {
+        ret &= this->setTorque(k, t[k]);
     }
-    return tt;
+    return ret;
 }
 
 /**
  * @param t has not real unit. Although it can be roughly estimated based on the maximum toruqe as specified in the document
  * Here t should be only set from 0 - 0x3FF (1023) as int
  */
-bool DynamixelAX12FtdiDriver::setTorque(int j, double t) {
+ReturnValue DynamixelAX12FtdiDriver::setTorque(int j, double t) {
     if (t < 0) {
         yCError(DYNAMIXELAX12FTDIDRIVER, "torque (%d) should in range [0 1023] or [0 0x3FF]. t is set to 0 here", (int)t);
         t = 0;
@@ -602,16 +610,16 @@ bool DynamixelAX12FtdiDriver::setTorque(int j, double t) {
 
     unsigned char inst[instl] = {INST_WRITE, CT_MAX_TORQUE, (unsigned char) ((int) t & 0xFF), (unsigned char) (((int) t << 8) & 0x03)};
     //return sendCommand(jointNumbers[j], inst, instl, blankReturn, blankReturnSize);
-    return syncSendCommand(jointNumbers[j], inst, instl, blankReturn, blankReturnSize);
+    return syncSendCommand(jointNumbers[j], inst, instl, blankReturn, blankReturnSize)==true?ReturnValue_ok:ReturnValue::return_code::return_value_error_method_failed;
 }
 
-bool DynamixelAX12FtdiDriver::setTorquePid(int j, const Pid &pid) {
+ReturnValue DynamixelAX12FtdiDriver::setTorquePid(int j, const Pid &pid) {
     yCError(DYNAMIXELAX12FTDIDRIVER, "Note: AX12 does not support torque control mode. This is only used to get torque feedback.");
-    return NOT_YET_IMPLEMENTED("setTorquePid");
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
 }
 
-bool DynamixelAX12FtdiDriver::getTorque(int j, double *t) {
-    bool ret;
+ReturnValue DynamixelAX12FtdiDriver::getTorque(int j, double *t) {
+    ReturnValue ret;
 
     int blankReturnSize = -1;
     unsigned char blankReturn[] = {0, 0, 0};
@@ -619,7 +627,7 @@ bool DynamixelAX12FtdiDriver::getTorque(int j, double *t) {
     const int instl = 3;
     unsigned char inst[instl] = {INST_READ, (unsigned char) CT_PRESENT_LOAD, (unsigned char) 2};
     //ret = sendCommand(jointNumbers[j], inst, instl, blankReturn, blankReturnSize);
-    ret = syncSendCommand(jointNumbers[j], inst, instl, blankReturn, blankReturnSize);
+    ret = syncSendCommand(jointNumbers[j], inst, instl, blankReturn, blankReturnSize)==true?ReturnValue_ok:ReturnValue::return_code::return_value_error_method_failed;
 
     const char* message = "";
     if (checkAnswerPacket(blankReturn, message) == OK) {
@@ -630,139 +638,139 @@ bool DynamixelAX12FtdiDriver::getTorque(int j, double *t) {
         *t = load;
     } else {
         yCError(DYNAMIXELAX12FTDIDRIVER, "%s", message);
-        return false;
+        return ReturnValue::return_code::return_value_error_method_failed;
     }
     return ret;
 }
 
-bool DynamixelAX12FtdiDriver::getTorques(double *t) {
+ReturnValue DynamixelAX12FtdiDriver::getTorques(double *t) {
     int k = 0;
-    bool tt = true;
-    for (k = 0; k < numOfAxes; k++) {
-        if (!getTorque(k, &t[k]))
-            tt = false;
+    ReturnValue ret = ReturnValue_ok;
+    for (k = 0; k < numOfAxes; k++)
+    {
+        ret &= getTorque(k, &t[k]);
     }
-    return tt;
+    return ret;
 }
 
-bool DynamixelAX12FtdiDriver::setTorquePids(const Pid *pids) {
+ReturnValue DynamixelAX12FtdiDriver::setTorquePids(const Pid *pids) {
     yCError(DYNAMIXELAX12FTDIDRIVER, "Note: AX12 does not support torque control mode. This is only used to get torque feedback.");
-    return NOT_YET_IMPLEMENTED("setTorquePids");
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
 }
 
-bool DynamixelAX12FtdiDriver::setTorqueErrorLimit(int j, double limit) {
+ReturnValue DynamixelAX12FtdiDriver::setTorqueErrorLimit(int j, double limit) {
     yCError(DYNAMIXELAX12FTDIDRIVER, "Note: AX12 does not support torque control mode. This is only used to get torque feedback.");
-    return NOT_YET_IMPLEMENTED("setTorqueErrorLimit");
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
 }
 
-bool DynamixelAX12FtdiDriver::setTorqueErrorLimits(const double *limits) {
+ReturnValue DynamixelAX12FtdiDriver::setTorqueErrorLimits(const double *limits) {
     yCError(DYNAMIXELAX12FTDIDRIVER, "Note: AX12 does not support torque control mode. This is only used to get torque feedback.");
-    return NOT_YET_IMPLEMENTED("setTorqueErrorLimits");
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
 }
 
-bool DynamixelAX12FtdiDriver::getTorqueError(int j, double *err) {
+ReturnValue DynamixelAX12FtdiDriver::getTorqueError(int j, double *err) {
     yCError(DYNAMIXELAX12FTDIDRIVER, "Note: AX12 does not support torque control mode. This is only used to get torque feedback.");
-    return NOT_YET_IMPLEMENTED("getTorqueError");
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
 }
 
-bool DynamixelAX12FtdiDriver::getTorqueErrors(double *errs) {
+ReturnValue DynamixelAX12FtdiDriver::getTorqueErrors(double *errs) {
     yCError(DYNAMIXELAX12FTDIDRIVER, "Note: AX12 does not support torque control mode. This is only used to get torque feedback.");
-    return NOT_YET_IMPLEMENTED("getTorqueErrors");
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
 }
 
-bool DynamixelAX12FtdiDriver::getTorquePidOutput(int j, double *out) {
+ReturnValue DynamixelAX12FtdiDriver::getTorquePidOutput(int j, double *out) {
     yCError(DYNAMIXELAX12FTDIDRIVER, "Note: AX12 does not support torque control mode. This is only used to get torque feedback.");
-    return NOT_YET_IMPLEMENTED("getTorquePidOutput");
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
 }
 
-bool DynamixelAX12FtdiDriver::getTorquePidOutputs(double *outs) {
+ReturnValue DynamixelAX12FtdiDriver::getTorquePidOutputs(double *outs) {
     yCError(DYNAMIXELAX12FTDIDRIVER, "Note: AX12 does not support torque control mode. This is only used to get torque feedback.");
-    return NOT_YET_IMPLEMENTED("getTorquePidOutputs");
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
 }
 
-bool DynamixelAX12FtdiDriver::getTorquePid(int j, Pid *pid) {
+ReturnValue DynamixelAX12FtdiDriver::getTorquePid(int j, Pid *pid) {
     yCError(DYNAMIXELAX12FTDIDRIVER, "Note: AX12 does not support torque control mode. This is only used to get torque feedback.");
-    return NOT_YET_IMPLEMENTED("getTorquePid");
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
 }
 
-bool DynamixelAX12FtdiDriver::getTorquePids(Pid *pids) {
+ReturnValue DynamixelAX12FtdiDriver::getTorquePids(Pid *pids) {
     yCError(DYNAMIXELAX12FTDIDRIVER, "Note: AX12 does not support torque control mode. This is only used to get torque feedback.");
-    return NOT_YET_IMPLEMENTED("getTorquePids");
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
 }
 
-bool DynamixelAX12FtdiDriver::getTorqueErrorLimit(int j, double *limit) {
+ReturnValue DynamixelAX12FtdiDriver::getTorqueErrorLimit(int j, double *limit) {
     yCError(DYNAMIXELAX12FTDIDRIVER, "Note: AX12 does not support torque control mode. This is only used to get torque feedback.");
-    return NOT_YET_IMPLEMENTED("getTorqueErrorLimit");
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
 }
 
-bool DynamixelAX12FtdiDriver::getTorqueErrorLimits(double *limits) {
+ReturnValue DynamixelAX12FtdiDriver::getTorqueErrorLimits(double *limits) {
     yCError(DYNAMIXELAX12FTDIDRIVER, "Note: AX12 does not support torque control mode. This is only used to get torque feedback.");
-    return NOT_YET_IMPLEMENTED("getTorqueErrorLimits");
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
 }
 
-bool DynamixelAX12FtdiDriver::resetTorquePid(int j) {
+ReturnValue DynamixelAX12FtdiDriver::resetTorquePid(int j) {
     yCError(DYNAMIXELAX12FTDIDRIVER, "Note: AX12 does not support torque control mode. This is only used to get torque feedback.");
-    return NOT_YET_IMPLEMENTED("resetTorquePid");
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
 }
 
-bool DynamixelAX12FtdiDriver::disableTorquePid(int j) {
+ReturnValue DynamixelAX12FtdiDriver::disableTorquePid(int j) {
     yCError(DYNAMIXELAX12FTDIDRIVER, "Note: AX12 does not support torque control mode. This is only used to get torque feedback.");
-    return NOT_YET_IMPLEMENTED("disableTorquePid");
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
 }
 
-bool DynamixelAX12FtdiDriver::enableTorquePid(int j) {
+ReturnValue DynamixelAX12FtdiDriver::enableTorquePid(int j) {
     yCError(DYNAMIXELAX12FTDIDRIVER, "Note: AX12 does not support torque control mode. This is only used to get torque feedback.");
-    return NOT_YET_IMPLEMENTED("enableTorquePid");
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
 }
 
-bool DynamixelAX12FtdiDriver::setTorqueOffset(int j, double v) {
+ReturnValue DynamixelAX12FtdiDriver::setTorqueOffset(int j, double v) {
     yCError(DYNAMIXELAX12FTDIDRIVER, "Note: AX12 does not support torque control mode. This is only used to get torque feedback.");
-    return NOT_YET_IMPLEMENTED("setTorqueOffset");
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
 }
 
-bool DynamixelAX12FtdiDriver::getBemfParam(int j, double *bemf) {
+ReturnValue DynamixelAX12FtdiDriver::getBemfParam(int j, double *bemf) {
     yCError(DYNAMIXELAX12FTDIDRIVER, "Note: AX12 does not support torque control mode. This is only used to get torque feedback.");
-    return NOT_YET_IMPLEMENTED("getBemfParam");
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
 }
 
-bool DynamixelAX12FtdiDriver::setBemfParam(int j, double bemf) {
+ReturnValue DynamixelAX12FtdiDriver::setBemfParam(int j, double bemf) {
     yCError(DYNAMIXELAX12FTDIDRIVER, "Note: AX12 does not support torque control mode. This is only used to get torque feedback.");
-    return NOT_YET_IMPLEMENTED("setBemfParam");
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
 }
 
-bool DynamixelAX12FtdiDriver::resetEncoder(int j) {
-    return NOT_YET_IMPLEMENTED("resetEncoder");
+ReturnValue DynamixelAX12FtdiDriver::resetEncoder(int j) {
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
 }
 
-bool DynamixelAX12FtdiDriver::resetEncoders() {
-    return NOT_YET_IMPLEMENTED("resetEncoders");
+ReturnValue DynamixelAX12FtdiDriver::resetEncoders() {
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
 }
 
-bool DynamixelAX12FtdiDriver::setEncoder(int j, double val) {
-    return NOT_YET_IMPLEMENTED("setEncoder");
+ReturnValue DynamixelAX12FtdiDriver::setEncoder(int j, double val) {
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
 }
 
-bool DynamixelAX12FtdiDriver::setEncoders(const double *vals) {
-    return NOT_YET_IMPLEMENTED("setEncoders");
+ReturnValue DynamixelAX12FtdiDriver::setEncoders(const double *vals) {
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
 }
 
-bool DynamixelAX12FtdiDriver::setRefTorques(const double* t) {
-    return NOT_YET_IMPLEMENTED("setRefTorques");
+ReturnValue DynamixelAX12FtdiDriver::setRefTorques(const double* t) {
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
 }
 
-bool DynamixelAX12FtdiDriver::setRefTorque(int j, double t) {
-    return NOT_YET_IMPLEMENTED("setRefTorque");
+ReturnValue DynamixelAX12FtdiDriver::setRefTorque(int j, double t) {
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
 }
 
-bool DynamixelAX12FtdiDriver::getTorqueRange(int j, double* min, double* max) {
-    return NOT_YET_IMPLEMENTED("getTorqueRange");
+ReturnValue DynamixelAX12FtdiDriver::getTorqueRange(int j, double* min, double* max) {
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
 }
 
-bool DynamixelAX12FtdiDriver::getTorqueRanges(double* min, double* max) {
-    return NOT_YET_IMPLEMENTED("getTorqueRanges");
+ReturnValue DynamixelAX12FtdiDriver::getTorqueRanges(double* min, double* max) {
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
 }
 
-bool DynamixelAX12FtdiDriver::getEncoder(int j, double *v) {
+ReturnValue DynamixelAX12FtdiDriver::getEncoder(int j, double *v) {
     *v = -1; // invalid value for encoder of AX12 motor
     int ret = 1;
 
@@ -780,38 +788,37 @@ bool DynamixelAX12FtdiDriver::getEncoder(int j, double *v) {
         if (checkAnswerPacket(blankReturn, message) == OK) {
             pos = ((int) blankReturn[2])*256 + blankReturn[1];
             *v = ((double) pos)*300.0 / 1024.0;
-            return true;
+            return ReturnValue_ok;
         } else {
             yCError(DYNAMIXELAX12FTDIDRIVER, "%s", message);
-            return false;
+            return ReturnValue::return_code::return_value_error_method_failed;
         }
 
-    }        // pos = (blankReturn[1]&0b00000011)*0x100 + blankReturn[0];
-    else
-        return false;
+    } // pos = (blankReturn[1]&0b00000011)*0x100 + blankReturn[0];
+    else {
+        return ReturnValue::return_code::return_value_error_method_failed;
+    }
 }
 
-bool DynamixelAX12FtdiDriver::getEncoders(double *encs) {
+ReturnValue DynamixelAX12FtdiDriver::getEncoders(double *encs) {
     int k = 0;
-    bool tt = true;
+    ReturnValue tt = ReturnValue_ok;
 
     for (k = 0; k < numOfAxes; k++) {
-        if (!getEncoder(k, &encs[k])) {
-            tt = false;
-        }
+        tt &= getEncoder(k, &encs[k]);
     }
     return tt;
 }
 
-bool DynamixelAX12FtdiDriver::getEncoderSpeed(int j, double *sp) {
-    bool ret;
+ReturnValue DynamixelAX12FtdiDriver::getEncoderSpeed(int j, double *sp) {
+    ReturnValue ret;
 
     int blankReturnSize = -1;
     unsigned char blankReturn[] = {0, 0, 0};
     const int instl = 3;
     unsigned char inst[instl] = {INST_READ, (unsigned char) CT_PRESENT_SPEED, (unsigned char) 2};
     //ret = sendCommand(jointNumbers[j], inst, instl, blankReturn, blankReturnSize);
-    ret = syncSendCommand(jointNumbers[j], inst, instl, blankReturn, blankReturnSize);
+    ret = syncSendCommand(jointNumbers[j], inst, instl, blankReturn, blankReturnSize)==true?ReturnValue_ok:ReturnValue::return_code::return_value_error_method_failed;
 
     double speed = 0;
     const char* message = "";
@@ -825,27 +832,27 @@ bool DynamixelAX12FtdiDriver::getEncoderSpeed(int j, double *sp) {
         *sp = speed * 113 / 1024 + 1; /// TODO should be changed. not very accurate, though close
     } else {
         yCError(DYNAMIXELAX12FTDIDRIVER, "%s", message);
-        return false;
+        return ReturnValue::return_code::return_value_error_method_failed;
     }
     return ret;
 }
 
-bool DynamixelAX12FtdiDriver::getEncoderSpeeds(double *spds) {
+ReturnValue DynamixelAX12FtdiDriver::getEncoderSpeeds(double *spds) {
     int k = 0;
-    bool tt = true;
-    for (k = 0; k < numOfAxes; k++) {
-        if (!getEncoderSpeed(k, &spds[k]))
-            tt = false;
+    ReturnValue ret = ReturnValue_ok;
+    for (k = 0; k < numOfAxes; k++)
+    {
+        ret &= getEncoderSpeed(k, &spds[k]);
     }
-    return tt;
+    return ret;
 }
 
-bool DynamixelAX12FtdiDriver::getEncoderAcceleration(int j, double *spds) {
-    return NOT_YET_IMPLEMENTED("getEncoderAcceleration");
+ReturnValue DynamixelAX12FtdiDriver::getEncoderAcceleration(int j, double *spds) {
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
 }
 
-bool DynamixelAX12FtdiDriver::getEncoderAccelerations(double *accs) {
-    return NOT_YET_IMPLEMENTED("getEncoderAccelerations");
+ReturnValue DynamixelAX12FtdiDriver::getEncoderAccelerations(double *accs) {
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
 }
 
 bool DynamixelAX12FtdiDriver::initMotorIndex(yarp::os::Bottle *sensorIndex) {
@@ -893,9 +900,9 @@ bool DynamixelAX12FtdiDriver::initMotorIndex(yarp::os::Bottle *sensorIndex) {
     return true;
 }
 
-bool DynamixelAX12FtdiDriver::positionMove(const int n_joint, const int *joints, const double *refs)
+ReturnValue DynamixelAX12FtdiDriver::positionMove(const int n_joint, const int *joints, const double *refs)
 {
-    bool ret = true;
+    ReturnValue ret = ReturnValue_ok;
     for(int j=0; j<n_joint; j++)
     {
         ret &= positionMove(joints[j], refs[j]);
@@ -903,9 +910,9 @@ bool DynamixelAX12FtdiDriver::positionMove(const int n_joint, const int *joints,
     return ret;
 }
 
-bool DynamixelAX12FtdiDriver::relativeMove(const int n_joint, const int *joints, const double *deltas)
+ReturnValue DynamixelAX12FtdiDriver::relativeMove(const int n_joint, const int *joints, const double *deltas)
 {
-    bool ret = true;
+    ReturnValue ret = ReturnValue_ok;
     for(int j=0; j<n_joint; j++)
     {
         ret &= relativeMove(joints[j], deltas[j]);
@@ -913,65 +920,95 @@ bool DynamixelAX12FtdiDriver::relativeMove(const int n_joint, const int *joints,
     return ret;
 }
 
-bool DynamixelAX12FtdiDriver::checkMotionDone(const int n_joint, const int *joints, bool *flag)
+ReturnValue DynamixelAX12FtdiDriver::checkMotionDone(const std::vector<int>& joints, bool& flag)
 {
-    bool ret = true;
+    ReturnValue ret = ReturnValue_ok;
     bool tmp_joint(false), tmp_device(true);
-    for(int j=0; j<n_joint; j++)
+    for(int j=0; j<joints.size(); j++)
     {
-        ret &= checkMotionDone(joints[j], &tmp_joint);
+        ret &= checkMotionDone(joints[j], tmp_joint);
         tmp_device &= tmp_joint;
     }
-    *flag = tmp_device;
+    flag = tmp_device;
     return ret;
 }
 
-bool DynamixelAX12FtdiDriver::setRefSpeeds(const int n_joint, const int *joints, const double *spds)
+ReturnValue DynamixelAX12FtdiDriver::setTrajSpeeds(const int n_joint, const int *joints, const double *spds)
 {
-    bool ret = true;
+    ReturnValue ret = ReturnValue_ok;
     for(int j=0; j<n_joint; j++)
     {
-        ret &= setRefSpeed(joints[j], spds[j]);
+        ret &= setTrajSpeed(joints[j], spds[j]);
     }
     return ret;
 }
 
-bool DynamixelAX12FtdiDriver::setRefAccelerations(const int n_joint, const int *joints, const double *accs)
+ReturnValue DynamixelAX12FtdiDriver::setTrajAccelerations(const int n_joint, const int *joints, const double *accs)
 {
-    bool ret = true;
+    ReturnValue ret = ReturnValue_ok;
     for(int j=0; j<n_joint; j++)
     {
-        ret &= setRefAcceleration(joints[j], accs[j]);
+        ret &= setTrajAcceleration(joints[j], accs[j]);
     }
     return ret;
 }
 
-bool DynamixelAX12FtdiDriver::getRefSpeeds(const int n_joint, const int *joints, double *spds)
+ReturnValue DynamixelAX12FtdiDriver::getTrajSpeeds(const int n_joint, const int *joints, double *spds)
 {
-    bool ret = true;
+    ReturnValue ret = ReturnValue_ok;
     for(int j=0; j<n_joint; j++)
     {
-        ret &= getRefSpeed(joints[j], &spds[j]);
+        ret &= getTrajSpeed(joints[j], &spds[j]);
     }
     return ret;
 }
 
-bool DynamixelAX12FtdiDriver::getRefAccelerations(const int n_joint, const int *joints, double *accs)
+ReturnValue DynamixelAX12FtdiDriver::getTrajAccelerations(const int n_joint, const int *joints, double *accs)
 {
-    bool ret = true;
+    ReturnValue ret = ReturnValue_ok;
     for(int j=0; j<n_joint; j++)
     {
-        ret &= getRefSpeed(joints[j], &accs[j]);
+        ret &= getTrajSpeed(joints[j], &accs[j]);
     }
     return ret;
 }
 
-bool DynamixelAX12FtdiDriver::stop(const int n_joint, const int *joints)
+ReturnValue DynamixelAX12FtdiDriver::stop(const int n_joint, const int *joints)
 {
-    bool ret = true;
+    ReturnValue ret = ReturnValue_ok;
     for(int j=0; j<n_joint; j++)
     {
         ret &= stop(joints[j]);
     }
     return ret;
+}
+
+ReturnValue DynamixelAX12FtdiDriver::getTargetPosition(const int joint, double *ref)
+{
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
+}
+
+ReturnValue DynamixelAX12FtdiDriver::getTargetPositions(double *refs)
+{
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
+}
+
+ReturnValue DynamixelAX12FtdiDriver::getTargetPositions(const int n_joint, const int *joints, double *refs)
+{
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
+}
+
+ReturnValue DynamixelAX12FtdiDriver::setRefTorques(const int n_joint, const int *joints, const double *t)
+{
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
+}
+
+ReturnValue DynamixelAX12FtdiDriver::getMotorTorqueParams(int j,  yarp::dev::MotorTorqueParameters *params)
+{
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
+}
+
+ReturnValue DynamixelAX12FtdiDriver::setMotorTorqueParams(int j,  const yarp::dev::MotorTorqueParameters params)
+{
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
 }

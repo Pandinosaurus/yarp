@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/manager/kbase.h>
@@ -16,7 +13,6 @@
 #include <cstring>
 
 
-using namespace std;
 using namespace yarp::manager;
 
 
@@ -44,8 +40,9 @@ bool KnowledgeBase::createFrom(ModuleLoader* _mloader,
     {
         GenericResource* resource;
         resloader->reset();
-        while((resource=resloader->getNextResource()))
+        while ((resource = resloader->getNextResource())) {
             addResource(resource);
+        }
     }
 
     /**
@@ -53,10 +50,11 @@ bool KnowledgeBase::createFrom(ModuleLoader* _mloader,
      */
     if(modloader)
     {
-        Module* module;
+        Module* themodule;
         modloader->reset();
-        while((module=modloader->getNextModule()))
-            addModule(module);
+        while ((themodule = modloader->getNextModule())) {
+            addModule(themodule);
+        }
     }
 
     /**
@@ -66,8 +64,9 @@ bool KnowledgeBase::createFrom(ModuleLoader* _mloader,
     {
         Application* application;
         apploader->reset();
-        while((application = apploader->getNextApplication()))
+        while ((application = apploader->getNextApplication())) {
             addApplication(application);
+        }
     }
 
     return true;
@@ -78,14 +77,15 @@ bool KnowledgeBase::addApplication(Application* app, char** szAppName_, bool mod
 {
     __CHECK_NULLPTR(app);
     ErrorLogger* logger  = ErrorLogger::Instance();
-    static map<string, int> mapId;
+    static std::map<std::string, int> mapId;
     app->setLabel(app->getName());
     if(kbGraph.hasNode(app))
     {
-        if(mapId.find(string(app->getName()))==mapId.end())
+        if (mapId.find(std::string(app->getName())) == mapId.end()) {
             mapId[app->getName()] = 1;
-        else
+        } else {
             mapId[app->getName()] = mapId[app->getName()] + 1;
+        }
         OSTRINGSTREAM newlable;
         newlable<<app->getLabel()<<"("<<mapId[app->getName()]<<")";
         OSTRINGSTREAM msg;
@@ -193,8 +193,9 @@ const ApplicaitonPContainer& KnowledgeBase::getApplications(Application* parent)
         for(GraphIterator itr=tmpGraph.begin(); itr!=tmpGraph.end(); itr++)
         {
             auto* app = dynamic_cast<Application*>(*itr);
-            if(app && (app->owner() == parent))
-                    dummyApplications.push_back(app);
+            if (app && (app->owner() == parent)) {
+                dummyApplications.push_back(app);
+            }
         }
     }
     else
@@ -202,8 +203,9 @@ const ApplicaitonPContainer& KnowledgeBase::getApplications(Application* parent)
         for(GraphIterator itr=kbGraph.begin(); itr!=kbGraph.end(); itr++)
         {
             auto* app = dynamic_cast<Application*>(*itr);
-            if(app)
-                    dummyApplications.push_back(app);
+            if (app) {
+                dummyApplications.push_back(app);
+            }
         }
     }
 
@@ -220,8 +222,9 @@ const ModulePContainer& KnowledgeBase::getModules(Application* parent)
         for(GraphIterator itr=tmpGraph.begin(); itr!=tmpGraph.end(); itr++)
         {
             auto* mod = dynamic_cast<Module*>(*itr);
-            if(mod && (mod->owner() == parent))
+            if (mod && (mod->owner() == parent)) {
                 dummyModules.push_back(mod);
+            }
         }
     }
     else
@@ -229,8 +232,9 @@ const ModulePContainer& KnowledgeBase::getModules(Application* parent)
         for(GraphIterator itr=kbGraph.begin(); itr!=kbGraph.end(); itr++)
         {
             auto* mod = dynamic_cast<Module*>(*itr);
-            if(mod)
+            if (mod) {
                 dummyModules.push_back(mod);
+            }
         }
     }
     sort(dummyModules.begin(), dummyModules.end(), sortModules());
@@ -244,11 +248,12 @@ const CnnContainer& KnowledgeBase::getConnections(Application* parent)
     dummyConnections.clear();
     if(parent)
     {
-        for(int i=0; i<parent->connectionCount(); i++)
+        for (int i = 0; i < parent->connectionCount(); i++) {
             dummyConnections.push_back(parent->getConnectionAt(i));
-    }
-    else
+        }
+    } else {
         dummyConnections = selconnections;
+    }
     //sort(dummyConnections.begin(), dummyConnections.end(), sortConnections());
     return dummyConnections;
 }
@@ -262,14 +267,16 @@ const ResourcePContainer& KnowledgeBase::getResources(Application* parent)
         if(res)
         {
             bool bHas = false;
-            for(auto& dummyResource : dummyResources)
-                if(string(dummyResource->getName()) == string(res->getName()))
+            for (auto& dummyResource : dummyResources) {
+                if(std::string(dummyResource->getName()) == std::string(res->getName()))
                 {
                     bHas = true;
                     break;
                 }
-            if(!bHas)
+            }
+            if (!bHas) {
                 dummyResources.push_back(res);
+            }
         }
     }
 
@@ -279,14 +286,16 @@ const ResourcePContainer& KnowledgeBase::getResources(Application* parent)
         if(res)
         {
             bool bHas = false;
-            for(auto& dummyResource : dummyResources)
-                if(string(dummyResource->getName()) == string(res->getName()))
+            for (auto& dummyResource : dummyResources) {
+                if(std::string(dummyResource->getName()) == std::string(res->getName()))
                 {
                     bHas = true;
                     break;
                 }
-            if(!bHas)
+            }
+            if (!bHas) {
                 dummyResources.push_back(res);
+            }
         }
     }
     sort(dummyResources.begin(), dummyResources.end(), sortResources());
@@ -298,8 +307,9 @@ const ArbContainer& KnowledgeBase::getArbitrators(Application* parent)
     dummyArbitrators.clear();
     if(parent)
     {
-        for(int i=0; i<parent->arbitratorCount(); i++)
+        for (int i = 0; i < parent->arbitratorCount(); i++) {
             dummyArbitrators.push_back(parent->getArbitratorAt(i));
+        }
     }
     return dummyArbitrators;
 }
@@ -309,10 +319,11 @@ const InputContainer& KnowledgeBase::getInputCandidates(OutputData* output)
 {
     static InputContainer inputs;
     inputs.clear();
-    for(GraphIterator itr=kbGraph.begin(); itr!=kbGraph.end(); itr++)
-        if((*itr)->getType() == INPUTD &&
-            (*itr)->hasSuc(output))
+    for (GraphIterator itr = kbGraph.begin(); itr != kbGraph.end(); itr++) {
+        if ((*itr)->getType() == INPUTD && (*itr)->hasSuc(output)) {
             inputs.push_back(*((InputData*)(*itr)));
+        }
+    }
     return inputs;
 }
 
@@ -321,8 +332,9 @@ const OutputContainer& KnowledgeBase::getOutputCandidates(InputData* input)
 {
     static OutputContainer outputs;
     outputs.clear();
-    for(int i=0; i<input->sucCount(); i++)
+    for (int i = 0; i < input->sucCount(); i++) {
         outputs.push_back(*((OutputData*)input->getLinkAt(i).to()));
+    }
     return outputs;
 }
 
@@ -333,15 +345,16 @@ const OutputContainer& KnowledgeBase::getOutputCandidates(InputData* input)
 bool KnowledgeBase::makeupApplication(Application* application)
 {
     ErrorLogger* logger  = ErrorLogger::Instance();
-    if(!application)
+    if (!application) {
         return false;
+    }
     /**
      * we need to load all child  applications first
      */
     for(int i=0; i<application->iapplicationCount(); i++)
     {
         ApplicationInterface interfaceApp = application->getIapplicationAt(i);
-        if(string(interfaceApp.getName()) == string(application->getName()))
+        if(std::string(interfaceApp.getName()) == std::string(application->getName()))
         {
             OSTRINGSTREAM msg;
             msg<<"Application "<<interfaceApp.getName()<<" cannot be called from itself.";
@@ -359,8 +372,9 @@ bool KnowledgeBase::makeupApplication(Application* application)
             else
             {
 
-                if(appList.find(string(interfaceApp.getName()))==appList.end())
+                if (appList.find(std::string(interfaceApp.getName())) == appList.end()) {
                     appList[interfaceApp.getName()] = 1;
+                }
                 OSTRINGSTREAM newname;
                 newname<<application->getName()<<":";
                 newname<<interfaceApp.getName()<<":"<<appList[interfaceApp.getName()];
@@ -373,8 +387,8 @@ bool KnowledgeBase::makeupApplication(Application* application)
                 // adding applicattion prefix to child application
                 if( strlen(application->getPrefix()) )
                 {
-                    string strPrefix = string(application->getPrefix()) +
-                                       string(interfaceApp.getPrefix());
+                    std::string strPrefix = std::string(application->getPrefix()) +
+                                       std::string(interfaceApp.getPrefix());
                     interfaceApp.setPrefix(strPrefix.c_str());
                 }
 
@@ -395,7 +409,7 @@ bool KnowledgeBase::makeupApplication(Application* application)
     /**
      * loading modules
      */
-    //map<string, int> modList;
+    //std::map<std::string, int> modList;
     for(int i=0; i<application->imoduleCount(); i++)
     {
         ModuleInterface &mod = application->getImoduleAt(i);
@@ -413,13 +427,13 @@ bool KnowledgeBase::makeupApplication(Application* application)
         cnn->setOwner(application);
         if(!cnn->isExternalFrom())
         {
-            string strPort = string(application->getPrefix()) + string(cnn->from());
+            std::string strPort = std::string(application->getPrefix()) + std::string(cnn->from());
             cnn->setFrom(strPort.c_str());
         }
 
         if(!cnn->isExternalTo())
         {
-            string strPort = string(application->getPrefix()) + string(cnn->to());
+            std::string strPort = std::string(application->getPrefix()) + std::string(cnn->to());
             cnn->setTo(strPort.c_str());
         }
     }
@@ -440,8 +454,9 @@ bool KnowledgeBase::makeupApplication(Application* application)
         mres.setLabel(strLabel.str().c_str());
         mres.setName("MultipleResource");
         mres.setOwner(application);
-        for(int i=0; i<application->resourcesCount(); i++)
-             mres.addResource(application->getResourceAt(i));
+        for (int i = 0; i < application->resourcesCount(); i++) {
+            mres.addResource(application->getResourceAt(i));
+        }
         Node* node = tmpGraph.addNode(&mres);
         tmpGraph.addLink(application, node, 0);
     }
@@ -449,24 +464,25 @@ bool KnowledgeBase::makeupApplication(Application* application)
     return true;
 }
 
-bool KnowledgeBase::setModulePrefix(Module* module, const char* szPrefix, bool updateBasePrefix)
+bool KnowledgeBase::setModulePrefix(Module* themodule, const char* szPrefix, bool updateBasePrefix)
 {
-    __CHECK_NULLPTR(module);
+    __CHECK_NULLPTR(themodule);
     __CHECK_NULLPTR(szPrefix);
 
-    module->setPrefix(szPrefix);
-    if(updateBasePrefix)
-        module->setBasePrefix(szPrefix);
+    themodule->setPrefix(szPrefix);
+    if (updateBasePrefix) {
+        themodule->setBasePrefix(szPrefix);
+    }
 
     // updating port's prefix
     // TODO: check if this is required anymore
     /*
-    for(int i=0; i<module->sucCount(); i++)
+    for(int i=0; i<themodule->sucCount(); i++)
     {
-        InputData* input = dynamic_cast<InputData*>(module->getLinkAt(i).to());
+        InputData* input = dynamic_cast<InputData*>(themodule->getLinkAt(i).to());
         if(input)
         {
-            string strPort = string(szPrefix) + string(input->getPort());
+            std::string strPort = std::string(szPrefix) + std::string(input->getPort());
             input->setPort(strPort.c_str());
         }
     }
@@ -477,9 +493,9 @@ bool KnowledgeBase::setModulePrefix(Module* module, const char* szPrefix, bool u
         {
             OutputData* output = (OutputData*)(*itr);
             Module* producer = dynamic_cast<Module*>(output->getLinkAt(0).to());
-            if(producer == module)
+            if(producer == themodule)
             {
-                string strPort = string(szPrefix) + string(output->getPort());
+                std::string strPort = std::string(szPrefix) + std::string(output->getPort());
                 output->setPort(strPort.c_str());
             }
         }
@@ -494,8 +510,9 @@ bool KnowledgeBase::setApplicationPrefix(Application* application, const char* s
     __CHECK_NULLPTR(szPrefix);
 
     application->setPrefix(szPrefix);
-    if(updateBasePrefix)
+    if (updateBasePrefix) {
         application->setBasePrefix(szPrefix);
+    }
 
     /**
      * updating nested application's and module's prefixs
@@ -505,16 +522,16 @@ bool KnowledgeBase::setApplicationPrefix(Application* application, const char* s
         auto* nestedApp = dynamic_cast<Application*>(application->getLinkAt(i).to());
         if(nestedApp)
         {
-            string strPrefix = string(szPrefix) + string(nestedApp->getBasePrefix());
+            std::string strPrefix = std::string(szPrefix) + std::string(nestedApp->getBasePrefix());
             setApplicationPrefix(nestedApp, strPrefix.c_str(), false);
         }
         else
         {
-             auto* module = dynamic_cast<Module*>(application->getLinkAt(i).to());
-             if(module)
+             auto* themodule = dynamic_cast<Module*>(application->getLinkAt(i).to());
+             if(themodule)
              {
-                string strPrefix = string(szPrefix) + string(module->getBasePrefix());
-                setModulePrefix(module, strPrefix.c_str(), false);
+                std::string strPrefix = std::string(szPrefix) + std::string(themodule->getBasePrefix());
+                setModulePrefix(themodule, strPrefix.c_str(), false);
              }
         }
     }
@@ -528,13 +545,13 @@ bool KnowledgeBase::setApplicationPrefix(Application* application, const char* s
         Connection* cnn = &application->getConnectionAt(i);
         if(!cnn->isExternalFrom())
         {
-            string strPort = string(szPrefix) + string(cnn->from());
+            std::string strPort = std::string(szPrefix) + std::string(cnn->from());
             cnn->setFrom(strPort.c_str());
         }
 
         if(!cnn->isExternalTo())
         {
-            string strPort = string(szPrefix) + string(cnn->to());
+            std::string strPort = std::string(szPrefix) + std::string(cnn->to());
             cnn->setTo(strPort.c_str());
         }
     }
@@ -632,8 +649,9 @@ bool KnowledgeBase::removeConnectionFromApplication(Application* application, Co
 
 const std::string KnowledgeBase::getUniqueAppID(Application* parent, const char* szAppName)
 {
-    if(appList.find(string(szAppName)) == appList.end())
+    if (appList.find(std::string(szAppName)) == appList.end()) {
         appList[szAppName] = 1;
+    }
     OSTRINGSTREAM newname;
     newname<<parent->getName()<<":";
     newname<<szAppName<<":"<<appList[szAppName];
@@ -648,7 +666,7 @@ Application* KnowledgeBase::addIApplicationToApplication(Application* applicatio
     Application* repapp = nullptr;
 
     ErrorLogger* logger  = ErrorLogger::Instance();
-    if(string(interfaceApp.getName()) == string(application->getName()))
+    if(std::string(interfaceApp.getName()) == std::string(application->getName()))
     {
         OSTRINGSTREAM msg;
         msg<<"Application "<<interfaceApp.getName()<<" cannot be called from itself.";
@@ -665,8 +683,9 @@ Application* KnowledgeBase::addIApplicationToApplication(Application* applicatio
         }
         else
         {
-            if(appList.find(string(interfaceApp.getName()))==appList.end())
+            if (appList.find(std::string(interfaceApp.getName())) == appList.end()) {
                 appList[interfaceApp.getName()] = 1;
+            }
             OSTRINGSTREAM newname;
             newname<<application->getName()<<":";
             newname<<interfaceApp.getName()<<":"<<appList[interfaceApp.getName()];
@@ -677,8 +696,8 @@ Application* KnowledgeBase::addIApplicationToApplication(Application* applicatio
             // adding application prefix to child application
             if( strlen(application->getPrefix()) )
             {
-                string strPrefix = string(application->getPrefix()) +
-                                   string(interfaceApp.getPrefix());
+                std::string strPrefix = std::string(application->getPrefix()) +
+                                   std::string(interfaceApp.getPrefix());
                 interfaceApp.setPrefix(strPrefix.c_str());
             }
 
@@ -702,56 +721,57 @@ Module* KnowledgeBase::addIModuleToApplication(Application* application,
 {
     __CHECK_NULLPTR(application);
 
-    Module* module;
+    Module* themodule;
 
-    if(application->modList.find(string(mod.getName()))==application->modList.end())
+    if (application->modList.find(std::string(mod.getName())) == application->modList.end()) {
         application->modList[mod.getName()] = 1;
+    }
     OSTRINGSTREAM newname;
     newname<<application->getLabel()<<":"<<mod.getName()<<":"<<application->modList[mod.getName()];
 
     auto* repmod = dynamic_cast<Module*>(kbGraph.getNode(mod.getName()));
-    if(repmod)
-        module = replicateModule(tmpGraph, repmod, newname.str().c_str());
-    else
-    {
+    if (repmod) {
+        themodule = replicateModule(tmpGraph, repmod, newname.str().c_str());
+    } else {
         Module newmod(mod.getName());
         newmod.setLabel(newname.str().c_str());
-        module = addModuleToGraph(tmpGraph, &newmod);
+        themodule = addModuleToGraph(tmpGraph, &newmod);
     }
 
     mod.setTag(newname.str().c_str());
 
-    // setting module base prefix
-    module->setBasePrefix(mod.getPrefix());
+    // setting themodule base prefix
+    themodule->setBasePrefix(mod.getPrefix());
 
-    // adding application prefix to module prefix
+    // adding application prefix to themodule prefix
     if( strlen(application->getPrefix()) )
     {
-        string strPrefix = string(application->getPrefix()) +
-                           string(mod.getPrefix());
+        std::string strPrefix = std::string(application->getPrefix()) +
+                           std::string(mod.getPrefix());
         mod.setPrefix(strPrefix.c_str());
     }
 
     //updating Module with ModuleInterface
-    updateModule(module, &mod);
+    updateModule(themodule, &mod);
     application->modList[mod.getName()] = application->modList[mod.getName()] + 1;
 
-    // adding module's resources to application resource list
+    // adding themodule's resources to application resource list
     ResourceIterator itr;
     for(itr=mod.getResources().begin();
         itr!=mod.getResources().end(); itr++)
     {
-        (*itr).setOwner(module);
+        (*itr).setOwner(themodule);
         application->addResource(*itr);
     }
 
-    //Adding the module as an successor to the application
-    tmpGraph.addLink(application, module, 0, false);
-    module->setOwner(application);
+    //Adding the themodule as an successor to the application
+    tmpGraph.addLink(application, themodule, 0, false);
+    themodule->setOwner(application);
 
-    if(isNew)
+    if (isNew) {
         application->addImodule(mod);
-    return module;
+    }
+    return themodule;
 }
 
 
@@ -760,9 +780,10 @@ bool KnowledgeBase::removeIModuleFromApplication(Application* application, const
 {
     __CHECK_NULLPTR(application);
 
-    auto* module = dynamic_cast<Module*>(tmpGraph.getNode(szModTag));
-    if(module)
-        removeModuleFromGraph(tmpGraph, module);
+    auto* themodule = dynamic_cast<Module*>(tmpGraph.getNode(szModTag));
+    if (themodule) {
+        removeModuleFromGraph(tmpGraph, themodule);
+    }
     for(int i=0; i<application->imoduleCount(); i++)
     {
         if(strcmp(application->getImoduleAt(i).getTag(), szModTag) == 0)
@@ -780,24 +801,25 @@ bool KnowledgeBase::removeIApplicationFromApplication(Application* application, 
 {
     __CHECK_NULLPTR(application);
     auto* app = dynamic_cast<Application*>(tmpGraph.getNode(szAppTag));
-    if(!app)
+    if (!app) {
         return false;
+    }
 
     // removing all nested applications recursively
     for(GraphIterator itr=tmpGraph.begin(); itr!=tmpGraph.end(); itr++)
     {
         auto* nestedApp = dynamic_cast<Application*>(*itr);
-        if(nestedApp && (nestedApp->owner() == app))
+        if (nestedApp && (nestedApp->owner() == app)) {
             removeIApplicationFromApplication(app, nestedApp->getLabel());
+        }
     }
 
     for(GraphIterator itr=tmpGraph.begin(); itr!=tmpGraph.end(); itr++)
     {
         auto* mod = dynamic_cast<Module*>(*itr);
-        if(mod && (mod->owner() == app))
+        if (mod && (mod->owner() == app)) {
             removeModuleFromGraph(tmpGraph, mod);
-        else
-        {
+        } else {
             auto* res = dynamic_cast<MultiResource*>(*itr);
             if(res && (res->owner() == app))
             {
@@ -828,9 +850,11 @@ GenericResource* KnowledgeBase::findResByName(Graph& graph, const char* szName)
     for(GraphIterator itr=graph.begin(); itr!=graph.end(); itr++)
     {
         auto* res = dynamic_cast<GenericResource*>(*itr);
-        if(res)
-            if(string(res->getName()) == string(szName))
+        if (res) {
+            if (std::string(res->getName()) == std::string(szName)) {
                 return res;
+            }
+        }
     }
     return nullptr;
 }
@@ -843,8 +867,9 @@ InputData* KnowledgeBase::findInputByPort(Graph& graph, const char* szPort)
         if((*itr)->getType() == INPUTD )
         {
             auto* input = (InputData*)(*itr);
-            if(compareString(input->getPort(), szPort))
+            if (compareString(input->getPort(), szPort)) {
                 return input;
+            }
         }
     }
     return nullptr;
@@ -858,8 +883,9 @@ OutputData* KnowledgeBase::findOutputByPort(Graph& graph, const char* szPort)
         if((*itr)->getType() == OUTPUTD)
         {
             auto* output = (OutputData*)(*itr);
-            if(compareString(output->getPort(), szPort))
+            if (compareString(output->getPort(), szPort)) {
                 return output;
+            }
         }
     }
     return nullptr;
@@ -873,7 +899,7 @@ bool KnowledgeBase::reasolveDependency(const char* szAppName,
     if(!app)
     {
         OSTRINGSTREAM msg;
-        msg<<"Application "<<string(szAppName)<<" not found.";
+        msg<<"Application "<<std::string(szAppName)<<" not found.";
         logger->addError(msg.str().c_str());
         mainApplication = nullptr;
         return false;
@@ -913,15 +939,17 @@ bool KnowledgeBase::reasolveDependency(Application* app,
 
     // Adding all resources which are providers to tmpGraph
     // providers are those with no owner.
-    for(GraphIterator itr=kbGraph.begin(); itr!=kbGraph.end(); itr++)
+    for (GraphIterator itr = kbGraph.begin(); itr != kbGraph.end(); itr++) {
         if(dynamic_cast<GenericResource*>(*itr))
         {
 
-            if(!dynamic_cast<GenericResource*>(*itr)->owner())
+            if (!dynamic_cast<GenericResource*>(*itr)->owner()) {
                 replicateResource(tmpGraph,
                                   (GenericResource*)(*itr),
                                   (*itr)->getLabel());
+            }
         }
+    }
 
     // make resources links
     makeResourceLinks(tmpGraph);
@@ -949,9 +977,9 @@ bool KnowledgeBase::reasolveDependency(Application* app,
            for(int i=0; i<mres->resourceCount(); i++)
            {
                 auto* yres = dynamic_cast<ResYarpPort*>(&mres->getResourceAt(i));
-                if(yres && (find(selresources.begin(), selresources.end(), yres)
-                    == selresources.end()))
+                if (yres && (find(selresources.begin(), selresources.end(), yres) == selresources.end())) {
                     selresources.push_back(yres);
+                }
 
                 // adding ResYarpPort from modules dependencies
                 /*
@@ -971,24 +999,27 @@ bool KnowledgeBase::reasolveDependency(Application* app,
        }
        else
        {
-            if(find(selresources.begin(), selresources.end(), resource)
-                == selresources.end())
-                selresources.push_back(resource);
+           if (find(selresources.begin(), selresources.end(), resource)
+               == selresources.end()) {
+               selresources.push_back(resource);
+           }
        }
     }
 
-    for(auto& module : modules)
+    for(auto& themodule : modules)
     {
-       if(find(selmodules.begin(), selmodules.end(), module)
-          == selmodules.end())
-            selmodules.push_back(module);
+        if (find(selmodules.begin(), selmodules.end(), themodule)
+            == selmodules.end()) {
+            selmodules.push_back(themodule);
+        }
     }
 
     for(auto& application : applications)
     {
-       if(find(selapplications.begin(), selapplications.end(), application)
-          == selapplications.end())
+        if (find(selapplications.begin(), selapplications.end(), application)
+            == selapplications.end()) {
             selapplications.push_back(application);
+        }
     }
 
 
@@ -1088,45 +1119,54 @@ bool KnowledgeBase::updateApplication(Application* app,
     __CHECK_NULLPTR(app);
     __CHECK_NULLPTR(iapp);
 
-    if(strlen(iapp->getPrefix()))
+    if (strlen(iapp->getPrefix())) {
         app->setPrefix(iapp->getPrefix());
+    }
     app->setModelBase(iapp->getModelBase());
     return true;
 }
 
-bool KnowledgeBase::updateModule(Module* module, ModuleInterface* imod )
+bool KnowledgeBase::updateModule(Module* themodule, ModuleInterface* imod )
 {
-    __CHECK_NULLPTR(module);
+    __CHECK_NULLPTR(themodule);
     __CHECK_NULLPTR(imod);
 
     if(strlen(imod->getHost()))
     {
-        module->setHost(imod->getHost());
-        module->setForced(true);
+        themodule->setHost(imod->getHost());
+        themodule->setForced(true);
     }
 
-    if(strlen(imod->getParam()))
-        module->setParam(imod->getParam());
-    if(imod->getRank()>0)
-        module->setRank(imod->getRank());
-    if(strlen(imod->getBroker()))
-        module->setBroker(imod->getBroker());
-    if(strlen(imod->getStdio()))
-        module->setStdio(imod->getStdio());
-    if(strlen(imod->getWorkDir()))
-        module->setWorkDir(imod->getWorkDir());
-    if(strlen(imod->getDisplay()))
-        module->setDisplay(imod->getDisplay());
-    if(strlen(imod->getEnvironment()))
-        module->setEnvironment(imod->getEnvironment());
-    module->setPostExecWait(imod->getPostExecWait());
-    module->setPostStopWait(imod->getPostStopWait());
-    module->setModelBase(imod->getModelBase());
+    if (strlen(imod->getParam())) {
+        themodule->setParam(imod->getParam());
+    }
+    if (imod->getRank() > 0) {
+        themodule->setRank(imod->getRank());
+    }
+    if (strlen(imod->getBroker())) {
+        themodule->setBroker(imod->getBroker());
+    }
+    if (strlen(imod->getStdio())) {
+        themodule->setStdio(imod->getStdio());
+    }
+    if (strlen(imod->getWorkDir())) {
+        themodule->setWorkDir(imod->getWorkDir());
+    }
+    if (strlen(imod->getDisplay())) {
+        themodule->setDisplay(imod->getDisplay());
+    }
+    if (strlen(imod->getEnvironment())) {
+        themodule->setEnvironment(imod->getEnvironment());
+    }
+    themodule->setPostExecWait(imod->getPostExecWait());
+    themodule->setPostStopWait(imod->getPostStopWait());
+    themodule->setModelBase(imod->getModelBase());
 
 
-    // updating module prefix
-    if(strlen(imod->getPrefix()))
-        setModulePrefix(module, imod->getPrefix(), false);
+    // updating themodule prefix
+    if (strlen(imod->getPrefix())) {
+        setModulePrefix(themodule, imod->getPrefix(), false);
+    }
     return true;
 }
 
@@ -1134,12 +1174,12 @@ bool KnowledgeBase::updateModule(Module* module, ModuleInterface* imod )
  * Replicate a module from graph to tmpgraph
  */
 Module* KnowledgeBase::replicateModule(Graph& graph,
-                        Module* module, const char* szLabel)
+                        Module* themodule, const char* szLabel)
 {
-    __CHECK_NULLPTR(module);
-    auto* newmod = (Module*) module->clone();
+    __CHECK_NULLPTR(themodule);
+    auto* newmod = (Module*) themodule->clone();
     newmod->setLabel(szLabel);
-    newmod->setBasePrefix(module->getPrefix());
+    newmod->setBasePrefix(themodule->getPrefix());
     newmod->removeAllSuc();
     if(!addModuleToGraph(graph, newmod))
     {
@@ -1187,34 +1227,35 @@ GenericResource* KnowledgeBase::replicateResource(Graph& graph,
 }
 
 
-Module* KnowledgeBase::addModuleToGraph(Graph& graph, Module* module)
+Module* KnowledgeBase::addModuleToGraph(Graph& graph, Module* themodule)
 {
     ErrorLogger* logger  = ErrorLogger::Instance();
 
-    if(!moduleCompleteness(module))
+    if (!moduleCompleteness(themodule)) {
         return nullptr;
+    }
 
-    /*Adding module to the graph */
-    if(!(module = (Module*)graph.addNode(module)))
+    /*Adding themodule to the graph */
+    if (!(themodule = (Module*)graph.addNode(themodule))) {
         return nullptr;
+    }
 
     /* Adding inputs nodes to the graph*/
-    for(int i=0; i<module->inputCount(); i++)
+    for(int i=0; i<themodule->inputCount(); i++)
     {
-        InputData* input = &(module->getInputAt(i));
-        input->setLabel(createDataLabel(module->getLabel(),
+        InputData* input = &(themodule->getInputAt(i));
+        input->setLabel(createDataLabel(themodule->getLabel(),
                                         input->getPort(), ":I"));
-        input->setOwner(module);
-        if((input=(InputData*)graph.addNode(input)))
-            graph.addLink(module, input, 0,
+        input->setOwner(themodule);
+        if ((input = (InputData*)graph.addNode(input))) {
+            graph.addLink(themodule, input, 0,
                         !(input->isRequired()));
-        else
-        {
-            input = &(module->getInputAt(i));
-            module->removeInput(*input);
+        } else {
+            input = &(themodule->getInputAt(i));
+            themodule->removeInput(*input);
             OSTRINGSTREAM msg;
             msg<<"Input ";
-            msg<<createDataLabel(module->getLabel(),
+            msg<<createDataLabel(themodule->getLabel(),
                                 input->getPort(), ":I");
             msg<<" already exists.";
             logger->addWarning(msg);
@@ -1222,21 +1263,20 @@ Module* KnowledgeBase::addModuleToGraph(Graph& graph, Module* module)
     }
 
     /* Adding output nodes to the graph*/
-    for(int i=0; i<module->outputCount(); i++)
+    for(int i=0; i<themodule->outputCount(); i++)
     {
-        OutputData* output = &(module->getOutputAt(i));
-        output->setLabel(createDataLabel(module->getLabel(),
+        OutputData* output = &(themodule->getOutputAt(i));
+        output->setLabel(createDataLabel(themodule->getLabel(),
                                         output->getPort(), ":O"));
-        output->setOwner(module);
-        if((output=(OutputData*)graph.addNode(output)))
-            graph.addLink(output, module, 0);
-        else
-        {
-            output = &(module->getOutputAt(i));
-            module->removeOutput(*output);
+        output->setOwner(themodule);
+        if ((output = (OutputData*)graph.addNode(output))) {
+            graph.addLink(output, themodule, 0);
+        } else {
+            output = &(themodule->getOutputAt(i));
+            themodule->removeOutput(*output);
             OSTRINGSTREAM msg;
             msg<<"Output ";
-            msg<<createDataLabel(module->getLabel(),
+            msg<<createDataLabel(themodule->getLabel(),
                                 output->getPort(), ":O");
             msg<<" already exists.";
             logger->addWarning(msg);
@@ -1248,16 +1288,17 @@ Module* KnowledgeBase::addModuleToGraph(Graph& graph, Module* module)
      */
     MultiResource mres;
     OSTRINGSTREAM strLabel;
-    strLabel<<module->getLabel()<<":MultipleResource";
+    strLabel<<themodule->getLabel()<<":MultipleResource";
     mres.setLabel(strLabel.str().c_str());
     mres.setName("MultipleResource");
-    mres.setOwner(module);
-    for(int i=0; i<module->resourceCount(); i++)
-        mres.addResource(module->getResourceAt(i));
+    mres.setOwner(themodule);
+    for (int i = 0; i < themodule->resourceCount(); i++) {
+        mres.addResource(themodule->getResourceAt(i));
+    }
     Node* node = graph.addNode(&mres);
-    graph.addLink(module, node, 0);
+    graph.addLink(themodule, node, 0);
 
-    return module;
+    return themodule;
 }
 
 bool KnowledgeBase::saveApplication(AppSaver* appSaver, Application* application)
@@ -1271,10 +1312,11 @@ bool KnowledgeBase::saveApplication(AppSaver* appSaver, Application* application
         {
             ApplicationInterface iapp(embApp->getName());
             iapp.setPrefix(embApp->getBasePrefix());
-            if(embApp->getModel())
+            if (embApp->getModel()) {
                 iapp.setModelBase(*embApp->getModel());
-            else
+            } else {
                 iapp.setModelBase(embApp->getModelBase());
+            }
             application->addIapplication(iapp);
         }
     }
@@ -1283,11 +1325,11 @@ bool KnowledgeBase::saveApplication(AppSaver* appSaver, Application* application
     application->removeAllImodules();
     for(GraphIterator itr=tmpGraph.begin(); itr!=tmpGraph.end(); itr++)
     {
-        auto* module = dynamic_cast<Module*>(*itr);
-        if(module && (module->owner() == application))
+        auto* themodule = dynamic_cast<Module*>(*itr);
+        if(themodule && (themodule->owner() == application))
         {
-            ModuleInterface imod(module);
-            imod.setPrefix(module->getBasePrefix());
+            ModuleInterface imod(themodule);
+            imod.setPrefix(themodule->getBasePrefix());
             application->addImodule(imod);
         }
     }
@@ -1296,16 +1338,18 @@ bool KnowledgeBase::saveApplication(AppSaver* appSaver, Application* application
     for(int i=0; i<application->connectionCount(); i++)
     {
         Connection* pcon = &application->getConnectionAt(i);
-        if(pcon->getModel())
+        if (pcon->getModel()) {
             pcon->setModelBase(*pcon->getModel());
+        }
     }
 
     // updating arbitrators modelBase with Model if exists
     for(int i=0; i<application->arbitratorCount(); i++)
     {
         Arbitrator* parb = &application->getArbitratorAt(i);
-        if(parb->getModel())
+        if (parb->getModel()) {
             parb->setModelBase(*parb->getModel());
+        }
     }
 
     return appSaver->save(application);
@@ -1340,9 +1384,9 @@ bool KnowledgeBase::removeModuleFromGraph(Graph& graph, Module* mod)
                     {
                          graph.removeNode(res);
                          itr=graph.begin();
-                    }
-                    else
+                    } else {
                         itr++;
+                    }
                 }
             }
             //itr++;
@@ -1353,37 +1397,41 @@ bool KnowledgeBase::removeModuleFromGraph(Graph& graph, Module* mod)
 }
 
 
-bool KnowledgeBase::moduleCompleteness(Module* module)
+bool KnowledgeBase::moduleCompleteness(Module* themodule)
 {
     ErrorLogger* logger  = ErrorLogger::Instance();
 
-    /* Checking module name */
-    if(strlen(module->getName()) == 0)
+    /* Checking themodule name */
+    if(strlen(themodule->getName()) == 0)
     {
         logger->addWarning("Module has no name.");
         return false;
     }
 
     /* Checking inputs name and port */
-    for(int i=0; i<module->inputCount(); i++)
+    for(int i=0; i<themodule->inputCount(); i++)
     {
-        const char* szType = module->getInputAt(i).getName();
-        const char* szPort = module->getInputAt(i).getPort();
-        if(!strlen(szType))
-            logger->addWarning(string(module->getName()) + string(" has an input with no type."));
-        if(!strlen(szPort))
-            logger->addWarning(string(module->getName()) + string(" has an input with no port."));
+        const char* szType = themodule->getInputAt(i).getName();
+        const char* szPort = themodule->getInputAt(i).getPort();
+        if (!strlen(szType)) {
+            logger->addWarning(std::string(themodule->getName()) + std::string(" has an input with no type."));
+        }
+        if (!strlen(szPort)) {
+            logger->addWarning(std::string(themodule->getName()) + std::string(" has an input with no port."));
+        }
     }
 
     /* Checking outputs name and port */
-    for(int i=0; i<module->outputCount(); i++)
+    for(int i=0; i<themodule->outputCount(); i++)
     {
-        const char* szType = module->getOutputAt(i).getName();
-        const char* szPort = module->getOutputAt(i).getPort();
-        if(!strlen(szType))
-            logger->addWarning(string(module->getName()) + string(" has an output with no type."));
-        if(!strlen(szPort))
-            logger->addWarning(string(module->getName()) + string(" has an output with no port."));
+        const char* szType = themodule->getOutputAt(i).getName();
+        const char* szPort = themodule->getOutputAt(i).getPort();
+        if (!strlen(szType)) {
+            logger->addWarning(std::string(themodule->getName()) + std::string(" has an output with no type."));
+        }
+        if (!strlen(szPort)) {
+            logger->addWarning(std::string(themodule->getName()) + std::string(" has an output with no port."));
+        }
     }
     return true;
 }
@@ -1395,12 +1443,13 @@ Module* KnowledgeBase::findOwner(Graph& graph, InputData* input)
     {
         if((*itr)->getType() == MODULE)
         {
-            auto* module = (Module*)(*itr);
-            for(int i=0; i<module->sucCount(); i++)
+            auto* themodule = (Module*)(*itr);
+            for(int i=0; i<themodule->sucCount(); i++)
             {
-                Link l = module->getLinkAt(i);
-                if((InputData*)l.to() == input)
-                    return module;
+                Link l = themodule->getLinkAt(i);
+                if ((InputData*)l.to() == input) {
+                    return themodule;
+                }
             }
         }
     }
@@ -1453,16 +1502,18 @@ void KnowledgeBase::updateNodesLink(Graph& graph, int level)
                 if((*itr2)->getType() == RESOURCE)
                 {
                     auto* res = (ResYarpPort*)(*itr2);
-                    if(compareString(res->getName(), input->getName()))
+                    if (compareString(res->getName(), input->getName())) {
                         graph.addLink(input, res, 0.0, false);
+                    }
                 }
             }
 
             /**
              * adding relevant outputs to inputs
              */
-            if(level==NODELINK_DEEP)
+            if (level == NODELINK_DEEP) {
                 linkToOutputs(graph, input);
+            }
         }
     }
 }
@@ -1472,9 +1523,11 @@ void KnowledgeBase::updateResourceWeight(Graph& graph,
 {
     for(GraphIterator itr=graph.begin(); itr!=graph.end(); itr++)
     {
-        for(int i=0; i<(*itr)->sucCount(); i++)
-            if((*itr)->getLinkAt(i).to() == resource)
+        for (int i = 0; i < (*itr)->sucCount(); i++) {
+            if ((*itr)->getLinkAt(i).to() == resource) {
                 (*itr)->getLinkAt(i).setWeight(weight);
+            }
+        }
     }
 
 }
@@ -1490,38 +1543,41 @@ void KnowledgeBase::makeResourceLinks(Graph& graph)
         if(resource && resource->owner())
         {
             resource->removeAllSuc();
-            auto* module = dynamic_cast<Module*>(resource->owner());
-            if(module && module->getForced())
+            auto* themodule = dynamic_cast<Module*>(resource->owner());
+            if(themodule && themodule->getForced())
             {
                 // we should create a provider resource with host name and
                 // connect it to resource
-                GenericResource* provider = findResByName(graph, module->getHost());
+                GenericResource* provider = findResByName(graph, themodule->getHost());
                 if(!provider)
                 {
                     Computer comp;
-                    comp.setLabel(module->getHost());
-                    comp.setName(module->getHost());
+                    comp.setLabel(themodule->getHost());
+                    comp.setName(themodule->getHost());
                     provider = (GenericResource*) graph.addNode(&comp);
                 }
                 float w = 0.0;
-                if(dynamic_cast<Computer*>(provider))
+                if (dynamic_cast<Computer*>(provider)) {
                     w = calculateLoad((Computer*)provider);
+                }
                 graph.addLink(resource, provider, w, false);
             }
-            else if((module && !module->getForced()))
+            else if((themodule && !themodule->getForced()))
             {
                 // linking resource providers to the relevant resources
                 for(GraphIterator itr2=graph.begin(); itr2!=graph.end(); itr2++)
                 {
                     auto* provider = dynamic_cast<GenericResource*>(*itr2);
-                    if(provider && !provider->owner())
+                    if (provider && !provider->owner()) {
                         if(provider->satisfy(resource))
                         {
                             float w = 0.0;
-                            if(dynamic_cast<Computer*>(provider))
+                            if (dynamic_cast<Computer*>(provider)) {
                                 w = calculateLoad((Computer*)provider);
+                            }
                             graph.addLink(resource, provider, w, false);
                         }
+                    }
                 }
             }
         }
@@ -1533,7 +1589,9 @@ float KnowledgeBase::calculateLoad(Computer* comp)
 {
     LoadAvg load = comp->getProcessor().getCPULoad();
     int siblings = comp->getProcessor().getSiblings();
-    if(siblings == 0) siblings = 1;
+    if (siblings == 0) {
+        siblings = 1;
+    }
     //cout<<comp->getName()<<": "<<load.loadAverage1<<", "<<load.loadAverage5<<", "<<load.loadAverage15;
     //cout<<" ("<<siblings<<")"<<endl;
     auto lavg = (float)((load.loadAverage1*15.0 +
@@ -1551,11 +1609,10 @@ void KnowledgeBase::linkToOutputs(Graph& graph, InputData* input)
         {
             auto* output = (OutputData*)(*itr);
             auto* producer = (Module*)output->getLinkAt(0).to();
-            if(compareString(output->getName(), input->getName())
-               &&(producer != findOwner(graph, input)))
-                graph.addLink(input, output,
-                             (float)getProducerRank(graph, output),
-                             !input->isRequired());
+            if (compareString(output->getName(), input->getName())
+                && (producer != findOwner(graph, input))) {
+                graph.addLink(input, output, (float)getProducerRank(graph, output), !input->isRequired());
+            }
         }
     }
 }
@@ -1568,8 +1625,8 @@ int KnowledgeBase::getProducerRank(Graph& graph, OutputData* output)
 {
     if(output->sucCount())
     {
-        auto* module = (Module*)output->getLinkAt(0).to();
-        return module->getRank();
+        auto* themodule = (Module*)output->getLinkAt(0).to();
+        return themodule->getRank();
     }
     return 0;
 }
@@ -1604,7 +1661,7 @@ bool KnowledgeBase::checkConsistency()
     return true;
 }
 
-Node* KnowledgeBase::getNode(string appName)
+Node* KnowledgeBase::getNode(std::string appName)
 {
     return kbGraph.getNode(appName.c_str());
 }
@@ -1671,24 +1728,27 @@ bool KnowledgeBase::reason(Graph* graph, Node* initial,
     {
         /* if it's a resource dependency */
         auto* resource = dynamic_cast<GenericResource*>(initial);
-        if(resource && resource->owner())
+        if (resource && resource->owner()) {
             resources.push_back(resource);
+        }
         return false;
     }
 
     if(initial->isLeaf())
     {
         // adding resource
-        if(dynamic_cast<GenericResource*>(initial))
+        if (dynamic_cast<GenericResource*>(initial)) {
             resources.push_back(dynamic_cast<GenericResource*>(initial));
+        }
 
         // adding connections
         auto* application = dynamic_cast<Application*>(initial);
         if(application)
         {
             applications.push_back(application);
-            for(int i=0; i<application->connectionCount(); i++)
+            for (int i = 0; i < application->connectionCount(); i++) {
                 connections.push_back(application->getConnectionAt(i));
+            }
         }
         initial->setSatisfied(true);
         initial->setVisited(false);
@@ -1719,11 +1779,11 @@ bool KnowledgeBase::reason(Graph* graph, Node* initial,
             bool ret = reason(graph, current,
                               subApplications, subModules, subResources, subConnections,
                               bAutoDependancy, bSilent);
-            if(ret)
+            if (ret) {
                 bPathFound = true;
-            else if(dynamic_cast<Application*>(initial) ||
-                    dynamic_cast<Module*>(initial))
-                    bPathFound = false;
+            } else if (dynamic_cast<Application*>(initial) || dynamic_cast<Module*>(initial)) {
+                bPathFound = false;
+            }
 
             /* we meet a conjunctive node and we need to copy all the
              *  selected successors
@@ -1755,37 +1815,40 @@ bool KnowledgeBase::reason(Graph* graph, Node* initial,
     auto* resource = dynamic_cast<GenericResource*>(initial);
     if(resource && resource->owner() && candidateLink)
     {
-        auto* module = dynamic_cast<Module*>(resource->owner());
+        auto* themodule = dynamic_cast<Module*>(resource->owner());
         auto* provider = dynamic_cast<GenericResource*>(candidateLink->to());
-        if(module && provider)
+        if(themodule && provider)
         {
-            // setting module's host property
-            module->setHost(provider->getName());
+            // setting themodule's host property
+            themodule->setHost(provider->getName());
 
             // we need to update the weight of all links to the selected provider
             // with load balancer tunning value;
             // It will help for better load distribution among nodes
             auto* comp = dynamic_cast<Computer*>(provider);
             float default_tunning = 0.1F;
-            if(comp && (comp->getProcessor().getSiblings() > 0))
+            if (comp && (comp->getProcessor().getSiblings() > 0)) {
                 default_tunning = 1.0F / (float)comp->getProcessor().getSiblings();
-            float tunner = (module->getRank()<10)? default_tunning : (float)module->getRank()/100.0F;
+            }
+            float tunner = (themodule->getRank()<10)? default_tunning : (float)themodule->getRank()/100.0F;
             updateResourceWeight(*graph, provider, candidateLink->weight()+tunner);
         }
         resources.push_back(resource);
     }
 
-    /* adding current module to the modules list.*/
-    if(dynamic_cast<Module*>(initial))
+    /* adding current themodule to the modules list.*/
+    if (dynamic_cast<Module*>(initial)) {
         modules.push_back(dynamic_cast<Module*>(initial));
+    }
 
     /* we should add all the connections */
     auto* application = dynamic_cast<Application*>(initial);
     if(application)
     {
         applications.push_back(dynamic_cast<Application*>(initial));
-        for(int i=0; i<application->connectionCount(); i++)
+        for (int i = 0; i < application->connectionCount(); i++) {
             connections.push_back(application->getConnectionAt(i));
+        }
     }
     initial->setSatisfied(bPathFound);
     initial->setVisited(false);
@@ -1797,10 +1860,11 @@ const char* KnowledgeBase::createDataLabel(const char* modlabel,
                                            const char* port,
                                            const char* postfix)
 {
-    static string name;
+    static std::string name;
     name.clear();
-    name = string(modlabel) + string(port);
-    if(postfix)
-        name += string(postfix);
+    name = std::string(modlabel) + std::string(port);
+    if (postfix) {
+        name += std::string(postfix);
+    }
     return name.c_str();
 }

@@ -1,0 +1,377 @@
+/*
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
+#include <yarp/profiler/NetworkProfilerBasic.h>
+
+#include <yarp/os/Network.h>
+#include <yarp/os/LogStream.h>
+#include <yarp/os/ContactStyle.h>
+#include <yarp/os/Port.h>
+#include <yarp/os/OutputProtocol.h>
+#include <yarp/os/Carrier.h>
+#include <yarp/os/impl/PortCoreClient.h>
+#include <yarp/companion/impl/Companion.h>
+#include <algorithm>
+
+#include <yarp/os/ProcessInfoData.h>
+#include <yarp/os/PlatformInfoData.h>
+#include <yarp/os/PortInfoData.h>
+
+using namespace yarp::os;
+using namespace yarp::profiler;
+
+bool NetworkProfilerBasic::getMachinesList(const ports_detail_set& ports, machines_list& l)
+{
+    l.clear(); //clear the output
+
+    for (auto it = ports.begin(); it != ports.end(); it++)
+    {
+        std::string ip = it->owner_process.owner_machine.ip;
+        if (std::find(l.begin(), l.end(), ip) == l.end())
+        {
+            l.push_back(ip);
+        }
+    }
+    return true;
+}
+
+bool NetworkProfilerBasic::getProcessesList(const ports_detail_set& ports, processes_list& l)
+{
+    l.clear(); //clear the output
+
+    for (auto it = ports.begin(); it != ports.end(); it++)
+    {
+        //int pid = it->owner.pid;
+        std::string pid = it->owner_process.process_fullname;
+        if (std::find(l.begin(), l.end(), pid) == l.end())
+        {
+            l.push_back(pid);
+        }
+    }
+    return true;
+}
+
+bool NetworkProfilerBasic::getPortsDetailedList(ports_detail_set& ports, bool complete, double timeout)
+{
+    ports.clear(); //clear the output
+
+    ports_name_set port_names;
+    bool r = getPortsList(port_names, complete);
+    if (!r) return false;
+
+    ports_detail_set port_details;
+    for (auto it = port_names.begin(); it != port_names.end(); it++)
+    {
+        PortDetails details;
+        r = getPortDetails(it->name, details, timeout);
+        if (!r) { yError() << "getPortDetails of `" << it->name << "`failed"; }
+        ports.push_back(details);
+    }
+    return r;
+}
+
+void NetworkProfilerBasic::filterPortsListByIp(const ports_detail_set& in, ports_detail_set& filtered_out, std::string ip)
+{
+    filtered_out.clear(); //clear the output
+
+    for (auto it = in.begin(); it != in.end(); it++)
+    {
+        if (ip != "*") {
+            if (it->owner_process.owner_machine.hostname == ip) { filtered_out.push_back(*it); }
+        }
+    }
+}
+
+void NetworkProfilerBasic::filterPortsListByProcess(const ports_detail_set& in, ports_detail_set& filtered_out, std::string process_fullname)
+{
+    filtered_out.clear(); //clear the output
+
+    for (auto it = in.begin(); it != in.end(); it++)
+    {
+        if (process_fullname != "*") {
+            if (it->owner_process.process_fullname == process_fullname) { filtered_out.push_back(*it); }
+        }
+    }
+}
+
+void NetworkProfilerBasic::filterConnectionListByName(const connections_set& in, connections_set& filtered_out, std::string src_name, std::string dst_name)
+{
+    filtered_out.clear(); //clear the output
+
+    for (auto it = in.begin(); it != in.end(); it++)
+    {
+        if (src_name!="*" && dst_name != "*") {
+            if (it->src.name == src_name && it->src.name == dst_name) { filtered_out.push_back(*it);}
+        }
+        else if (src_name == "*") {
+            if (it->dst.name == dst_name) { filtered_out.push_back(*it); }
+        }
+        else if (dst_name == "*") {
+            if (it->src.name == src_name) {filtered_out.push_back(*it); }
+        }
+    }
+}
+
+void NetworkProfilerBasic::filterConnectionListByIp(const connections_set& in, connections_set& filtered_out, std::string src_portnumber, std::string dst_portnumber)
+{
+    filtered_out.clear(); //clear the output
+
+    for (auto it = in.begin(); it != in.end(); it++)
+    {
+        if (src_portnumber != "*" && dst_portnumber != "*") {
+            if (it->src.ip == src_portnumber && it->src.ip == dst_portnumber) { filtered_out.push_back(*it); }
+        }
+        else if (src_portnumber == "*") {
+            if (it->dst.ip == dst_portnumber) { filtered_out.push_back(*it); }
+        }
+        else if (dst_portnumber == "*") {
+            if (it->src.ip == src_portnumber) { filtered_out.push_back(*it); }
+        }
+    }
+}
+
+void NetworkProfilerBasic::filterConnectionListByPortNumber(const connections_set& in, connections_set& filtered_out, std::string src_ip, std::string dst_ip)
+{
+    filtered_out.clear(); //clear the output
+
+    for (auto it = in.begin(); it != in.end(); it++)
+    {
+        if (src_ip != "*" && dst_ip != "*") {
+            if (it->src.port_number == src_ip && it->src.port_number == dst_ip) { filtered_out.push_back(*it); }
+        }
+        else if (src_ip == "*") {
+            if (it->dst.port_number == dst_ip) { filtered_out.push_back(*it); }
+        }
+        else if (dst_ip == "*") {
+            if (it->src.port_number == src_ip) { filtered_out.push_back(*it); }
+        }
+    }
+}
+
+bool NetworkProfilerBasic::getPortInfo (const std::string& name, const ports_name_set& ports, PortInfo& p)
+{
+    p = PortInfo(); // clear the output
+
+    for (auto it = ports.begin(); it != ports.end(); it++)
+    {
+        if (name == it->name)
+        {
+            p.name = it->name;
+            p.ip = it->ip;
+            p.port_number = it->port_number;
+            return true;
+        }
+    }
+    return false;
+}
+
+bool NetworkProfilerBasic::getConnectionsList(connections_set& connections)
+{
+    connections.clear(); // clear the output
+
+    //get the list of all the ports
+    ports_name_set ports;
+    getPortsList(ports);
+
+    //for each port, get the list of its connections...
+    for (auto it = ports.begin(); it != ports.end(); it++)
+    {
+        PortDetails info;
+        getPortDetails(it->name, info);
+        ConnectionDetails conn;
+        /*
+        //I will not process incoming connections since probably everything in the system
+        //is determined just looking at the outgoing connections
+        for (auto it2 = info.inputs.begin(); it2 != info.inputs.end(); it2++)
+        {
+            PortInfo p; getPortInfo(it2->name, ports, p);
+            conn.src.name = it2->name;
+            conn.src.ip = p.ip;
+            conn.src.port_number = p.port_number;
+            conn.dst.name = it->name;
+            conn.dst.ip = it->ip;
+            conn.dst.port_number = it->port_number;
+            conn.carrier = it2->carrier;
+        }*/
+        //process all the outgoing connections and put them into a vector
+        for (auto it2 = info.outputs.begin(); it2 != info.outputs.end(); it2++)
+        {
+            PortInfo p; getPortInfo(it2->port_name, ports, p);
+            conn.src.name = it->name;
+            conn.src.ip = it->ip;
+            conn.src.port_number= it->port_number;
+            conn.dst.name = it2->port_name;
+            conn.dst.ip = p.ip;
+            conn.dst.port_number = p.port_number;
+            conn.carrier = it2->carrier;
+
+            //add the connection to the list if it is valid and it is unique
+            //(no other connections with same src/dst/protocol)
+            if (conn.isValid() &&
+                std::find(connections.begin(), connections.end(), conn) == connections.end())
+            {
+                connections.push_back(conn);
+            }
+        }
+    }
+    return true;
+}
+
+bool NetworkProfilerBasic::getPortsList(ports_name_set &ports, bool complete)
+{
+    ports.clear(); //clear the output
+
+    ContactStyle style;
+    style.quiet = true;
+    style.timeout = 3.0;
+    std::string nameserver = NetworkBase::getNameServerName();
+    Bottle msg, reply;
+    msg.addString("bot");
+    msg.addString("list");
+    if(!NetworkBase::write(Contact(nameserver), msg, reply, style)) {
+        yError() << "Cannot write to yarp name server";
+        return false;
+    }
+
+    if(reply.size() == 0) {
+        yError() << "Empty reply from yarp name server";
+        return false;
+    }
+
+    for (size_t i=1; i<reply.size(); i++) {
+        Bottle *entry = reply.get(i).asList();
+        if(entry != nullptr) {
+            bool shouldTake = false;
+            std::string portname = entry->check("name", Value("")).asString();
+            if(complete)
+            {
+                shouldTake = portname != "";
+            }
+            else
+            {
+                shouldTake = portname != "" && portname != "fallback" && portname != nameserver;
+            }
+            if (shouldTake) {
+                Contact c = Contact::fromConfig(*entry);
+                if (c.getCarrier() != "mcast")
+                {
+                      PortInfo portd;
+                      portd.name = entry->find("name").asString();
+                      portd.ip = entry->find("ip").asString();
+                      portd.port_number = std::to_string(entry->find("port_number").asInt32());
+                      ports.push_back(portd);
+                }
+            }
+        }
+    }
+
+    return true;
+}
+
+bool NetworkProfilerBasic::getPortDetails(const std::string& portName, PortDetails& details, double timeout)
+ {
+    details = PortDetails(); //clear the output
+
+    details.info.name = portName;
+    Port ping;
+    ping.open("...");
+    ping.setAdminMode(true);
+    ping.setTimeout(timeout);
+    if(!NetworkBase::connect(ping.getName(), portName)) {
+        yWarning()<<"Cannot connect to"<<portName;
+        ping.close();
+        return false;
+    }
+
+    yarp::os::impl::PortCoreClient client(ping);
+
+    // Getting output connections list
+    const yarp::os::return_listConnections outputs = client.listConnectionsOut();
+    if (!outputs.ret) {
+        yError()<<"Cannot get the output connections of"<<portName;
+        ping.close();
+        return false;
+    }
+    for (const auto& name : outputs.connections) {
+        ConnectedPortInfo cnn;
+        cnn.port_name = name;
+        const yarp::os::return_getConnectionInfo info = client.getConnectionInfoOut(name);
+        if (!info.ret) {
+            yWarning()<<"Cannot get the details of the connection from"<<portName<<"to"<<name;
+        } else {
+            cnn.carrier = info.carrier;
+        }
+        details.outputs.push_back(cnn);
+    }
+
+    // Getting input connections list
+    const yarp::os::return_listConnections inputs = client.listConnectionsIn();
+    if (!inputs.ret) {
+        yError()<<"Cannot get the input connections of"<<portName;
+        ping.close();
+        return false;
+    }
+    for (const auto& name : inputs.connections) {
+        if (name != ping.getName()) {
+            ConnectedPortInfo cnn;
+            cnn.port_name = name;
+            details.inputs.push_back(cnn);
+        }
+    }
+
+    // Getting owner info
+    const yarp::os::return_getPortInfo info = client.getPortInfo();
+    if (!info.ret) {
+        yError()<<"Cannot get the info of"<<portName;
+        ping.close();
+        return false;
+    }
+
+    details.owner_process.process_name = info.process.name;
+    details.owner_process.arguments = info.process.arguments;
+    details.owner_process.pid = info.process.pid;
+    details.owner_process.priority = info.process.schedPriority;
+    details.owner_process.policy = info.process.schedPolicy;
+    details.owner_process.process_fullname = details.owner_process.process_name + "(" + std::to_string(details.owner_process.pid) + ")";
+
+    details.owner_process.owner_machine.os = info.platform.name;
+
+    details.owner_process.owner_machine.hostname = info.port.hostname;
+    details.owner_process.owner_machine.ip = info.port.hostname;
+
+    ping.close();
+    return true;
+}
+
+bool NetworkProfilerBasic::yarpClean(float timeout) {
+
+    return yarp::os::Network::cleanUnresponsivePorts(timeout);
+}
+
+std::string NetworkProfilerBasic::PortDetails::toString() const
+{
+    std::ostringstream str;
+    str << "port name: " << info.name << std::endl;
+    str << "port ip: " << info.ip << std::endl;
+    str << "port port number: " << info.port_number << std::endl;
+    str << "outputs:" << std::endl;
+    std::vector<ConnectedPortInfo>::const_iterator itr;
+    for (itr = outputs.begin(); itr != outputs.end(); itr++) {
+        str << "   + " << (*itr).port_name << " (" << (*itr).carrier << ")" << std::endl;
+    }
+    str << "inputs:" << std::endl;
+    for (itr = inputs.begin(); itr != inputs.end(); itr++) {
+        str << "   + " << (*itr).port_name << " (" << (*itr).carrier << ")" << std::endl;
+    }
+    str << "owner:" << std::endl;
+    str << "   + name:      " << owner_process.process_name << std::endl;
+    str << "   + arguments: " << owner_process.arguments << std::endl;
+    str << "   + hostname:  " << owner_process.owner_machine.hostname << std::endl;
+    str << "   + priority:  " << owner_process.priority << std::endl;
+    str << "   + policy:    " << owner_process.policy << std::endl;
+    str << "   + os:        " << owner_process.owner_machine.os << std::endl;
+    str << "   + pid:       " << owner_process.pid << std::endl;
+    return str.str();
+}

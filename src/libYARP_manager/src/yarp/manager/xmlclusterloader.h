@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_MANAGER_XMLCLUSTERLOADER_H
@@ -13,9 +10,7 @@
 #include <yarp/manager/manifestloader.h>
 
 
-
-namespace yarp {
-namespace manager {
+namespace yarp::manager {
 
 struct ClusterNode
 {
@@ -25,8 +20,21 @@ struct ClusterNode
     std::string displayValue = "none";
     std::string user = "";
     std::string ssh_options = "";
+    std::string docker = "";
+    std::string conda = "";
+    std::string pixi = "";
     bool onOff = false;
     bool log = true;
+};
+
+struct DockerContainer
+{
+    std::string id = "";
+    std::string name = "";
+    std::string status = "";
+    std::string host = "";
+    std::string user = "";
+    std::string ssh_options = "";
 };
 
 struct Cluster
@@ -56,8 +64,7 @@ private:
     Cluster     cluster;
 };
 
-} // namespace manager
-} // namespace yarp
+} // namespace yarp::manager
 
 
 #endif // YARP_MANAGER_XMLCLUSTERLOADER_H

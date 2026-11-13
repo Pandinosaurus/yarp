@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_IMPLEMENTMOTORENCODERS_H
@@ -11,29 +8,26 @@
 
 #include <yarp/dev/IMotorEncoders.h>
 
-namespace yarp {
-    namespace dev {
-        class ImplementMotorEncoders;
-    }
+namespace yarp::dev {
+class ImplementMotorEncoders;
 }
 
-namespace yarp {
-namespace dev {
-namespace impl {
+namespace yarp::dev::impl {
 
 template <typename T>
 class FixedSizeBuffersManager;
 
-} // namespace impl
-} // namespace dev
-} // namespace yarp
+} // namespace yarp::dev::impl
 
 class YARP_dev_API yarp::dev::ImplementMotorEncoders: public IMotorEncoders
 {
 protected:
-    IMotorEncodersRaw *iMotorEncoders;
-    void *helper;
-    yarp::dev::impl::FixedSizeBuffersManager<double> *buffManager;
+    IMotorEncodersRaw*       m_iraw=nullptr;
+    void*                    m_helper=nullptr;
+    std::vector<int>         m_buffer_ints;
+    std::vector<double>      m_buffer_doubles;
+    std::vector<double>      m_buffer_doubles2;
+    std::mutex               m_imp_mutex;
 
 
     /**
@@ -62,22 +56,21 @@ public:
 
     virtual ~ImplementMotorEncoders();
 
-    bool getNumberOfMotorEncoders(int *num) override;
-
-    bool resetMotorEncoder(int m) override;
-    bool resetMotorEncoders() override;
-    bool setMotorEncoder(int m, const double val) override;
-    bool setMotorEncoders(const double *vals) override;
-    bool setMotorEncoderCountsPerRevolution(int m, const double cpr) override;
-    bool getMotorEncoderCountsPerRevolution(int m, double *cpr) override;
-    bool getMotorEncoder(int m, double *v) override;
-    bool getMotorEncodersTimed(double *encs, double *time) override;
-    bool getMotorEncoderTimed(int m, double *v, double *t) override;
-    bool getMotorEncoders(double *encs) override;
-    bool getMotorEncoderSpeed(int m, double *spds) override;
-    bool getMotorEncoderSpeeds(double *spds) override;
-    bool getMotorEncoderAcceleration(int m, double *spds) override;
-    bool getMotorEncoderAccelerations(double *accs) override;
+    yarp::dev::ReturnValue getNumberOfMotorEncoders(int *num) override;
+    yarp::dev::ReturnValue resetMotorEncoder(int m) override;
+    yarp::dev::ReturnValue resetMotorEncoders() override;
+    yarp::dev::ReturnValue setMotorEncoder(int m, const double val) override;
+    yarp::dev::ReturnValue setMotorEncoders(const double *vals) override;
+    yarp::dev::ReturnValue setMotorEncoderCountsPerRevolution(int m, const double cpr) override;
+    yarp::dev::ReturnValue getMotorEncoderCountsPerRevolution(int m, double *cpr) override;
+    yarp::dev::ReturnValue getMotorEncoder(int m, double *v) override;
+    yarp::dev::ReturnValue getMotorEncodersTimed(double *encs, double *time) override;
+    yarp::dev::ReturnValue getMotorEncoderTimed(int m, double *v, double *t) override;
+    yarp::dev::ReturnValue getMotorEncoders(double *encs) override;
+    yarp::dev::ReturnValue getMotorEncoderSpeed(int m, double *spds) override;
+    yarp::dev::ReturnValue getMotorEncoderSpeeds(double *spds) override;
+    yarp::dev::ReturnValue getMotorEncoderAcceleration(int m, double *spds) override;
+    yarp::dev::ReturnValue getMotorEncoderAccelerations(double *accs) override;
 };
 
 #endif // YARP_DEV_IMPLEMENTMOTORENCODERS_H

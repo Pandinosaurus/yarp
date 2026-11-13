@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_OS_YARPPLUGINSELECTOR_H
@@ -15,9 +12,9 @@
 #include <yarp/os/Property.h>
 
 #include <mutex>
+#include <map>
 
-namespace yarp {
-namespace os {
+namespace yarp::os {
 
 /**
  *
@@ -33,6 +30,9 @@ private:
     Bottle search_path;
     Property config;
     mutable std::mutex mutex;
+
+    // Populated during scan() from "deprecated_alias" fields in .ini files
+    std::map<std::string, std::string> deprecated_aliases;
 
 public:
     /**
@@ -57,6 +57,13 @@ public:
      * through the select method.
      */
     void scan();
+
+    // Returns the map of deprecated alias -> canonical name,
+    // populated from "deprecated_alias" fields in plugin .ini files.
+    std::map<std::string, std::string> getDeprecatedAliases() const
+    {
+        return deprecated_aliases;
+    }
 
     /**
      * @return a list of plugin sections that passed the select method
@@ -101,7 +108,6 @@ public:
     }
 };
 
-} // namespace os
-} // namespace yarp
+} // namespace yarp::os
 
 #endif // YARP_OS_YARPPLUGINSELECTOR_H

@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/dev/IRemoteCalibrator.h>
@@ -25,10 +22,10 @@ IRemoteCalibrator::IRemoteCalibrator()
     _remoteCalibrator = nullptr;
 }
 
-bool IRemoteCalibrator::setCalibratorDevice(yarp::dev::IRemoteCalibrator *dev)
+yarp::dev::ReturnValue IRemoteCalibrator::setCalibratorDevice(yarp::dev::IRemoteCalibrator *dev)
 {
     _remoteCalibrator = dev;
-    return true;
+    return ReturnValue_ok;
 }
 
 IRemoteCalibrator *IRemoteCalibrator::getCalibratorDevice()
@@ -36,13 +33,14 @@ IRemoteCalibrator *IRemoteCalibrator::getCalibratorDevice()
     return _remoteCalibrator;
 }
 
-bool IRemoteCalibrator::isCalibratorDevicePresent(bool *isCalib)
+yarp::dev::ReturnValue IRemoteCalibrator::isCalibratorDevicePresent(bool *isCalib)
 {
     _remoteCalibrator == nullptr ? *isCalib = false : *isCalib = true;
-    return true;
+    return ReturnValue_ok;
 }
 
-void IRemoteCalibrator::releaseCalibratorDevice()
+yarp::dev::ReturnValue IRemoteCalibrator::releaseCalibratorDevice()
 {
     _remoteCalibrator = nullptr;
+    return ReturnValue_ok;
 }

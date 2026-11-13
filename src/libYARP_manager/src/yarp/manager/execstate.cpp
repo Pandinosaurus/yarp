@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/manager/execstate.h>
@@ -12,7 +9,6 @@
 
 #include <iostream>
 
-using namespace std;
 using namespace FSM;
 using namespace yarp::manager;
 
@@ -78,9 +74,9 @@ void Suspended::refresh()
     {
         executable->getEvent()->onExecutableStart(executable);
         castEvent(EventFactory::recoverEvent);
-    }
-    else if(ret == -1)
+    } else if (ret == -1) {
         logger->addError(executable->getBroker()->error());
+    }
 }
 
 
@@ -103,9 +99,10 @@ bool Ready::checkPriorityPorts()
     for(itr=executable->getConnections().begin();
         itr!=executable->getConnections().end(); itr++)
     {
-        if((*itr).withPriority()
-            && !executable->getBroker()->exists((*itr).from()))
+        if ((*itr).withPriority()
+            && !executable->getBroker()->exists((*itr).from())) {
             return false;
+        }
     }
     return true;
 }
@@ -119,9 +116,9 @@ bool Ready::checkResources(bool silent)
     {
         if(!executable->getBroker()->exists((*itr).getPort())) {
             allOK = false;
-            if(silent)
-               return false;
-            else {
+            if (silent) {
+                return false;
+            } else {
                 OSTRINGSTREAM msg;
                 msg<<(*itr).getPort()<<" does not exist";
                 ErrorLogger::Instance()->addError(msg);
@@ -130,31 +127,33 @@ bool Ready::checkResources(bool silent)
         }
         // check the rpc request/reply if required
         if(strlen((*itr).getRequest()) != 0) {
-            const char* reply = executable->getBroker()->requestRpc((*itr).getPort(),
+            std::string reply = executable->getBroker()->requestRpc((*itr).getPort(),
                                                                     (*itr).getRequest(),
                                                                     (*itr).getTimeout());
-            if(reply == nullptr) {
+            if(reply.empty()) {
                 allOK = false;
                 OSTRINGSTREAM msg;
                 msg<<"cannot request resource "<<(*itr).getPort()<<" for "<<(*itr).getRequest();
                 ErrorLogger::Instance()->addError(msg);
-                if(silent)
-                   return false;
-                else
+                if (silent) {
+                    return false;
+                } else {
                     continue;
+                }
             }
 
-            if(!compareString(reply, (*itr).getReply())) {
+            if (!compareString(reply.c_str(), (*itr).getReply())) {
                 allOK = false;
                 OSTRINGSTREAM msg;
                 msg<<"waiting for the expected reply from resource "<<(*itr).getPort();
                 msg<<" for request "<<(*itr).getRequest();
                 msg<<". (expected="<<(*itr).getReply()<<", received="<<reply<<")";
                 ErrorLogger::Instance()->addWarning(msg);
-                if(silent)
-                   return false;
-                else
+                if (silent) {
+                    return false;
+                } else {
                     continue;
+                }
             }
         }
     }
@@ -164,8 +163,9 @@ bool Ready::checkResources(bool silent)
 bool Ready::timeout(double base, double timeout)
 {
     yarp::os::SystemClock::delaySystem(1.0);
-    if((yarp::os::SystemClock::nowSystem()-base) > timeout)
+    if ((yarp::os::SystemClock::nowSystem() - base) > timeout) {
         return true;
+    }
     return false;
 }
 
@@ -181,7 +181,9 @@ void Ready::startModule()
         while(!checkPriorityPorts())
         {
             yarp::os::SystemClock::delaySystem(1.0);
-            if(bAborted) return;
+            if (bAborted) {
+                return;
+            }
         }
     }
 
@@ -191,14 +193,17 @@ void Ready::startModule()
     for(itr=executable->getResources().begin();
         itr!=executable->getResources().end(); itr++)
     {
-        if((*itr).getTimeout() > maxTimeout)
+        if ((*itr).getTimeout() > maxTimeout) {
             maxTimeout = (*itr).getTimeout();
+        }
     }
 
     // waiting for resources
     double base = yarp::os::SystemClock::nowSystem();
     while(!checkResources()) {
-        if(bAborted) return;
+        if (bAborted) {
+            return;
+        }
 
         if(timeout(base, maxTimeout)) {
             // give it the last try and collect the error messages
@@ -224,8 +229,9 @@ void Ready::startModule()
     {
         OSTRINGSTREAM msg;
         msg<<"cannot run "<<executable->getCommand()<<" on "<<executable->getHost();
-        if(executable->getBroker()->error())
-            msg<<" : "<<executable->getBroker()->error();
+        if (!executable->getBroker()->error().empty()) {
+            msg << " : " << executable->getBroker()->error();
+        }
         logger->addError(msg);
 
         castEvent(EventFactory::startModuleEventFailed);
@@ -265,9 +271,9 @@ bool Connecting::checkNormalPorts()
     for(itr=executable->getConnections().begin();
         itr!=executable->getConnections().end(); itr++)
     {
-        if(!executable->getBroker()->exists((*itr).to()) ||
-            !executable->getBroker()->exists((*itr).from()))
+        if (!executable->getBroker()->exists((*itr).to()) || !executable->getBroker()->exists((*itr).from())) {
             return false;
+        }
     }
     return true;
 }
@@ -285,7 +291,9 @@ void Connecting::connectAllPorts()
         while(!checkNormalPorts())
         {
             yarp::os::SystemClock::delaySystem(1.0);
-            if(bAborted) return;
+            if (bAborted) {
+                return;
+            }
         }
 
         CnnIterator itr;
@@ -297,12 +305,13 @@ void Connecting::connectAllPorts()
             {
                 OSTRINGSTREAM msg;
                 msg<<"cannot connect "<<(*itr).from() <<" to "<<(*itr).to();
-                if(executable->getBroker()->error())
-                    msg<<" : "<<executable->getBroker()->error();
+                if (!executable->getBroker()->error().empty()) {
+                    msg << " : " << executable->getBroker()->error();
+                }
                 logger->addError(msg);
-            }
-            else
+            } else {
                 executable->getEvent()->onCnnStablished(&(*itr));
+            }
         }
     }
 
@@ -313,10 +322,11 @@ void Connecting::refresh()
 {
     ErrorLogger* logger = ErrorLogger::Instance();
     int ret = executable->getBroker()->running();
-    if(ret == 0)
+    if (ret == 0) {
         Connecting::moduleFailed();
-    else if(ret == -1)
+    } else if (ret == -1) {
         logger->addError(executable->getBroker()->error());
+    }
 }
 
 void Connecting::kill()
@@ -349,11 +359,11 @@ void Running::refresh()
 {
     ErrorLogger* logger = ErrorLogger::Instance();
     int ret = executable->getBroker()->running();
-    if(ret == 0)
+    if (ret == 0) {
         Running::moduleFailed();
-    else if(ret == -1)
+    } else if (ret == -1) {
         logger->addError(executable->getBroker()->error());
-
+    }
 }
 
 void Running::start()
@@ -408,8 +418,9 @@ void Dying::stopModule()
     {
         OSTRINGSTREAM msg;
         msg<<"cannot stop "<<executable->getCommand()<<" on "<<executable->getHost();
-        if(executable->getBroker()->error())
-            msg<<" : "<<executable->getBroker()->error();
+        if (!executable->getBroker()->error().empty()) {
+            msg << " : " << executable->getBroker()->error();
+        }
         logger->addError(msg);
         executable->getEvent()->onError(executable);
         castEvent(EventFactory::stopModuleEventFailed);
@@ -428,8 +439,9 @@ void Dying::killModule()
     {
         OSTRINGSTREAM msg;
         msg<<"cannot kill "<<executable->getCommand()<<" on "<<executable->getHost();
-        if(executable->getBroker()->error())
-            msg<<" : "<<executable->getBroker()->error();
+        if (!executable->getBroker()->error().empty()) {
+            msg << " : " << executable->getBroker()->error();
+        }
         logger->addError(msg);
         executable->getEvent()->onError(executable);
         castEvent(EventFactory::killModuleEventFailed);
@@ -455,12 +467,13 @@ void Dying::disconnectAllPorts()
             {
                 OSTRINGSTREAM msg;
                 msg<<"cannot disconnect "<<(*itr).from() <<" to "<<(*itr).to();
-                if(executable->getBroker()->error())
-                    msg<<" : "<<executable->getBroker()->error();
+                if (!executable->getBroker()->error().empty()) {
+                    msg << " : " << executable->getBroker()->error();
+                }
                 logger->addError(msg);
-            }
-            else
+            } else {
                 executable->getEvent()->onCnnReleased(&(*itr));
+            }
         }
     }
     // We do not need to handle event disconnectAllPortsEventOk
@@ -470,11 +483,11 @@ void Dying::refresh()
 {
     ErrorLogger* logger = ErrorLogger::Instance();
     int ret = executable->getBroker()->running();
-    if(ret == 0)
+    if (ret == 0) {
         Dying::moduleFailed();
-    else if(ret == -1)
+    } else if (ret == -1) {
         logger->addError(executable->getBroker()->error());
-
+    }
 }
 
 void Dying::kill() { /* do nothing */ }
@@ -528,9 +541,9 @@ void Dead::refresh()
     {
         executable->getEvent()->onExecutableStart(executable);
         castEvent(EventFactory::recoverEvent);
-    }
-    else if(ret == -1)
+    } else if (ret == -1) {
         logger->addError(executable->getBroker()->error());
+    }
 }
 
 

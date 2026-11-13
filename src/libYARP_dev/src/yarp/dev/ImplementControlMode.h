@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_IMPLEMENTCONTROLMODE_H
@@ -12,40 +9,48 @@
 #include <yarp/dev/IControlMode.h>
 #include <yarp/dev/api.h>
 
-namespace yarp {
-    namespace dev {
-    class ImplementControlMode;
-    }
+namespace yarp::dev {
+class ImplementControlMode;
 }
 
-namespace yarp {
-namespace dev {
-namespace impl {
+namespace yarp::dev::impl {
 
 template <typename T>
 class FixedSizeBuffersManager;
 
-} // namespace impl
-} // namespace dev
-} // namespace yarp
+template <typename T>
+class VectorBufferManager;
+
+} // namespace yarp::dev::impl
 
 class YARP_dev_API yarp::dev::ImplementControlMode: public IControlMode
 {
-    void *helper;
-    yarp::dev::IControlModeRaw *raw;
-    yarp::dev::impl::FixedSizeBuffersManager<int> *buffManager;
+private:
+    void*                       m_helper = nullptr;
+    yarp::dev::IControlModeRaw* m_iraw = nullptr;
+
+    std::mutex                                         m_imp_mutex;
+    std::vector<int>                                   m_vectorInt_tmp;
+    std::vector<yarp::dev::ControlModeEnum>            m_vectorCM_tmp;
+    std::vector<yarp::dev::SelectableControlModeEnum>  m_vectorSCM_tmp;
 
 public:
     bool initialize(int k, const int *amap);
     bool uninitialize();
     ImplementControlMode(IControlModeRaw *v);
     ~ImplementControlMode();
-    bool getControlMode(int j, int *f) override;
-    bool getControlModes(int *modes) override;
-    bool getControlModes(const int n_joint, const int *joints, int *modes) override;
-    bool setControlMode(const int j, const int mode) override;
-    bool setControlModes(const int n_joint, const int *joints, int *modes) override;
-    bool setControlModes(int *modes) override;
+    yarp::dev::ReturnValue getAvailableControlModes(int j, std::vector<yarp::dev::SelectableControlModeEnum>& avail) override;
+    yarp::dev::ReturnValue getControlMode(int j, yarp::dev::ControlModeEnum& mode) override;
+    yarp::dev::ReturnValue getControlModes(const std::vector<int>& joints, std::vector<yarp::dev::ControlModeEnum>& modes) override;
+    yarp::dev::ReturnValue getControlModes(std::vector<yarp::dev::ControlModeEnum>& modes) override;
+    yarp::dev::ReturnValue setControlMode(int j, yarp::dev::SelectableControlModeEnum mode) override;
+    yarp::dev::ReturnValue setControlModes(const std::vector<int>& joints, const std::vector<yarp::dev::SelectableControlModeEnum>& modes) override;
+    yarp::dev::ReturnValue setControlModes(const std::vector<yarp::dev::SelectableControlModeEnum>& modes) override;
+
+#if ALLOW_OLD_CONTROL_MODE_INTERFACE
+    using IControlMode::getControlMode;
+    using IControlMode::setControlMode;
+#endif
 };
 
 #endif // YARP_DEV_IMPLEMENTCONTROLMODE_H

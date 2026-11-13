@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_OS_IMPL_NAMECLIENT_H
@@ -12,15 +9,15 @@
 
 #include <yarp/os/Contact.h>
 #include <yarp/os/ContactStyle.h>
-#include <yarp/os/Nodes.h>
 
-namespace yarp {
-namespace os {
+namespace yarp::os {
 
 class Bottle;
 class NameStore;
 
-namespace impl {
+} // namespace yarp::os
+
+namespace yarp::os::impl {
 
 class NameServer;
 
@@ -195,8 +192,6 @@ public:
 
     std::string getMode();
 
-    yarp::os::Nodes& getNodes();
-
 private:
     Contact address;
     YARP_SUPPRESS_DLL_INTERFACE_WARNING_ARG(std::string) host;
@@ -209,14 +204,11 @@ private:
     bool reportSaveScan;
     bool isSetup;
     NameStore* altStore;
-    yarp::os::Nodes nodes;
 
     NameServer& getServer();
     void setup();
 };
 
-} // namespace impl
-} // namespace os
-} // namespace yarp
+} // namespace yarp::os::impl
 
 #endif // YARP_OS_IMPL_NAMECLIENT_H

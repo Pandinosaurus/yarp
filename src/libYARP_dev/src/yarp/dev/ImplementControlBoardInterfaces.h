@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_IMPLEMENTCONTROLBOARDINTERFACES_H
@@ -13,13 +10,9 @@
 #include <yarp/dev/ImplementControlCalibration.h>
 #include <yarp/dev/api.h>
 
-namespace yarp
-{
-    namespace dev
-    {
-        class StubImplPositionControlRaw;
-        class StubImplEncodersRaw;
-    }
+namespace yarp::dev {
+class StubImplPositionControlRaw;
+class StubImplEncodersRaw;
 }
 
 /**
@@ -38,48 +31,41 @@ namespace yarp
  */
 class YARP_dev_API yarp::dev::StubImplEncodersRaw: public IEncodersRaw
 {
-private:
-    /**
-     * Helper for printing error message, see below.
-     * Implemented in ControlBoardInterfacesImpl.cpp.
-     */
-    bool NOT_YET_IMPLEMENTED(const char *func=0);
-
 public:
     virtual ~StubImplEncodersRaw(){}
 
-    bool getAxes(int *ax) override
-    {return NOT_YET_IMPLEMENTED("getAxes");}
+    yarp::dev::ReturnValue getAxes(size_t& ax) override
+    {return YARP_METHOD_NOT_YET_IMPLEMENTED();}
 
-    bool resetEncoderRaw(int j) override
-    {return NOT_YET_IMPLEMENTED("resetEncoderRaw");}
+    yarp::dev::ReturnValue resetEncoderRaw(int j) override
+    {return YARP_METHOD_NOT_YET_IMPLEMENTED();}
 
-    bool resetEncodersRaw() override
-    {return NOT_YET_IMPLEMENTED("resetEncodersRaw");}
+    yarp::dev::ReturnValue resetEncodersRaw() override
+    {return YARP_METHOD_NOT_YET_IMPLEMENTED();}
 
-    bool setEncoderRaw(int j, double val) override
-    {return NOT_YET_IMPLEMENTED("setEncoderRaw");}
+    yarp::dev::ReturnValue setEncoderRaw(int j, double val) override
+    {return YARP_METHOD_NOT_YET_IMPLEMENTED();}
 
-    bool setEncodersRaw(const double *vals) override
-    {return NOT_YET_IMPLEMENTED("setEncodersRaw");}
+    yarp::dev::ReturnValue setEncodersRaw(const double *vals) override
+    {return YARP_METHOD_NOT_YET_IMPLEMENTED();}
 
-    bool getEncoderRaw(int j, double *v) override
-    {return NOT_YET_IMPLEMENTED("getEncoderRaw");}
+    yarp::dev::ReturnValue getEncoderRaw(int j, double *v) override
+    {return YARP_METHOD_NOT_YET_IMPLEMENTED();}
 
-    bool getEncodersRaw(double *encs) override
-    {return NOT_YET_IMPLEMENTED("getEncodersRaw");}
+    yarp::dev::ReturnValue getEncodersRaw(double *encs) override
+    {return YARP_METHOD_NOT_YET_IMPLEMENTED();}
 
-    bool getEncoderSpeedRaw(int j, double *sp) override
-    {return NOT_YET_IMPLEMENTED("getEncoderSpeedRaw");}
+    yarp::dev::ReturnValue getEncoderSpeedRaw(int j, double *sp) override
+    {return YARP_METHOD_NOT_YET_IMPLEMENTED();}
 
-    bool getEncoderSpeedsRaw(double *spds) override
-    {return NOT_YET_IMPLEMENTED("getEncoderSpeedsRaw");}
+    yarp::dev::ReturnValue getEncoderSpeedsRaw(double *spds) override
+    {return YARP_METHOD_NOT_YET_IMPLEMENTED();}
 
-    bool getEncoderAccelerationRaw(int j, double *spds) override
-    {return NOT_YET_IMPLEMENTED("getEncoderAccelerationRaw");}
+    yarp::dev::ReturnValue getEncoderAccelerationRaw(int j, double *spds) override
+    {return YARP_METHOD_NOT_YET_IMPLEMENTED();}
 
-    bool getEncoderAccelerationsRaw(double *accs) override
-    {return NOT_YET_IMPLEMENTED("getEncoderAccelerationsRaw");}
+    yarp::dev::ReturnValue getEncoderAccelerationsRaw(double *accs) override
+    {return YARP_METHOD_NOT_YET_IMPLEMENTED();}
 };
 
 #endif // YARP_DEV_IMPLEMENTCONTROLBOARDINTERFACES_H

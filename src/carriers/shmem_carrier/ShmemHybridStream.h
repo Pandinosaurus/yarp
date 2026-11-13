@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_SHMEM_SHMEMHYBRIDSTREAM_H
@@ -72,14 +69,14 @@ private:
 
     yarp::os::Contact m_LocalAddress;
     yarp::os::Contact m_RemoteAddress;
-    ACE_SOCK_Stream m_SockStream;
-    ACE_SOCK_Acceptor m_Acceptor;
+    shmem::Socket m_Socket;
+    shmem::Socket m_Acceptor;
 
     ShmemInputStreamImpl in;
     ShmemOutputStreamImpl out;
 
     // FUNCTIONS
-    int connect(const ACE_INET_Addr& ace_address);
+    int connect(const yarp::os::Contact& address);
 };
 
 #endif // YARP_SHMEM_SHMEMHYBRIDSTREAM_H

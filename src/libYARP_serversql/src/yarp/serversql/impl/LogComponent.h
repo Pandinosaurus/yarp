@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_SERVERSQL_IMPL_LOGCOMPONENT_H
@@ -12,10 +9,7 @@
 #include <yarp/os/api.h>
 #include <yarp/os/LogComponent.h>
 
-namespace yarp {
-namespace serversql {
-namespace impl {
-namespace LogComponent {
+namespace yarp::serversql::impl::LogComponent {
 
 void print_callback(yarp::os::Log::LogType type,
                     const char* msg,
@@ -25,14 +19,12 @@ void print_callback(yarp::os::Log::LogType type,
                     double systemtime,
                     double networktime,
                     double externaltime,
-                    const char* comp_name);
+                    const char* comp_name,
+                    const char* id);
 
 void setMinumumLogType(yarp::os::Log::LogType minumumLogType);
 
-} // namespace LogComponent
-} // namespace impl
-} // namespace serversql
-} // namespace yarp
+} // namespace yarp::serversql::impl::LogComponent
 
 #define YARP_SERVERSQL_LOG_COMPONENT(name, name_string) \
     const yarp::os::LogComponent& name() \

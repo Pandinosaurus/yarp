@@ -1,19 +1,16 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/robotinterface/impl/RobotInterfaceDTD.h>
 
-#include <yarp/robotinterface/experimental/Action.h>
-#include <yarp/robotinterface/experimental/Device.h>
-#include <yarp/robotinterface/experimental/Param.h>
-#include <yarp/robotinterface/experimental/Robot.h>
-#include <yarp/robotinterface/experimental/Types.h>
-#include <yarp/robotinterface/experimental/XMLReader.h>
+#include <yarp/robotinterface/Action.h>
+#include <yarp/robotinterface/Device.h>
+#include <yarp/robotinterface/Param.h>
+#include <yarp/robotinterface/Robot.h>
+#include <yarp/robotinterface/Types.h>
+#include <yarp/robotinterface/XMLReader.h>
 
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Network.h>
@@ -29,8 +26,7 @@
 #define SYNTAX_ERROR(line) yFatal() << "Syntax error while loading" << curr_filename << "at line" << line << "."
 #define SYNTAX_WARNING(line) yWarning() << "Invalid syntax while loading" << curr_filename << "at line" << line << "."
 
-namespace yarp {
-namespace robotinterface {
+namespace yarp::robotinterface {
 
 // Represent something like this in the xml file
 // <!DOCTYPE robot PUBLIC "-//YARP//DTD yarprobotinterface 1.0//EN" "http://www.yarp.it/DTD/yarprobotinterfaceV1.0.dtd">
@@ -43,11 +39,14 @@ RobotInterfaceDTD::DocType StringToDocType(const std::string& type)
 {
     if (type == "robot") {
         return RobotInterfaceDTD::DocTypeRobot;
-    } else if (type == "devices") {
+    }
+    if (type == "devices") {
         return RobotInterfaceDTD::DocTypeDevices;
-    } else if (type == "params") {
+    }
+    if (type == "params") {
         return RobotInterfaceDTD::DocTypeParams;
-    } else if (type == "actions") {
+    }
+    if (type == "actions") {
         return RobotInterfaceDTD::DocTypeActions;
     }
     return RobotInterfaceDTD::DocTypeUnknown;
@@ -69,7 +68,7 @@ std::string DocTypeToString(RobotInterfaceDTD::DocType doctype)
     }
 }
 
-bool RobotInterfaceDTD::valid()
+bool RobotInterfaceDTD::valid() const
 {
     return type != DocTypeUnknown && majorVersion != 0;
 }
@@ -107,10 +106,9 @@ bool RobotInterfaceDTD::parse(TiXmlUnknown* unknownNode, const std::string& curr
                         s += cit->substr(0, cit->size() - 1);
                         cit = tokens.erase(cit);
                         break;
-                    } else {
-                        s += *cit + " ";
-                        cit = tokens.erase(cit);
                     }
+                    s += *cit + " ";
+                    cit = tokens.erase(cit);
                 }
                 *it = s;
             }
@@ -167,5 +165,4 @@ bool RobotInterfaceDTD::parse(TiXmlUnknown* unknownNode, const std::string& curr
     return true;
 }
 
-} // namespace robotinterface
-} // namespace yarp
+} // namespace yarp::robotinterface

@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_OS_NETWORK_H
@@ -20,19 +17,16 @@
 #include <yarp/os/Value.h>
 
 
-namespace yarp {
-namespace os {
+namespace yarp::os {
 class ContactStyle;
 class QosStyle;
-} // namespace os
-} // namespace yarp
+} // namespace yarp::os
 
 // Make plugins in a library available for use
 #define YARP_DECLARE_PLUGINS(name) extern "C" void add_ ## name ## _plugins();
 #define YARP_REGISTER_PLUGINS(name) add_ ## name ## _plugins();
 
-namespace yarp {
-namespace os {
+namespace yarp::os {
 
 /**
  * \ingroup comm_class
@@ -191,7 +185,7 @@ public:
     }
 
     /**
-     * Check if a connection exists between two ports.
+     * Check if a connection with tcp carrier exists between two ports
      * @param src the name of an output port
      * @param dest the name of an input port
      * @param quiet suppress messages displayed upon success/failure
@@ -202,7 +196,7 @@ public:
                             bool quiet);
 
     /**
-     * Check if a connection exists between two ports.
+     * Check if a connection with tcp carrier exists between two ports.
      * @param src the name of an output port
      * @param dest the name of an input port
      * @param style options for network communication
@@ -213,10 +207,12 @@ public:
                             const ContactStyle& style);
 
     /**
-     * Check if a connection exists between two ports.
+     * Check if a connection with specified carrier exists between two ports.
      * @param src the name of an output port
      * @param dest the name of an input port
-     * @param carrier the name of the protocol to use (tcp/udp/mcast)
+     * @param carrier the name of the protocol to use (tcp/udp/mcast).
+     *                if a connection exists but using a different carrier,
+     *                the method will return false
      * @param quiet suppress messages displayed upon success/failure
      * @return true if there is a connection
      */
@@ -324,6 +320,18 @@ public:
      */
     static Contact unregisterContact(const Contact& contact);
 
+    /**
+    * Clean up unresponsive ports from the name server.
+    * This method will query the name server for all registered ports,
+    * and check if they are responsive. If a port is unresponsive (in the given
+    * timeout), it will be removed from the name server.
+    * Be careful when using this method, as it may remove working ports that are
+    * temporarily unresponsive due to network issues (delays) or other reasons.
+    * @param timeout the time in seconds to wait for a response from a port.
+    * If negative, a default timeout will be used.
+    */
+    static bool cleanUnresponsivePorts(double timeout=-1);
+
 
     /**
      * Names registered with the nameserver can have arbitrary
@@ -393,26 +401,6 @@ public:
      * @return state of the flag.
      */
     static bool getLocalMode();
-
-#ifndef YARP_NO_DEPRECATED // Since YARP 3.0.0
-    /**
-     * Read a line of arbitrary length from standard input.
-     *
-     * @param eof If non-null, this is set to true if standard input has
-     * closed.  Note that some heuristics are used to guess if someone
-     * on windows has hit the equivalent of ctrl-D, the key to close
-     * a stream on unix.  These heuristics will lead to false detects
-     * in some cases if the user hits strange keys.
-     *
-     * @return A string from standard input, without newline or
-     * linefeed characters.
-     *
-     * @deprecated since YARP 3.0.0
-     */
-    YARP_DEPRECATED
-    static std::string readString(bool* eof = nullptr);
-#endif // YARP_NO_DEPRECATED
-
 
     /**
      *
@@ -534,62 +522,6 @@ public:
     static void queryBypass(NameStore* store);
 
     static NameStore* getQueryBypass();
-
-#ifndef YARP_NO_DEPRECATED // Since YARP 3.4
-    /**
-     * Read a variable from the environment.
-     *
-     * @param key the variable to read
-     * @param found an optional variable to set to true iff variable is found
-     * @return the value of the environment variable, or "" if not found
-     *
-     * @deprecated Since YARP 3.4. Use yarp::conf::environment::getEnvironment instead
-     */
-    YARP_DEPRECATED_MSG("Use yarp::conf::environment::getEnvironment instead")
-    static std::string getEnvironment(const char* key,
-                                      bool* found = nullptr);
-
-    /**
-     * Set or change an environment variable.
-     *
-     * @param key the variable to set or change
-     * @param val the target value
-     *
-     * @deprecated Since YARP 3.4. Use yarp::conf::environment::setEnvironment instead
-     */
-    YARP_DEPRECATED_MSG("Use yarp::conf::environment::setEnvironment instead")
-    static void setEnvironment(const std::string& key,
-                               const std::string& val);
-
-    /**
-     * Remove an environment variable.
-     *
-     * @param key the variable to remove
-     *
-     * @deprecated Since YARP 3.4. Use yarp::conf::environment::unsetEnvironment instead
-     */
-    YARP_DEPRECATED_MSG("Use yarp::conf::environment::unsetEnvironment instead")
-    static void unsetEnvironment(const std::string& key);
-#endif // YARP_NO_DEPRECATED
-
-
-#ifndef YARP_NO_DEPRECATED // Since YARP 3.3.0
-    /**
-     *  Get an OS-appropriate directory separator (e.g. "/" on linux)
-     *
-     *  @deprecated since YARP 3.3.0
-     */
-    YARP_DEPRECATED_MSG("Use yarp::conf::filesystem::preferred_separator instead")
-    static std::string getDirectorySeparator();
-
-    /**
-     * Get an OS-appropriate path separator (e.g. ":" on linux)
-     *
-     * @deprecated since YARP 3.3.0
-     */
-    YARP_DEPRECATED_MSG("Use yarp::conf::filesystem::path_separator instead")
-    static std::string getPathSeparator();
-#endif // YARP_NO_DEPRECATED
 
     /**
      *
@@ -837,7 +769,6 @@ public:
     static void fini();
 };
 
-} // namespace os
-} // namespace yarp
+} // namespace yarp::os
 
 #endif // YARP_OS_NETWORK_H

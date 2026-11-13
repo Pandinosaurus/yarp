@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_OS_NETTYPE_H
@@ -19,8 +16,7 @@
 
 #include <string>
 
-namespace yarp {
-namespace os {
+namespace yarp::os {
 
 /**
  * Various utilities related to types and formats.
@@ -31,27 +27,10 @@ public:
     static int netInt(const yarp::os::Bytes& code);
     static bool netInt(int data, yarp::os::Bytes& code);
 
-    static std::string toHexString(int x);
-    static std::string toHexString(long x);
-    static std::string toHexString(unsigned int x);
-
-    static std::string toString(int x);
-    static std::string toString(long x);
-    static std::string toString(unsigned int x);
-
-    static std::string toString(yarp::conf::float32_t x);
-    static std::string toString(yarp::conf::float64_t x);
-
-    static yarp::conf::float32_t toFloat32(const std::string& s);
-    static yarp::conf::float64_t toFloat64(const std::string& s);
-    static yarp::conf::float32_t toFloat32(std::string&& s);
-    static yarp::conf::float64_t toFloat64(std::string&& s);
-
-    static int toInt(const std::string& x);
     static unsigned long int getCrc(char* buf, size_t len);
+
 };
 
-} // namespace os
-} // namespace yarp
+} // namespace yarp::os
 
 #endif // YARP_OS_NETTYPE_H

@@ -1,32 +1,21 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_OS_STAMP_H
 #define YARP_OS_STAMP_H
 
-#include <yarp/os/NetFloat64.h>
-#include <yarp/os/NetInt32.h>
-#include <yarp/os/Portable.h>
+#include <yarp/os/StampData.h>
 
-
-namespace yarp {
-namespace os {
+namespace yarp::os {
 
 /**
  * An abstraction for a time stamp and/or sequence number.
  */
-class YARP_os_API Stamp : public Portable
+class YARP_os_API Stamp : public yarp::os::StampData
 {
-private:
-    NetInt32 sequenceNumber;
-    NetFloat64 timeStamp;
-
 public:
     /**
      * Construct an invalid Stamp.
@@ -83,36 +72,8 @@ public:
      */
     void update(double time);
 
-    // Documented in Portable
-    bool read(ConnectionReader& connection) override;
-
-    // Documented in Portable
-    bool write(ConnectionWriter& connection) const override;
 };
 
-
-#ifndef YARP_NO_DEPRECATED // Since YARP 3.0.0
-/**
- * A base class for objects with time stamps and/or sequence numbers.
- * @deprecated since YARP 3.0.0
- */
-class YARP_os_DEPRECATED_API Stamped
-{
-public:
-    /**
-     * Destructor
-     */
-    virtual ~Stamped();
-
-    /**
-     * @return the Stamp associated with this object (time stamp,
-     * sequence number).
-     */
-    virtual Stamp getStamp() const = 0;
-};
-#endif // YARP_NO_DEPRECATED
-
-} // namespace os
-} // namespace yarp
+} // namespace yarp::os
 
 #endif // YARP_OS_STAMP_H

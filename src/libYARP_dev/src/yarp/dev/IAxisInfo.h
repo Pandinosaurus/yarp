@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_IAXISINFO_H
@@ -15,24 +12,21 @@
 #include <yarp/os/Log.h>
 #include <yarp/os/Vocab.h>
 #include <yarp/dev/api.h>
+#include <yarp/dev/ReturnValue.h>
 
 /*! \file IAxisInfo.h define control board standard interfaces*/
 
-namespace yarp
-{
-    namespace dev
-    {
-        class IAxisInfo;
-        class IAxisInfoRaw;
+namespace yarp::dev {
+class IAxisInfo;
+class IAxisInfoRaw;
 
-        enum JointTypeEnum
-        {
-            VOCAB_JOINTTYPE_REVOLUTE  = yarp::os::createVocab('a', 't', 'r', 'v'),
-            VOCAB_JOINTTYPE_PRISMATIC = yarp::os::createVocab('a', 't', 'p', 'r'),
-            VOCAB_JOINTTYPE_UNKNOWN   = yarp::os::createVocab('u', 'n', 'k', 'n')
-        };
-    }
-}
+enum class JointTypeEnum
+{
+    VOCAB_JOINTTYPE_REVOLUTE = yarp::os::createVocab32('a', 't', 'r', 'v'),
+    VOCAB_JOINTTYPE_PRISMATIC = yarp::os::createVocab32('a', 't', 'p', 'r'),
+    VOCAB_JOINTTYPE_UNKNOWN = yarp::os::createVocab32('u', 'n', 'k', 'n')
+};
+} // namespace yarp::dev
 
 /**
  * @ingroup dev_iface_motor
@@ -47,24 +41,34 @@ public:
      */
     virtual ~IAxisInfo() {}
 
+    /**
+     * Get the number of controlled axes. This command asks the number of controlled
+     * axes for the current physical interface.
+     * @param ax storage to return param
+     * @return true/false.
+     */
+    virtual yarp::dev::ReturnValue getAxes(size_t& ax) = 0;
+
     /* Get the name for a particular axis.
     * @param axis joint number
     * @param name the axis name
     * @return true if everything goes fine, false otherwise.
     */
-    virtual bool getAxisName(int axis, std::string& name) = 0;
+    virtual yarp::dev::ReturnValue getAxisName(int axis, std::string& name) = 0;
 
     /* Get the joint type (e.g. revolute/prismatic) for a particular axis.
     * @param axis joint number
     * @param type the joint type
     * @return true if everything goes fine, false otherwise.
     */
-    virtual bool getJointType(int axis, yarp::dev::JointTypeEnum& type) { yFatal("getJointType() not implemented on your device, cannot proceed further. Please report the problem on yarp issue tracker"); return false; }
+    virtual yarp::dev::ReturnValue getJointType(int axis, yarp::dev::JointTypeEnum& type) { yFatal("getJointType() not implemented on your device, cannot proceed further. Please report the problem on yarp issue tracker"); return ReturnValue::return_code::return_value_error_method_failed; }
 };
 
 /**
-* Interface for getting information about specific axes, if available.
-*/
+ * @ingroup dev_iface_motor_raw
+ *
+ * Interface for getting information about specific axes, if available.
+ */
 class YARP_dev_API yarp::dev::IAxisInfoRaw
 {
 public:
@@ -73,23 +77,31 @@ public:
     */
     virtual ~IAxisInfoRaw() {}
 
+    /**
+     * Get the number of controlled axes. This command asks the number of controlled
+     * axes for the current physical interface.
+     * @param ax storage to return param
+     * @return true/false.
+     */
+    virtual yarp::dev::ReturnValue getAxes(size_t& ax) = 0;
+
     /* Get the name for a particular axis.
     * @param axis joint number
     * @param name the axis name
     * @return true if everything goes fine, false otherwise.
     */
-    virtual bool getAxisNameRaw(int axis, std::string& name) = 0;
+    virtual yarp::dev::ReturnValue getAxisNameRaw(int axis, std::string& name) = 0;
 
     /* Get the joint type (e.g. revolute/prismatic) for a particular axis.
     * @param axis joint number
     * @param type the joint type
     * @return true if everything goes fine, false otherwise.
     */
-    virtual bool getJointTypeRaw(int axis, yarp::dev::JointTypeEnum& type)  { yFatal("getJointType() not implemented on your device, cannot proceed further. Please report the problem on yarp issue tracker"); return false; };
+    virtual yarp::dev::ReturnValue getJointTypeRaw(int axis, yarp::dev::JointTypeEnum& type)  { yFatal("getJointType() not implemented on your device, cannot proceed further. Please report the problem on yarp issue tracker"); return ReturnValue::return_code::return_value_error_method_failed; };
 };
 
 // interface IAxisInfo
-constexpr yarp::conf::vocab32_t VOCAB_INFO_NAME            = yarp::os::createVocab('n','a','m','e');
-constexpr yarp::conf::vocab32_t VOCAB_INFO_TYPE            = yarp::os::createVocab('t','y','p','e');
+constexpr yarp::conf::vocab32_t VOCAB_INFO_NAME            = yarp::os::createVocab32('n','a','m','e');
+constexpr yarp::conf::vocab32_t VOCAB_INFO_TYPE            = yarp::os::createVocab32('t','y','p','e');
 
 #endif // YARP_DEV_IAXISINFO_H

@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/SystemInfo.h>
@@ -596,6 +593,29 @@ SystemInfo::ProcessorInfo SystemInfo::getProcessorInfo()
     return processor;
 }
 
+void SystemInfo::updateSystemInfo()
+{
+    // updating system info
+    memory = SystemInfo::getMemoryInfo();
+    storage = SystemInfo::getStorageInfo();
+    //network = SystemInfo::getNetworkInfo();
+    processor = SystemInfo::getProcessorInfo();
+    platform = SystemInfo::getPlatformInfo();
+    load = SystemInfo::getLoadInfo();
+    user = SystemInfo::getUserInfo();
+    process = SystemInfo::getProcessInfo();
+}
+
+bool SystemInfo::read(yarp::os::ConnectionReader& connection)
+{
+    return SystemInfoData::read(connection);
+}
+
+bool SystemInfo::write(yarp::os::ConnectionWriter& connection) const
+{
+    //this->updateSystemInfo();
+    return SystemInfoData::write(connection);
+}
 
 SystemInfo::PlatformInfo SystemInfo::getPlatformInfo()
 {
@@ -646,6 +666,7 @@ SystemInfo::PlatformInfo SystemInfo::getPlatformInfo()
     }
 
     const char* a = GetEnvironmentStrings();
+    yarp::os::Property tempProperty;
     size_t prev = 0;
     for (size_t i = 0;; i++) {
         if (a[i] == '\0') {
@@ -653,7 +674,7 @@ SystemInfo::PlatformInfo SystemInfo::getPlatformInfo()
             size_t equalsSign = tmpVariable.find("=");
             if (equalsSign != std::string::npos && equalsSign != 0) // among environment variables there are DOS-related ones that start with a =
             {
-                platform.environmentVars.put(tmpVariable.substr(0, equalsSign), tmpVariable.substr(equalsSign + 1));
+                tempProperty.put(tmpVariable.substr(0, equalsSign), tmpVariable.substr(equalsSign + 1));
             }
             prev = i + 1;
             if (a[i + 1] == '\0') {
@@ -661,6 +682,7 @@ SystemInfo::PlatformInfo SystemInfo::getPlatformInfo()
             }
         }
     }
+    platform.environmentVars = tempProperty.toString();
 
 #endif
 
@@ -692,15 +714,17 @@ SystemInfo::PlatformInfo SystemInfo::getPlatformInfo()
     }
 
     char* varChar = *environ;
-
+    yarp::os::Property tempProperty;
     for (int i = 0; varChar != nullptr; i++) {
         std::string tmpVariable(varChar);
         size_t equalsSign = tmpVariable.find('=');
         if (equalsSign != std::string::npos) {
-            platform.environmentVars.put(tmpVariable.substr(0, equalsSign), tmpVariable.substr(equalsSign + 1));
+        tempProperty.put(tmpVariable.substr(0, equalsSign), tmpVariable.substr(equalsSign + 1));
         }
         varChar = *(environ + i);
     }
+    platform.environmentVars = tempProperty.toString();
+
 #endif
 
 #if defined(__APPLE__)
@@ -775,7 +799,7 @@ SystemInfo::LoadInfo SystemInfo::getLoadInfo()
     FILE* procload = fopen("/proc/loadavg", "r");
     if (procload != nullptr) {
         char buff[128];
-        int ret = fscanf(procload, "%lf %lf %lf %s", &(load.cpuLoad1), &(load.cpuLoad5), &(load.cpuLoad15), buff);
+        int ret = fscanf(procload, "%lf %lf %lf %127s", &(load.cpuLoad1), &(load.cpuLoad5), &(load.cpuLoad15), buff);
         if (ret > 0) {
             char* tail = strchr(buff, '/');
             if ((tail != nullptr) && (tail != buff)) {
@@ -874,10 +898,16 @@ SystemInfo::ProcessInfo SystemInfo::getProcessInfo(int pid)
     hr = CoCreateInstance(CLSID_WbemLocator, 0, CLSCTX_INPROC_SERVER, IID_IWbemLocator, (LPVOID*)&WbemLocator);
     if (WbemLocator != nullptr) {
         //connect to the WMI
-        hr = WbemLocator->ConnectServer(L"ROOT\\CIMV2", nullptr, nullptr, 0, 0, 0, 0, &WbemServices);
+        BSTR val1 = SysAllocString(L"ROOT\\CimV2");
+        hr = WbemLocator->ConnectServer(val1, nullptr, nullptr, 0, 0, 0, 0, &WbemServices);
+        SysFreeString(val1);
         if (WbemServices != nullptr) {
             //Run the WQL Query
-            hr = WbemServices->ExecQuery(L"WQL", L"SELECT ProcessId, CommandLine FROM Win32_Process", WBEM_FLAG_FORWARD_ONLY, nullptr, &EnumWbem);
+            BSTR val2 = SysAllocString(L"WQL");
+            BSTR val3 = SysAllocString(L"SELECT ProcessId, CommandLine FROM Win32_Process");
+            hr = WbemServices->ExecQuery(val2, val3, WBEM_FLAG_FORWARD_ONLY, nullptr, &EnumWbem);
+            SysFreeString(val2);
+            SysFreeString(val3);
             // Iterate over the enumerator
             if (EnumWbem != nullptr) {
                 IWbemClassObject* result = nullptr;

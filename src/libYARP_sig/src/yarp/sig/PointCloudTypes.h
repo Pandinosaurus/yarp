@@ -1,11 +1,8 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2010 Willow Garage, Inc.
- * Copyright (C) 2012 Open Perception, Inc.
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2010 Willow Garage Inc.
+ * SPDX-FileCopyrightText: 2012 Open Perception Inc.
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 
@@ -19,8 +16,7 @@
 #include <yarp/os/NetInt32.h>
 #include <yarp/sig/Vector.h>
 
-namespace yarp {
-namespace sig {
+namespace yarp::sig {
 
 
 // Plain xy point is not supported for now ... does it make sense to have it?
@@ -910,8 +906,7 @@ YARP_END_PACK
 
 // TBD: many others ...
 
-} // namespace sig
-} // namespace yarp
+} // namespace yarp::sig
 
 
 #endif // YARP_SIG_POINTCLOUDTYPES_H

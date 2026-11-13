@@ -1,0 +1,54 @@
+/*
+ * SPDX-FileCopyrightText: 2024 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
+#include <yarp/os/Log.h>
+#include <yarp/os/LogStream.h>
+
+#include <yarp/dev/ControlBoardInterfaces.h>
+#include <yarp/dev/PolyDriver.h>
+
+#include <string>
+#include <vector>
+
+#ifndef ROBOTDRIVER_H
+#define ROBOTDRIVER_H
+
+// ******************** ROBOT DRIVER CLASS
+class robotDriver
+{
+    friend class BroadcastingThread;
+private:
+    size_t            n_joints=0;
+    bool              m_verbose=true;
+    std::vector<double>         m_trajectoryTime; // default trajectory time in seconds
+    std::vector<double>         m_stored_speed;   // joint ref speed
+
+    yarp::dev::PolyDriver       *drv_ll=nullptr;
+    yarp::dev::IPositionControl *ipos_ll=nullptr;
+    yarp::dev::IPositionDirect  *iposdir_ll=nullptr;
+    yarp::dev::IPidControl      *ipid_ll=nullptr;
+    yarp::dev::IControlMode     *icmd_ll=nullptr;
+    yarp::dev::IEncoders        *ienc_ll=nullptr;
+    yarp::dev::IMotorEncoders   *imotenc_ll=nullptr;
+
+public:
+    robotDriver();
+    bool configure(yarp::dev::PolyDriver* pd);
+    bool init();
+    ~robotDriver();
+    size_t getNJoints();
+    bool getControlMode(const int j, yarp::dev::ControlModeEnum& mode);
+    bool setControlMode(const int j, const yarp::dev::SelectableControlModeEnum mode);
+    bool setPosition(int j, double ref);
+    bool getEncoder(int j, double *v);
+    bool positionMove(int j, double ref);
+    bool setTrajectoryTime(double t);
+    bool setTrajectoryTime(int j, double t);
+
+    bool storeRefVelocities();
+    bool loadRefVelocities();
+};
+
+#endif

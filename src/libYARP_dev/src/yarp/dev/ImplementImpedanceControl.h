@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_IMPLEMENTIMPEDANCECONTROL_H
@@ -11,18 +8,20 @@
 
 #include <yarp/dev/IImpedanceControl.h>
 #include <yarp/dev/api.h>
+#include <vector>
 
-namespace yarp {
-    namespace dev {
-        class ImplementImpedanceControl;
-    }
+namespace yarp::dev {
+class ImplementImpedanceControl;
 }
 
 class YARP_dev_API yarp::dev::ImplementImpedanceControl: public IImpedanceControl
 {
 protected:
-    yarp::dev::IImpedanceControlRaw *iImpedanceRaw;
-    void *helper;
+    yarp::dev::IImpedanceControlRaw* m_iraw=nullptr;
+    void*                            m_helper=nullptr;
+    std::vector<int>                 m_buffer_ints;
+    std::vector<double>              m_buffer_doubles;
+    std::mutex                       m_imp_mutex;
 
     /**
      * Initialize the internal data and alloc memory.
@@ -50,12 +49,12 @@ public:
      */
     virtual ~ImplementImpedanceControl();
 
-    bool getAxes(int *ax) override;
-    bool getImpedance(int j, double *stiffness, double *damping) override;
-    bool setImpedance(int j, double  stiffness, double  damping) override;
-    bool setImpedanceOffset(int j, double offset) override;
-    bool getImpedanceOffset(int j, double* offset) override;
-    bool getCurrentImpedanceLimit(int j, double *min_stiff, double *max_stiff, double *min_damp, double *max_damp) override;
+    yarp::dev::ReturnValue getAxes(size_t& ax) override;
+    yarp::dev::ReturnValue getImpedance(int j, double *stiffness, double *damping) override;
+    yarp::dev::ReturnValue setImpedance(int j, double  stiffness, double  damping) override;
+    yarp::dev::ReturnValue setImpedanceOffset(int j, double offset) override;
+    yarp::dev::ReturnValue getImpedanceOffset(int j, double* offset) override;
+    yarp::dev::ReturnValue getCurrentImpedanceLimit(int j, double *min_stiff, double *max_stiff, double *min_damp, double *max_damp) override;
 
 };
 

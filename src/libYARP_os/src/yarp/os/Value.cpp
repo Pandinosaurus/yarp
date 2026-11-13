@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/Value.h>
@@ -25,15 +22,15 @@ Value::Value() :
 {
 }
 
-Value::Value(std::int32_t x, bool isVocab) :
+Value::Value(std::int32_t x, bool isVocab32) :
         Portable(),
         Searchable(),
         proxy(nullptr)
 {
-    if (!isVocab) {
+    if (!isVocab32) {
         setProxy(static_cast<Storable*>(makeInt32(x)));
     } else {
-        setProxy(static_cast<Storable*>(makeVocab(x)));
+        setProxy(static_cast<Storable*>(makeVocab32(x)));
     }
 }
 
@@ -45,15 +42,15 @@ Value::Value(yarp::conf::float64_t x) :
     setProxy(static_cast<Storable*>(makeFloat64(x)));
 }
 
-Value::Value(const std::string& str, bool isVocab) :
+Value::Value(const std::string& str, bool isVocab32) :
         Portable(),
         Searchable(),
         proxy(nullptr)
 {
-    if (!isVocab) {
+    if (!isVocab32) {
         setProxy(static_cast<Storable*>(makeString(str)));
     } else {
-        setProxy(static_cast<Storable*>(makeVocab(str)));
+        setProxy(static_cast<Storable*>(makeVocab32(str)));
     }
 }
 
@@ -168,16 +165,16 @@ bool Value::isList() const
     return proxy->isList();
 }
 
-bool Value::isDict() const
+bool Value::isVocab32() const
 {
     ok();
-    return proxy->isDict();
+    return proxy->isVocab32();
 }
 
-bool Value::isVocab() const
+bool Value::isVocab64() const
 {
     ok();
-    return proxy->isVocab();
+    return proxy->isVocab64();
 }
 
 bool Value::isBlob() const
@@ -228,10 +225,16 @@ yarp::conf::float64_t Value::asFloat64() const
     return proxy->asFloat64();
 }
 
-int Value::asVocab() const
+yarp::conf::vocab32_t Value::asVocab32() const
 {
     ok();
-    return proxy->asVocab();
+    return proxy->asVocab32();
+}
+
+yarp::conf::vocab64_t Value::asVocab64() const
+{
+    ok();
+    return proxy->asVocab64();
 }
 
 std::string Value::asString() const
@@ -243,21 +246,6 @@ std::string Value::asString() const
 Bottle* Value::asList() const
 {
     ok();
-    return proxy->asList();
-}
-
-Property* Value::asDict() const
-{
-    ok();
-    return proxy->asDict();
-}
-
-Searchable* Value::asSearchable() const
-{
-    ok();
-    if (proxy->isDict()) {
-        return proxy->asDict();
-    }
     return proxy->asList();
 }
 
@@ -427,15 +415,9 @@ Value* Value::makeString(const std::string& str)
 }
 
 
-Value* Value::makeVocab(int v)
+Value* Value::makeVocab32(yarp::conf::vocab32_t v)
 {
-    return new StoreVocab(v);
-}
-
-
-Value* Value::makeVocab(const std::string& str)
-{
-    return new StoreVocab(Vocab::encode(str));
+    return new StoreVocab32(v);
 }
 
 

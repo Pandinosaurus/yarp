@@ -12,7 +12,6 @@ GPL-2.0 or later, GPL-3.0 or later, or Apache-2.0 License:
    or later.
    + devices:
      - `audioPlayerWrapper`
-     - `audioRecorderWrapper`
      - `batteryClient`
      - `batteryWrapper`
      - `depthCamera`
@@ -33,6 +32,7 @@ GPL-2.0 or later, GPL-3.0 or later, or Apache-2.0 License:
      - `Rangefinder2DWrapper`
      - `rpLidar`
      - `rpLidar2`
+     - `rpLidar3`
      - `SDLJoypad`
      - `transformClient`
      - `transformServer`
@@ -60,15 +60,20 @@ GPL-2.0 or later, GPL-3.0 or later, or Apache-2.0 License:
      [libdc1394](http://damien.douxchamps.net/ieee1394/libdc1394/) or, if the
      library is not available, links statically a few files taken from
      [libdc1394](http://libdc1394.git.sourceforge.net/git/gitweb.cgi?p=libdc1394/libdc1394;a=blob_plain;f=libdc1394/dc1394/bayer.c;hb=HEAD).
-   + The `h264` carrier uses glib (LGPLv2.1 or later) and gstreamer (LGPLv2.1 or
+   + The `gstreamer` carrier uses glib (LGPLv2.1 or later) and gstreamer (LGPLv2.1 or
      later).
    + The `mpi` carrier uses MPI (license dependent on the implementation).
    + The `dynamixelAX12Ftdi` device uses
      [libftdi](https://www.intra2net.com/en/developer/libftdi/).
    + The `SDLJoypad` device uses alternatively
      [SDL 1.2](https://libsdl.org/license.php).
-   + The ffmpeg_grabber and ffmpeg_writer devices use
+   + The `ffmpeg_grabber` and `ffmpeg_writer` devices, and the
+     `image_compression_ffmpeg` and `sound_compression_mp3` portmonitors use
      [Ffmpeg](https://github.com/FFmpeg/FFmpeg/blob/master/LICENSE.md).
+   + The websocket carrier uses the `Websocket` library, which contains some
+     files that are released under the
+     [FDL](https://github.com/katzarsky/WebSocket/blob/master/WebSocket/sha1/license.txt)
+     license.
  * A few optional parts of YARP are released under the terms of the GPL license,
    version 2 or later:
    + `YARP_gsl` uses the GNU Scientific Library, under the GPL 2 or later.
@@ -84,63 +89,81 @@ GPL-2.0 or later, GPL-3.0 or later, or Apache-2.0 License:
 The list of committers in the YARP repository (ordered by number of commit) is:
   Daniele E. Domenichelli
   Paul Fitzpatrick
-  Nicolò Genesio
   Marco Randazzo
+  Nicolò Genesio
   Lorenzo Natale
   Alberto Cardellino
   Ugo Pattacini
   Ali Paikan
+  Silvio Traversaro
   YARP Developers
   Damiano Enerli
   Andrea Ruzzenenti
   Alessandro Scalzo
-  Silvio Traversaro
+  Ettore Landini
   Elena Ceseracciu
+  Stefano Bernagozzi
   Francesco Romano
   Matteo Brunettini
   Giacomo Spigler
   Giorgio Metta
+  Bartek Łukawski
   Vadim Tikhanoff
   Davide Perrone
   Alessandro Roncone
   Valentina Gaggero
-  Bartek Łukawski
+  Giulia Martino
   Claudio Fantacci
   Konstantinos Theofilis
+  Stefano Dafarra
   Alexandre Bernardino
   Tobias Fischer
   Duarte Aragao
+  robotology-bot (Tag Repository Action)
   Francesco Nori
+  Diego Ferigo
+  fbrand-new
   Juan G. Victores
   Nuno Guedelha
   Andrea Del Prete
   Arjan Gijsberts
   Carlos Beltran-Gonzalez
   Claudio Castellini
-  Ettore Landini
   Daniel Krieg
-  Diego Ferigo
+  Nick Tremaroli
+  Simone Girardi
+  Fabio Valla
+  Arren Glover
+  Giulio Romualdi
   Prashanth Ramadoss
   Alexandros Paraschos
+  Plinio Moreno
+  Valentina Vasco
   Yeshasvi Tirupachuri
   Giovanni Saponaro
   Giulia Vezzani
   Jonas Ruesch
   Lorenzo Rapetti
   Michael Bucko
-  Stefano Dafarra
-  Valentina Vasco
-  Giulio Romualdi
   Massimo Regoli
+  Nicola Piga
+  tumme
   Aiko Dinale
   Alessio Rocchi
   Mirko Ferrati
   Alexandre Gomes Pereira Antunes
   Andrea Ruzzenenti
+  Beniamino Squitieri
   Bertrand Higy
   David-Estevez
+  Davide
   Francesco Giovannini
-  Arren Glover
+  Giovanni Fregonese
+  Jacopo Losi
+  Pasquale
+  Stefano Berti
+  hypothe
+  Bartek Łukawski
   Bruno Nery
   Davide Pollarolo
   Emilio Cartoni
@@ -149,52 +172,70 @@ The list of committers in the YARP repository (ordered by number of commit) is:
   Gabriele Nava
   Gianpaolo Bontempo
   Holger Friedrich
+  Jacopo
   Johnny Willemsen
   Mohamed Babiker Mohamed Elobaid
   Naeem Assif Mirza
-  Nicola Piga
-  Plinio Moreno
+  Simone
   Ze Ji
+  fincatomarta
+  gauraansh
+  vpfkfl753
+  Alessandro Croci
+  Alessandro Croci
+  Alvaro14
+  AntonioViscomi
   Austin Kothig
   Carlo Ciliberto
   Carlotta Sartore
   Claudia Latella
+  Davide Gorbani
   Davide Tome
   Elena Rampone
   Emilio Benenati
   Enrico Mingo
   Francesca Stramandinoli
+  Francesco Brand
   Giovanni Saponaro
+  Giuseppe L'Erario
+  Greg Herlein
+  Ines Sorrentino
   Jason Chevrie
+  Marco Gabriele Fedozzi
   Marco Monforte
+  Marco Randazzo
+  Marco Randazzo
   Massimiliano Iacono
   Matej Hoffmann
+  Mattia Fussi
   Pedro Vicente
   Serena Ivaldi
+  SimoneMic
   Vítor Galvão
   Zero King
+  dependabot[bot]
+  elisabeth-ms
 
 The list of copyright holders for YARP is:
-  Copyright (C) 1995, 2000, 2003, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021
-    Istituto Italiano di Tecnologia (IIT) (2428 files)
-    RobotCub Consortium (760 files)
+  Copyright (C) 1995, 2000, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026
+    Istituto Italiano di Tecnologia (IIT) (3355 files)
+    RobotCub Consortium (703 files)
     Daniel Krieg <krieg@fias.uni-frankfurt.de> (16 files)
     Anne van Rossum <anne@almende.com> (11 files)
-    Arjan Gijsberts (10 files)
-    Giacomo Spigler (7 files)
-    Alexandre Bernardino (5 files)
-    Carlos Beltran-Gonzalez (5 files)
+    Arjan Gijsberts (9 files)
     Digia Plc and/or its subsidiary(-ies) (4 files)
+    Alexandre Bernardino (3 files)
+    Carlos Beltran-Gonzalez (3 files)
+    Giacomo Spigler (3 files)
     Eric Mislivec (2 files)
     Freyr Magnusson (2 files)
     Intel Corporation (2 files)
-    Julio Gomes (2 files)
     Ze Ji (2 files)
-    Fabrice Bellard (1 file)
+    Copyright: NO_DOC (1 file)
+    Copyright: THRIFT_NO_DOC (1 file)
     Francesco Giovannini (1 file)
-    Jonas Ruesch (1 file)
-    Open Perception, Inc. (1 file)
-    Willow Garage, Inc. (1 file)
+    Open Perception Inc (1 file)
+    Willow Garage Inc (1 file)
 
 The identifier "RobotCub Consortium" used in some copyright statements is
 equivalent to the following list of institutions:

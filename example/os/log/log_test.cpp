@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <vector>
@@ -51,7 +48,7 @@ int main(int argc, char *argv[])
 
     yTrace();
     yTrace() << "This is" << "another" << "trace" << i;
-    yTrace() << v;
+    yTrace() << v << "and there should be a space before \"and\" and after" << "the first \"after\"";
     yTrace() << "The end of line is removed from this trace\n";
     yCTrace(LOG_COMPONENT);
     yCTrace(LOG_COMPONENT) << "This is" << "another" << "trace" << i;
@@ -70,7 +67,7 @@ int main(int argc, char *argv[])
 
     yDebug();
     yDebug() << "This is" << "another" << "debug" << i;
-    yDebug() << v;
+    yDebug() << v << "and there should be a space before \"and\" and after" << "the first \"after\"";
     yDebug() << "The end of line is removed from this debug\n";
     yCDebug(LOG_COMPONENT);
     yCDebug(LOG_COMPONENT) << "This is" << "another" << "debug" << i;
@@ -88,7 +85,7 @@ int main(int argc, char *argv[])
 
     yInfo();
     yInfo() << "This is" << "more" << "info" << i;
-    yInfo() << v;
+    yInfo() << v << "and there should be a space before \"and\" and after" << "the first \"after\"";
     yInfo() << "The end of line is removed from this info\n";
     yCInfo(LOG_COMPONENT);
     yCInfo(LOG_COMPONENT) << "This is" << "more" << "info" << i;
@@ -106,7 +103,7 @@ int main(int argc, char *argv[])
 
     yWarning();
     yWarning() << "This is" << "another" << "warning" << i;
-    yWarning() << v;
+    yWarning() << v << "and there should be a space before \"and\" and after" << "the first \"after\"";
     yWarning() << "The end of line is removed from this warning\n";
     yCWarning(LOG_COMPONENT);
     yCWarning(LOG_COMPONENT) << "This is" << "another" << "warning" << i;
@@ -124,7 +121,7 @@ int main(int argc, char *argv[])
 
     yError();
     yError() << "This is" << "another" << "error" << i;
-    yError() << v;
+    yError() << v << "and there should be a space before \"and\" and after" << "the first \"after\"";
     yError() << "The end of line is removed from this error\n";
     yCError(LOG_COMPONENT);
     yCError(LOG_COMPONENT) << "This is" << "another" << "error" << i;

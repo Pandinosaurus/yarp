@@ -1,9 +1,6 @@
-# Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
-# Copyright (C) 2006-2010 RobotCub Consortium
-# All rights reserved.
-#
-# This software may be modified and distributed under the terms of the
-# BSD-3-Clause license. See the accompanying LICENSE file for details.
+# SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+# SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+# SPDX-License-Identifier: BSD-3-Clause
 
 
 #########################################################################
@@ -24,7 +21,7 @@ include(GNUInstallDirs)
 # These variables are used by try_compile, so they must be set here
 
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
@@ -55,19 +52,17 @@ int main() {
 }
 ")
 
-  try_run(${_result_var}
-          _unused
-          "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}"
-          "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${_type_s}-is_iec559.cpp")
+  try_run(
+    ${_result_var}
+    _unused
+    "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}"
+    "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${_type_s}-is_iec559.cpp"
+  )
 endmacro()
 
 unset(YARP_FLOAT32)
 unset(YARP_FLOAT64)
 unset(YARP_FLOAT128)
-
-set(YARP_FLOAT32_IS_IEC559 0)
-set(YARP_FLOAT64_IS_IEC559 0)
-set(YARP_FLOAT128_IS_IEC559 0)
 
 set(YARP_HAS_FLOAT128_T 0)
 
@@ -132,10 +127,12 @@ int main()
         static_cast<int>(std::floor(std::log10(${_type}_MIN_EXP))) + 1);
 }
 ")
-  try_run(YARP_${_type}_EXP_DIG
-          _unused
-          "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}"
-          "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${_type}-exp-dig.cpp")
+  try_run(
+    YARP_${_type}_EXP_DIG
+    _unused
+    "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}"
+    "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${_type}-exp-dig.cpp"
+  )
 endmacro()
 
 check_floating_point_exponent_digits(FLT)
@@ -181,6 +178,11 @@ if(WIN32)
 
     # Traditionally, we add "d" postfix to debug libraries
     set(CMAKE_DEBUG_POSTFIX "d")
+
+    # Make __cplusplus definition accurate
+    if(MSVC_VERSION GREATER_EQUAL 1914)
+        add_compile_options(/Zc:__cplusplus)
+    endif()
   endif()
 else()
 
@@ -220,7 +222,6 @@ else()
     yarp_check_and_append_cxx_compiler_flag(WANTED_WARNING_FLAGS "-Wredundant-decls")
     yarp_check_and_append_cxx_compiler_flag(WANTED_WARNING_FLAGS "-Wunknown-pragmas")
     yarp_check_and_append_cxx_compiler_flag(WANTED_WARNING_FLAGS "-Wunused-result")
-    yarp_check_and_append_cxx_compiler_flag(WANTED_WARNING_FLAGS "-Wc++17-compat")
     yarp_check_and_append_cxx_compiler_flag(WANTED_WARNING_FLAGS "-Wc++2a-compat")
     yarp_check_and_append_cxx_compiler_flag(WANTED_WARNING_FLAGS "-Wheader-guard")
     yarp_check_and_append_cxx_compiler_flag(WANTED_WARNING_FLAGS "-Wignored-attributes")
@@ -275,37 +276,6 @@ else()
     yarp_check_and_append_cxx_compiler_flag(HARDENING_FLAGS "-Wl,-zrelro")
     yarp_check_and_append_cxx_compiler_flag(HARDENING_FLAGS "-Wl,-znow")
     yarp_check_and_append_cxx_compiler_flag(HARDENING_FLAGS "-fPIE -pie")
-
-
-    ## C++11 flags ##
-    unset(CXX11_FLAGS)
-    check_cxx_compiler_flag("-std=c++11" CXX_HAS_STD_CXX11)
-    check_cxx_compiler_flag("-std=c++0x" CXX_HAS_STD_CXX0X)
-    if(CXX_HAS_STD_CXX11)
-      set(CXX11_FLAGS "-std=c++11")
-    elseif(CXX_HAS_STD_CXX0X)
-      set(CXX11_FLAGS "-std=c++0x")
-    endif()
-
-    ## C++14 flags ##
-    unset(CXX14_FLAGS)
-    check_cxx_compiler_flag("-std=c++14" CXX_HAS_STD_CXX14)
-    check_cxx_compiler_flag("-std=c++1y" CXX_HAS_STD_CXX1Y)
-    if(CXX_HAS_STD_CXX14)
-      set(CXX14_FLAGS "-std=c++14")
-    elseif(CXX_HAS_STD_CXX1Y)
-      set(CXX14_FLAGS "-std=c++1y")
-    endif()
-
-    ## C++17 flags ##
-    unset(CXX14_FLAGS)
-    check_cxx_compiler_flag("-std=c++17" CXX_HAS_STD_CXX17)
-    check_cxx_compiler_flag("-std=c++1z" CXX_HAS_STD_CXX1Z)
-    if(CXX_HAS_STD_CXX17)
-      set(CXX17_FLAGS "-std=c++17")
-    elseif(CXX_HAS_STD_CXX1Z)
-      set(CXX17_FLAGS "-std=c++1z")
-    endif()
 
 
     ## Error and warning flags ##

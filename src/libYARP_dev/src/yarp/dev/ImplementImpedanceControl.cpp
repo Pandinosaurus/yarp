@@ -1,36 +1,41 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <cstdio>
 
 #include <yarp/dev/ImplementImpedanceControl.h>
 #include <yarp/dev/ControlBoardHelper.h>
+#include <yarp/dev/ControlBoardHelpers.h>
 #include <yarp/os/LogStream.h>
 #include <cmath>
 
 using namespace yarp::dev;
-#define JOINTIDCHECK if (j >= castToMapper(helper)->axes()){yError("joint id out of bound"); return false;}
+
+namespace {
+YARP_LOG_COMPONENT(IMPLEMENT_LAYER_COMPONENT, "yarp.ImplementImpedanceControl")
+}
 
 /////////////// implement ImplementImpedanceControl
 ImplementImpedanceControl::ImplementImpedanceControl(IImpedanceControlRaw *r)
 {
-    iImpedanceRaw=r;
-    helper=nullptr;
+    m_iraw=r;
+    m_helper=nullptr;
 }
 
 bool ImplementImpedanceControl::initialize(int size, const int *amap, const double *enc, const double *zos, const double *nw)
 {
-    if (helper!=nullptr)
+    if (m_helper != nullptr) {
         return false;
+    }
 
-    helper=(void *)(new ControlBoardHelper(size, amap, enc, zos, nw));
-    yAssert (helper != nullptr);
+    m_helper=(void *)(new ControlBoardHelper(size, amap, enc, zos, nw));
+    yAssert (m_helper != nullptr);
+
+    m_buffer_ints.resize   (size);
+    m_buffer_doubles.resize(size);
 
     return true;
 }
@@ -42,68 +47,85 @@ ImplementImpedanceControl::~ImplementImpedanceControl()
 
 bool ImplementImpedanceControl::uninitialize ()
 {
-    if (helper!=nullptr)
+    if (m_helper!=nullptr)
     {
-        delete castToMapper(helper);
-        helper=nullptr;
+        delete castToMapper(m_helper);
+        m_helper=nullptr;
     }
 
     return true;
 }
 
-bool ImplementImpedanceControl::getAxes(int *axes)
+ReturnValue ImplementImpedanceControl::getAxes(size_t& axes)
 {
-    return iImpedanceRaw->getAxes(axes);
+    return m_iraw->getAxes(axes);
 }
 
-bool ImplementImpedanceControl::setImpedance(int j, double stiffness, double damping)
+ReturnValue ImplementImpedanceControl::setImpedance(int j, double stiffness, double damping)
 {
-    JOINTIDCHECK
+    std::lock_guard lock(m_imp_mutex);
+    JOINTIDCHECK(IMPLEMENT_LAYER_COMPONENT,j)
+
     int k;
     double stiff;
     double damp;
-    castToMapper(helper)->impN2S(stiffness,j,stiff,k);
-    castToMapper(helper)->impN2S(damping,j,damp,k);
-    return iImpedanceRaw->setImpedanceRaw(k, stiff, damp);
+    castToMapper(m_helper)->impN2S(stiffness,j,stiff,k);
+    castToMapper(m_helper)->impN2S(damping,j,damp,k);
+    return m_iraw->setImpedanceRaw(k, stiff, damp);
 }
 
-bool ImplementImpedanceControl::getImpedance(int j, double *stiffness, double *damping)
+ReturnValue ImplementImpedanceControl::getImpedance(int j, double *stiffness, double *damping)
 {
-    JOINTIDCHECK
+    std::lock_guard lock(m_imp_mutex);
+    JOINTIDCHECK(IMPLEMENT_LAYER_COMPONENT,j)
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,stiffness)
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,damping)
+
     int k;
-    k=castToMapper(helper)->toHw(j);
-    bool ret=iImpedanceRaw->getImpedanceRaw(k, stiffness, damping);
-    *stiffness = (castToMapper(helper)->impS2N(*stiffness, k));
-    *damping   = (castToMapper(helper)->impS2N(*damping, k));
+    k=castToMapper(m_helper)->toHw(j);
+    ReturnValue ret=m_iraw->getImpedanceRaw(k, stiffness, damping);
+    *stiffness = (castToMapper(m_helper)->impS2N(*stiffness, k));
+    *damping   = (castToMapper(m_helper)->impS2N(*damping, k));
     //prevent negative stiffness
     *stiffness = fabs (*stiffness);
     *damping   = fabs (*damping);
     return ret;
 }
 
-bool ImplementImpedanceControl::setImpedanceOffset(int j, double offset)
+ReturnValue ImplementImpedanceControl::setImpedanceOffset(int j, double offset)
 {
-    JOINTIDCHECK
+    std::lock_guard lock(m_imp_mutex);
+    JOINTIDCHECK(IMPLEMENT_LAYER_COMPONENT,j)
+
     int k;
     double off;
-    castToMapper(helper)->trqN2S(offset,j,off,k);
-    return iImpedanceRaw->setImpedanceOffsetRaw(k, off);
+    castToMapper(m_helper)->trqN2S(offset,j,off,k);
+    return m_iraw->setImpedanceOffsetRaw(k, off);
 }
 
-bool ImplementImpedanceControl::getImpedanceOffset(int j, double *offset)
+ReturnValue ImplementImpedanceControl::getImpedanceOffset(int j, double *offset)
 {
-    JOINTIDCHECK
+    std::lock_guard lock(m_imp_mutex);
+    JOINTIDCHECK(IMPLEMENT_LAYER_COMPONENT,j)
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,offset)
+
     int k;
-    k=castToMapper(helper)->toHw(j);
-    bool ret = iImpedanceRaw->getImpedanceOffsetRaw(k, offset);
-    *offset    = (castToMapper(helper)->trqS2N(*offset,k));
+    k=castToMapper(m_helper)->toHw(j);
+    ReturnValue ret = m_iraw->getImpedanceOffsetRaw(k, offset);
+    *offset    = (castToMapper(m_helper)->trqS2N(*offset,k));
     return ret;
 }
 
-bool ImplementImpedanceControl::getCurrentImpedanceLimit(int j, double *min_stiff, double *max_stiff, double *min_damp, double *max_damp)
+ReturnValue ImplementImpedanceControl::getCurrentImpedanceLimit(int j, double *min_stiff, double *max_stiff, double *min_damp, double *max_damp)
 {
-    JOINTIDCHECK
+    std::lock_guard lock(m_imp_mutex);
+    JOINTIDCHECK(IMPLEMENT_LAYER_COMPONENT,j)
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,min_stiff)
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,max_stiff)
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,min_damp)
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,max_damp)
+
     int k;
-    k=castToMapper(helper)->toHw(j);
-    return iImpedanceRaw->getCurrentImpedanceLimitRaw(k, min_stiff, max_stiff, min_damp, max_damp);
+    k=castToMapper(m_helper)->toHw(j);
+    return m_iraw->getCurrentImpedanceLimitRaw(k, min_stiff, max_stiff, min_damp, max_damp);
 }

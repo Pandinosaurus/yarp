@@ -1,11 +1,8 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * Copyright (C) 2006, 2008 Arjan Gijsberts
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-FileCopyrightText: 2006, 2008 Arjan Gijsberts
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_OS_IMPL_STORABLE_H
@@ -16,6 +13,7 @@
 #include <yarp/os/LogComponent.h>
 #include <yarp/os/Value.h>
 #include <yarp/os/Vocab.h>
+#include <yarp/os/Vocab64.h>
 
 
 #define UNIT_MASK         \
@@ -25,19 +23,17 @@
      BOTTLE_TAG_INT64   | \
      BOTTLE_TAG_FLOAT32 | \
      BOTTLE_TAG_FLOAT64 | \
-     BOTTLE_TAG_VOCAB   | \
+     BOTTLE_TAG_VOCAB32 | \
+     BOTTLE_TAG_VOCAB64 | \
      BOTTLE_TAG_STRING  | \
      BOTTLE_TAG_BLOB)
 
 #define GROUP_MASK     \
-    (BOTTLE_TAG_LIST | \
-     BOTTLE_TAG_DICT)
+    (BOTTLE_TAG_LIST)
 
 YARP_DECLARE_LOG_COMPONENT(STORABLE)
 
-namespace yarp {
-namespace os {
-namespace impl {
+namespace yarp::os::impl {
 
 /**
  * A single item in a Bottle.  This extends the public yarp::os::Value
@@ -183,22 +179,22 @@ public:
         return nullptr;
     }
 
-    bool isDict() const override
+    bool isVocab32() const override
     {
         return false;
     }
 
-    yarp::os::Property* asDict() const override
-    {
-        return nullptr;
-    }
-
-    bool isVocab() const override
+    bool isVocab64() const override
     {
         return false;
     }
 
-    std::int32_t asVocab() const override
+    yarp::conf::vocab32_t asVocab32() const override
+    {
+        return 0;
+    }
+
+    yarp::conf::vocab64_t asVocab64() const override
     {
         return 0;
     }
@@ -223,14 +219,6 @@ public:
         return false;
     }
 
-
-    Searchable* asSearchable() const override
-    {
-        if (isDict()) {
-            return asDict();
-        }
-        return asList();
-    }
     using yarp::os::Searchable::check;
     bool check(const std::string& key) const override;
 
@@ -413,7 +401,7 @@ public:
         return x;
     }
 
-    std::int32_t asVocab() const override
+    yarp::conf::vocab32_t asVocab32() const override
     {
         return x;
     }
@@ -499,7 +487,7 @@ public:
         return x;
     }
 
-    std::int32_t asVocab() const override
+    yarp::conf::vocab32_t asVocab32() const override
     {
         return x;
     }
@@ -585,7 +573,7 @@ public:
         return x;
     }
 
-    std::int32_t asVocab() const override
+    yarp::conf::vocab32_t asVocab32() const override
     {
         return x;
     }
@@ -670,9 +658,9 @@ public:
         return static_cast<yarp::conf::float64_t>(x);
     }
 
-    std::int32_t asVocab() const override
+    yarp::conf::vocab32_t asVocab32() const override
     {
-        return (std::int32_t)x;
+        return static_cast<yarp::conf::vocab32_t>(x);
     }
 };
 
@@ -827,29 +815,29 @@ public:
 };
 
 /**
- * A vocabulary item.
+ * A 32 bit vocabulary item.
  */
-class YARP_os_impl_API StoreVocab :
+class YARP_os_impl_API StoreVocab32 :
         public Storable
 {
-    std::int32_t x{0};
+    yarp::conf::vocab32_t x{0};
 
 public:
-    StoreVocab() = default;
+    StoreVocab32() = default;
 
-    StoreVocab(std::int32_t x) :
+    StoreVocab32(yarp::conf::vocab32_t x) :
             x(x)
     {
     }
 
     Storable* createStorable() const override
     {
-        return new StoreVocab();
+        return new StoreVocab32();
     }
 
     void copy(const Storable& alt) override
     {
-        x = alt.asVocab();
+        x = alt.asVocab32();
     }
 
     std::string toString() const override;
@@ -896,12 +884,98 @@ public:
         return x;
     }
 
-    bool isVocab() const override
+    bool isVocab32() const override
     {
         return true;
     }
 
-    std::int32_t asVocab() const override
+    yarp::conf::vocab32_t asVocab32() const override
+    {
+        return x;
+    }
+
+    std::string asString() const override
+    {
+        return toString();
+    }
+};
+
+/**
+ * A 64 bit vocabulary item.
+ */
+class YARP_os_impl_API StoreVocab64 :
+        public Storable
+{
+    yarp::conf::vocab64_t x{0};
+
+public:
+    StoreVocab64() = default;
+
+    StoreVocab64(yarp::conf::vocab64_t x) :
+            x(x)
+    {
+    }
+
+    Storable* createStorable() const override
+    {
+        return new StoreVocab64();
+    }
+
+    void copy(const Storable& alt) override
+    {
+        x = alt.asVocab64();
+    }
+
+    std::string toString() const override;
+    void fromString(const std::string& src) override;
+    std::string toStringNested() const override;
+    void fromStringNested(const std::string& src) override;
+
+    static const std::int32_t code;
+    std::int32_t getCode() const override
+    {
+        return code;
+    }
+
+    bool readRaw(ConnectionReader& reader) override;
+    bool writeRaw(ConnectionWriter& writer) const override;
+
+    bool isBool() const override
+    {
+        return (x == 0 || x == '1');
+    }
+
+    bool asBool() const override
+    {
+        return x != 0;
+    }
+
+    std::int32_t asInt32() const override
+    {
+        return x;
+    }
+
+    std::int64_t asInt64() const override
+    {
+        return x;
+    }
+
+    yarp::conf::float32_t asFloat32() const override
+    {
+        return static_cast<yarp::conf::float32_t>(x);
+    }
+
+    yarp::conf::float64_t asFloat64() const override
+    {
+        return x;
+    }
+
+    bool isVocab64() const override
+    {
+        return true;
+    }
+
+    yarp::conf::vocab64_t asVocab64() const override
     {
         return x;
     }
@@ -963,9 +1037,9 @@ public:
         return x;
     }
 
-    std::int32_t asVocab() const override
+    yarp::conf::vocab32_t asVocab32() const override
     {
-        return yarp::os::Vocab::encode(x.c_str());
+        return yarp::os::Vocab32::encode(x);
     }
 
     // Quote and escape a string for printing it nested
@@ -1099,70 +1173,6 @@ public:
     }
 };
 
-
-/**
- * Key/value pairs
- */
-class YARP_os_impl_API StoreDict :
-        public Storable
-{
-private:
-    yarp::os::Property content{};
-
-public:
-    StoreDict() = default;
-
-    Storable* createStorable() const override
-    {
-        return new StoreDict();
-    }
-
-    void copy(const Storable& alt) override
-    {
-        content = *(alt.asDict());
-    }
-
-    yarp::os::Property& internal()
-    {
-        return content;
-    }
-
-    std::string toString() const override;
-    void fromString(const std::string& src) override;
-    std::string toStringNested() const override;
-    void fromStringNested(const std::string& src) override;
-
-    static const std::int32_t code;
-    std::int32_t getCode() const override
-    {
-        return code;
-    }
-
-    bool readRaw(ConnectionReader& reader) override;
-    bool writeRaw(ConnectionWriter& writer) const override;
-
-    bool isDict() const override
-    {
-        return true;
-    }
-
-    yarp::os::Property* asDict() const override
-    {
-        return const_cast<yarp::os::Property*>(&content);
-    }
-
-    yarp::os::Value& find(const std::string& key) const override
-    {
-        return content.find(key);
-    }
-
-    yarp::os::Bottle& findGroup(const std::string& key) const override
-    {
-        return content.findGroup(key);
-    }
-};
-
-
 template <typename T>
 inline std::int32_t subCoder(T& content)
 {
@@ -1187,8 +1197,6 @@ inline std::int32_t subCoder(T& content)
     return c;
 }
 
-} // namespace impl
-} // namespace os
-} // namespace yarp
+} // namespace yarp::os::impl
 
 #endif // YARP_OS_IMPL_STORABLE_H

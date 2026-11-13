@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/serversql/impl/NameServerContainer.h>
@@ -13,7 +10,6 @@
 
 #include <yarp/os/Carriers.h>
 #include <yarp/os/Network.h>
-#include <yarp/os/RosNameSpace.h>
 #include <yarp/os/Value.h>
 #include <yarp/name/BootstrapServer.h>
 #include <yarp/serversql/impl/LogComponent.h>
@@ -28,13 +24,11 @@
 
 
 using yarp::os::Contact;
-using yarp::os::NameSpace;
 using yarp::os::Searchable;
 using yarp::os::NetworkBase;
 using yarp::os::Network;
 using yarp::os::Value;
 using yarp::os::Carriers;
-using yarp::os::RosNameSpace;
 using yarp::name::BootstrapServer;
 using yarp::serversql::impl::ComposedNameService;
 using yarp::serversql::impl::NameServiceOnTriples;
@@ -50,23 +44,11 @@ YARP_SERVERSQL_LOG_COMPONENT(NAMESERVERCONTAINER, "yarp.serversql.impl.NameServe
 NameServerContainer::~NameServerContainer()
 {
     subscriber.clear();
-    if (space) {
-        delete space;
-        space = nullptr;
-    }
 }
 
 const Contact& NameServerContainer::where()
 {
     return contact;
-}
-
-Contact NameServerContainer::whereDelegate()
-{
-    if (!space) {
-        return Contact();
-    }
-    return space->getNameServerContact();
 }
 
 void NameServerContainer::preregister(const Contact& c)
@@ -103,7 +85,7 @@ bool NameServerContainer::open(Searchable& options)
 
     bool reset = false;
     if (options.check("ip")||options.check("socket")) {
-        yCError(NAMESERVERCONTAINER, "Database needs to be reset, IP or port number set.");
+        yCInfo(NAMESERVERCONTAINER, "Database needs to be reset, IP or port number set.");
         reset = true;
     }
 
@@ -126,32 +108,6 @@ bool NameServerContainer::open(Searchable& options)
                                                   options.check("write"))) {
             yCError(NAMESERVERCONTAINER, "Aborting.\n");
             return false;
-        }
-    }
-
-    if (options.check("ros") || yarp::conf::environment::getEnvironment("YARP_USE_ROS")!="") {
-        yarp::os::Bottle lst = yarp::os::Carriers::listCarriers();
-        std::string lstStr(lst.toString());
-        if (lstStr.find("rossrv") == std::string::npos ||
-            lstStr.find("tcpros") == std::string::npos ||
-            lstStr.find("xmlrpc") == std::string::npos) {
-            yCError(NAMESERVERCONTAINER, "Missing one or more required carriers ");
-            yCError(NAMESERVERCONTAINER, "for yarpserver --ros (rossrv, tcpros, xmlrpc).\n");
-            yCError(NAMESERVERCONTAINER, "Run 'yarp connect --list-carriers' to see carriers on your machine\n");
-            yCError(NAMESERVERCONTAINER, "Aborting.\n");
-            return false;
-        }
-        std::string addr = yarp::conf::environment::getEnvironment("ROS_MASTER_URI");
-        Contact c = Contact::fromString(addr);
-        if (c.isValid()) {
-            c.setCarrier("xmlrpc");
-            c.setName("/ros");
-            space = new RosNameSpace(c);
-            subscriber.setDelegate(space);
-            ns.setDelegate(space);
-            yCInfo(NAMESERVERCONTAINER, "Using ROS with ROS_MASTER_URI=%s\n", addr.c_str());
-        } else {
-            yCFatal(NAMESERVERCONTAINER, "Cannot find ROS, check ROS_MASTER_URI (currently '%s')\n", addr.c_str());
         }
     }
 

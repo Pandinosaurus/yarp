@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_CV_CV_INL_H
@@ -11,8 +8,7 @@
 
 #include<cassert>
 
-namespace yarp {
-namespace cv {
+namespace yarp::cv {
 
 template <typename T>
 struct type_code;
@@ -42,13 +38,13 @@ template<> struct convert_code_to_cv<yarp::sig::PixelMonoSigned> : std::integral
 template<> struct convert_code_to_cv<yarp::sig::PixelFloat> : std::integral_constant<int, -1> {};
 template<> struct convert_code_to_cv<yarp::sig::PixelInt> : std::integral_constant<int, -1> {};
 template<> struct convert_code_to_cv<yarp::sig::PixelBgr> : std::integral_constant<int, -1> {};
-template<> struct convert_code_to_cv<yarp::sig::PixelRgb> : std::integral_constant<int, CV_RGB2BGR> {};
-template<> struct convert_code_to_cv<yarp::sig::PixelRgbSigned> : std::integral_constant<int, CV_RGB2BGR> {};
-template<> struct convert_code_to_cv<yarp::sig::PixelRgbFloat> : std::integral_constant<int, CV_RGB2BGR> {};
-template<> struct convert_code_to_cv<yarp::sig::PixelRgbInt> : std::integral_constant<int, CV_RGB2BGR> {};
-template<> struct convert_code_to_cv<yarp::sig::PixelHsv> : std::integral_constant<int, CV_HSV2BGR> {};
-template<> struct convert_code_to_cv<yarp::sig::PixelHsvFloat> : std::integral_constant<int, CV_HSV2BGR> {};
-template<> struct convert_code_to_cv<yarp::sig::PixelRgba> : std::integral_constant<int, CV_RGBA2BGRA> {};
+template<> struct convert_code_to_cv<yarp::sig::PixelRgb> : std::integral_constant<int, ::cv::ColorConversionCodes::COLOR_RGB2BGR> {};
+template<> struct convert_code_to_cv<yarp::sig::PixelRgbSigned> : std::integral_constant<int, ::cv::ColorConversionCodes::COLOR_RGB2BGR> {};
+template<> struct convert_code_to_cv<yarp::sig::PixelRgbFloat> : std::integral_constant<int, ::cv::ColorConversionCodes::COLOR_RGB2BGR> {};
+template<> struct convert_code_to_cv<yarp::sig::PixelRgbInt> : std::integral_constant<int, ::cv::ColorConversionCodes::COLOR_RGB2BGR> {};
+template<> struct convert_code_to_cv<yarp::sig::PixelHsv> : std::integral_constant<int, ::cv::ColorConversionCodes::COLOR_HSV2BGR> {};
+template<> struct convert_code_to_cv<yarp::sig::PixelHsvFloat> : std::integral_constant<int, ::cv::ColorConversionCodes::COLOR_HSV2BGR> {};
+template<> struct convert_code_to_cv<yarp::sig::PixelRgba> : std::integral_constant<int, ::cv::ColorConversionCodes::COLOR_RGBA2BGRA> {};
 template<> struct convert_code_to_cv<yarp::sig::PixelBgra> : std::integral_constant<int, -1> {};
 
 template <typename T>
@@ -60,22 +56,21 @@ template<> struct convert_code_from_cv<yarp::sig::PixelMonoSigned> : std::integr
 template<> struct convert_code_from_cv<yarp::sig::PixelFloat> : std::integral_constant<int, -1> {};
 template<> struct convert_code_from_cv<yarp::sig::PixelInt> : std::integral_constant<int, -1> {};
 template<> struct convert_code_from_cv<yarp::sig::PixelBgr> : std::integral_constant<int, -1> {};
-template<> struct convert_code_from_cv<yarp::sig::PixelRgb> : std::integral_constant<int, CV_BGR2RGB> {};
-template<> struct convert_code_from_cv<yarp::sig::PixelRgbSigned> : std::integral_constant<int, CV_BGR2RGB> {};
-template<> struct convert_code_from_cv<yarp::sig::PixelRgbFloat> : std::integral_constant<int, CV_BGR2RGB> {};
-template<> struct convert_code_from_cv<yarp::sig::PixelRgbInt> : std::integral_constant<int, CV_BGR2RGB> {};
-template<> struct convert_code_from_cv<yarp::sig::PixelHsv> : std::integral_constant<int, CV_BGR2HSV> {};
-template<> struct convert_code_from_cv<yarp::sig::PixelHsvFloat> : std::integral_constant<int, CV_BGR2HSV> {};
-template<> struct convert_code_from_cv<yarp::sig::PixelRgba> : std::integral_constant<int, CV_BGRA2RGBA> {};
+template<> struct convert_code_from_cv<yarp::sig::PixelRgb> : std::integral_constant<int, ::cv::ColorConversionCodes::COLOR_BGR2RGB> {};
+template<> struct convert_code_from_cv<yarp::sig::PixelRgbSigned> : std::integral_constant<int, ::cv::ColorConversionCodes::COLOR_BGR2RGB> {};
+template<> struct convert_code_from_cv<yarp::sig::PixelRgbFloat> : std::integral_constant<int, ::cv::ColorConversionCodes::COLOR_BGR2RGB> {};
+template<> struct convert_code_from_cv<yarp::sig::PixelRgbInt> : std::integral_constant<int, ::cv::ColorConversionCodes::COLOR_BGR2RGB> {};
+template<> struct convert_code_from_cv<yarp::sig::PixelHsv> : std::integral_constant<int, ::cv::ColorConversionCodes::COLOR_BGR2HSV> {};
+template<> struct convert_code_from_cv<yarp::sig::PixelHsvFloat> : std::integral_constant<int, ::cv::ColorConversionCodes::COLOR_BGR2HSV> {};
+template<> struct convert_code_from_cv<yarp::sig::PixelRgba> : std::integral_constant<int, ::cv::ColorConversionCodes::COLOR_BGRA2RGBA> {};
 template<> struct convert_code_from_cv<yarp::sig::PixelBgra> : std::integral_constant<int, -1> {};
 
 
-} // namespace cv
-} // namespace yarp
+} // namespace yarp::cv
 
 
 template<typename T>
-::cv::Mat yarp::cv::toCvMat(yarp::sig::ImageOf<T>& yarpImage)
+::cv::Mat yarp::cv::toCvMat(const yarp::sig::ImageOf<T>& yarpImage)
 {
     ::cv::Mat outMat (yarpImage.height(), yarpImage.width(), yarp::cv::type_code<T>::value,
                       yarpImage.getRawImage(), yarpImage.getRowSize()); // RVO
@@ -86,9 +81,29 @@ template<typename T>
     return outMat;
 }
 
+inline ::cv::Mat yarp::cv::toCvMat(const yarp::sig::Image& yarpImage)
+{
+    int val=-1;
+    int type=0;
+    if      (yarpImage.getPixelCode() == VOCAB_PIXEL_RGB_INT) {type = CV_32SC1; val = ::cv::ColorConversionCodes::COLOR_RGB2BGR;}
+    else if (yarpImage.getPixelCode() == VOCAB_PIXEL_RGB) { type = CV_8UC3; val = ::cv::ColorConversionCodes::COLOR_RGB2BGR;}
+    else if (yarpImage.getPixelCode() == VOCAB_PIXEL_MONO_FLOAT) { type = CV_32FC1; val = -1;}
+    else
+    {
+        //not yet implemented.
+        assert(0);
+    }
+    ::cv::Mat outMat(yarpImage.height(), yarpImage.width(), type,
+        yarpImage.getRawImage(), yarpImage.getRowSize()); // RVO
+    if (val >= 0)
+    {
+        ::cv::cvtColor(outMat, outMat, val);
+    }
+    return outMat;
+}
 
 template<typename T>
-yarp::sig::ImageOf<T> yarp::cv::fromCvMat(::cv::Mat& cvImage)
+yarp::sig::ImageOf<T> yarp::cv::fromCvMat(const ::cv::Mat& cvImage)
 {
     constexpr size_t align_8_bytes = 8;
     constexpr size_t align_4_bytes = 4;

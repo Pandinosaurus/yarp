@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_OS_SEARCHABLE_H
@@ -15,47 +12,12 @@
 #include <cstddef>
 #include <string>
 
-#ifndef YARP_NO_DEPRECATED // Since YARP 3.0.0
-#define YARP_INCLUDING_DEPRECATED_HEADER_ON_PURPOSE
-#    include <yarp/os/ConstString.h>
-#undef YARP_INCLUDING_DEPRECATED_HEADER_ON_PURPOSE
-#endif // YARP_NO_DEPRECATED
-
-
-namespace yarp {
-namespace os {
+namespace yarp::os {
 class Value;
 class Bottle;
-} // namespace os
-} // namespace yarp
+} // namespace yarp::os
 
-namespace yarp {
-namespace os {
-
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
-
-class YARP_os_API SearchReport
-{
-public:
-    YARP_SUPPRESS_DLL_INTERFACE_WARNING_ARG(std::string) key;
-    YARP_SUPPRESS_DLL_INTERFACE_WARNING_ARG(std::string) value;
-    bool isFound;
-    bool isGroup;
-    bool isComment;
-    bool isDefault;
-
-    explicit SearchReport();
-};
-
-class YARP_os_API SearchMonitor
-{
-public:
-    virtual ~SearchMonitor();
-    virtual void report(const SearchReport& report, const char* context) = 0;
-};
-
-#endif /* DOXYGEN_SHOULD_SKIP_THIS */
-
+namespace yarp::os {
 
 /**
  * A base class for nested structures that can be searched.
@@ -67,10 +29,6 @@ public:
  */
 class YARP_os_API Searchable
 {
-private:
-    SearchMonitor* monitor;
-    YARP_SUPPRESS_DLL_INTERFACE_WARNING_ARG(std::string) monitorContext;
-
 public:
     /**
      * Default constructor.
@@ -213,16 +171,8 @@ public:
      * object.
      */
     virtual std::string toString() const = 0;
-
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
-    virtual void setMonitor(SearchMonitor* monitor, const char* context = "");
-    virtual SearchMonitor* getMonitor() const;
-    virtual std::string getMonitorContext() const;
-    virtual void reportToMonitor(const SearchReport& report) const;
-#endif /* DOXYGEN_SHOULD_SKIP_THIS */
 };
 
-} // namespace os
-} // namespace yarp
+} // namespace yarp::os
 
 #endif // YARP_OS_SEARCHABLE_H

@@ -5,12 +5,9 @@
 # A set of macros for building YARP plugins.
 #
 
-# Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
-# Copyright (C) 2006-2010 RobotCub Consortium
-# All rights reserved.
-#
-# This software may be modified and distributed under the terms of the
-# BSD-3-Clause license. See the accompanying LICENSE file for details.
+# SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+# SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+# SPDX-License-Identifier: BSD-3-Clause
 
 ################################################################################
 ##
@@ -62,7 +59,7 @@ include(CMakeParseArguments)
 include(CMakeDependentOption)
 include(${CMAKE_CURRENT_LIST_DIR}/YarpInstallationHelpers.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/YarpPrintFeature.cmake)
-
+include(${CMAKE_CURRENT_LIST_DIR}/YarpDeviceParamsParserGenerator.cmake)
 
 ################################################################################
 #.rst:
@@ -85,9 +82,11 @@ include(${CMAKE_CURRENT_LIST_DIR}/YarpPrintFeature.cmake)
 #
 macro(YARP_BEGIN_PLUGIN_LIBRARY bundle_name)
   set(_options QUIET)
-  set(_oneValueArgs OPTION
-                    DEFAULT
-                    DOC)
+  set(_oneValueArgs
+    OPTION
+    DEFAULT
+    DOC
+  )
   set(_multiValueArgs )
   cmake_parse_arguments(_YBPL "${_options}" "${_oneValueArgs}" "${_multiValueArgs}" ${ARGN} )
 
@@ -170,6 +169,7 @@ endmacro()
 #                       [DOC "<plugin documentation>"]
 #                       [ADVANCED]
 #                       [INTERNAL]
+#                       [GENERATE_PARSER]
 #                       [DEPENDS <condition>]
 #                       [TEMPLATE <file_name|path_to_a_file>]
 #                       [TEMPLATE_DIR <dir>]
@@ -219,6 +219,8 @@ endmacro()
 # The ``DOC`` argument can be used to set a description for this option.
 # If the``ADVANCED`` option is enabled, this option is marked as advanced in
 # CMake.
+# If the ``GENERATE_PARSER`` option is enabled, a parameter parser will be generated
+# for the plugin. See documentation of: generateDeviceParamsParser()
 # If the ``INTERNAL`` option is enabled, this option is marked as internal in
 # CMake, and therefore not displayed in CMake gui. This also implies
 # `DEFAULT=ON` unless explicitly specified.
@@ -247,20 +249,27 @@ endmacro()
 # the command does not print any message, except for warnings and errors.
 
 macro(YARP_PREPARE_PLUGIN _plugin_name)
-  set(_options ADVANCED
-               INTERNAL
-               QUIET)
-  set(_oneValueArgs TYPE
-                    INCLUDE
-                    CATEGORY
-                    PARENT_TYPE
-                    OPTION
-                    DOC
-                    DEFAULT
-                    TEMPLATE
-                    TEMPLATE_DIR)
-  set(_multiValueArgs DEPENDS
-                      EXTRA_CONFIG)
+  set(_options
+    ADVANCED
+    INTERNAL
+    QUIET
+    GENERATE_PARSER
+  )
+  set(_oneValueArgs
+    TYPE
+    INCLUDE
+    CATEGORY
+    PARENT_TYPE
+    OPTION
+    DOC
+    DEFAULT
+    TEMPLATE
+    TEMPLATE_DIR
+  )
+  set(_multiValueArgs
+    DEPENDS
+    EXTRA_CONFIG
+  )
   cmake_parse_arguments(_YPP "${_options}" "${_oneValueArgs}" "${_multiValueArgs}" ${ARGN} )
 
   if(NOT DEFINED _YPP_TYPE OR NOT DEFINED _YPP_INCLUDE OR NOT DEFINED _YPP_CATEGORY)
@@ -412,14 +421,18 @@ library \@YARPPLUG_LIBRARY\@
       # still evaluates to false (
       set(${_YPP_OPTION} "OFF - Dependencies unsatisfied: '${_missing_deps}' - ${_plugin_name}-NOTFOUND" CACHE STRING "${_option_doc}" FORCE)
       string(REPLACE ";" "\;" _missing_deps "${_missing_deps}")
-      set_property(CACHE ${_YPP_OPTION}
-                   PROPERTY STRINGS "OFF - Dependencies unsatisfied: '${_missing_deps}' - ${_plugin_name}-NOTFOUND"
-                                    "OFF - You can try as much as you want, but '${_missing_deps}' is needed to build ${_plugin_name} - ${_plugin_name}-NOTFOUND"
-                                    "OFF - Are you crazy or what? '${_missing_deps}' is needed to build ${_plugin_name} - ${_plugin_name}-NOTFOUND"
-                                    "OFF - Didn't I already tell you that '${_missing_deps}' is needed to build ${_plugin_name}? - ${_plugin_name}-NOTFOUND"
-                                    "OFF - Stop it! - ${_plugin_name}-NOTFOUND"
-                                    "OFF - This is insane! Leave me alone! - ${_plugin_name}-NOTFOUND"
-                                    "ON - All right, you win. The plugin is enabled. Are you happy now? You just broke the build.")
+      set_property(
+        CACHE ${_YPP_OPTION}
+        PROPERTY
+          STRINGS
+            "OFF - Dependencies unsatisfied: '${_missing_deps}' - ${_plugin_name}-NOTFOUND"
+            "OFF - You can try as much as you want, but '${_missing_deps}' is needed to build ${_plugin_name} - ${_plugin_name}-NOTFOUND"
+            "OFF - Are you crazy or what? '${_missing_deps}' is needed to build ${_plugin_name} - ${_plugin_name}-NOTFOUND"
+            "OFF - Didn't I already tell you that '${_missing_deps}' is needed to build ${_plugin_name}? - ${_plugin_name}-NOTFOUND"
+            "OFF - Stop it! - ${_plugin_name}-NOTFOUND"
+            "OFF - This is insane! Leave me alone! - ${_plugin_name}-NOTFOUND"
+            "ON - All right, you win. The plugin is enabled. Are you happy now? You just broke the build."
+      )
       # Set non-cache variable that will override the value in current scope
       # For parent scopes, the "-NOTFOUND ensures that the variable still
       # evaluates to false
@@ -439,9 +452,11 @@ library \@YARPPLUG_LIBRARY\@
       set(_YPP_TEMPLATE "yarp_plugin_${_YPP_CATEGORY}.cpp.in")
     endif()
     unset(_template)
-    foreach(_dir "${CMAKE_CURRENT_SOURCE_DIR}"
-                 ${CMAKE_MODULE_PATH}
-                 "${YARP_MODULE_DIR}")
+    foreach(_dir
+      "${CMAKE_CURRENT_SOURCE_DIR}"
+      ${CMAKE_MODULE_PATH}
+      "${YARP_MODULE_DIR}"
+    )
       if(EXISTS "${_dir}/${_YPP_TEMPLATE_DIR}/${_YPP_TEMPLATE}")
         set(_template "${_dir}/${_YPP_TEMPLATE_DIR}/${_YPP_TEMPLATE}")
         break()
@@ -456,11 +471,8 @@ library \@YARPPLUG_LIBRARY\@
       else()
         file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/${_YPP_TEMPLATE}"
 "/*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 /*
@@ -506,9 +518,11 @@ YARP_DEFINE_SHARED_SUBCLASS(\@YARPPLUG_NAME\@, \@YARPPLUG_TYPE\@, \@YARPPLUG_PAR
     set(_fname ${CMAKE_CURRENT_BINARY_DIR}/yarp_plugin_${_plugin_fullname}.cpp)
 
     # Configure the file
-    configure_file("${_YPP_TEMPLATE}"
-                   "${_fname}"
-                   @ONLY)
+    configure_file(
+      "${_YPP_TEMPLATE}"
+      "${_fname}"
+      @ONLY
+    )
     # Put the file in the right source group if defined
     get_property(autogen_source_group_set GLOBAL PROPERTY AUTOGEN_SOURCE_GROUP SET)
     if(autogen_source_group_set)
@@ -531,9 +545,14 @@ YARP_DEFINE_SHARED_SUBCLASS(\@YARPPLUG_NAME\@, \@YARPPLUG_TYPE\@, \@YARPPLUG_PAR
     set_property(DIRECTORY APPEND PROPERTY YARP_BUNDLE_CODE ${_fname})
   endif()
 
-  set_property(DIRECTORY APPEND PROPERTY YARP_BUNDLE_INI "${_plugin_name}.ini")
-  string(MAKE_C_IDENTIFIER "${_plugin_name}.ini" _ini_id)
-  set_property(DIRECTORY PROPERTY YARP_BUNDLE_INI_CONTENT_${_ini_id} ${_ini_file_content})
+  if(ENABLE_${_plugin_name})
+      set_property(DIRECTORY APPEND PROPERTY YARP_BUNDLE_INI "${_plugin_name}.ini")
+      string(MAKE_C_IDENTIFIER "${_plugin_name}.ini" _ini_id)
+      set_property(DIRECTORY PROPERTY YARP_BUNDLE_INI_CONTENT_${_ini_id} ${_ini_file_content})
+  else()
+      # This if will skip the .ini file generation if the plugin is disabled
+      # message ("Skipping plugin {_plugin_name}.ini because it is disabled")
+  endif()
 
   if(NOT _YPP_QUIET AND NOT YarpPlugin_QUIET)
     if(${_YPP_OPTION})
@@ -552,6 +571,12 @@ YARP_DEFINE_SHARED_SUBCLASS(\@YARPPLUG_NAME\@, \@YARPPLUG_TYPE\@, \@YARPPLUG_PAR
     add_feature_info(${_plugin_fullname} ${_YPP_OPTION} "${_feature_doc}.")
   endif()
 
+  if (NOT SKIP_${_plugin_name})
+    if(_YPP_GENERATE_PARSER)
+        message ("Invoking generateDeviceParamsParser (${_YPP_TYPE} ${_plugin_name})")
+        generateDeviceParamsParser(${_YPP_TYPE} ${_plugin_name})
+    endif()
+  endif()
 endmacro()
 
 
@@ -664,8 +689,11 @@ macro(YARP_END_PLUGIN_LIBRARY bundle_name)
         set(YARP_CODE_POST "${YARP_CODE_POST}\n        add_owned_${dev}(\"${owner}\");")
       endforeach()
     endif()
-    configure_file("${YARP_MODULE_DIR}/template/yarp_plugin_library.cpp.in"
-                   "${CMAKE_CURRENT_BINARY_DIR}/yarp_${YARP_PLUGIN_MASTER}_plugin_library.cpp" @ONLY)
+    configure_file(
+      "${YARP_MODULE_DIR}/template/yarp_plugin_library.cpp.in"
+      "${CMAKE_CURRENT_BINARY_DIR}/yarp_${YARP_PLUGIN_MASTER}_plugin_library.cpp"
+      @ONLY
+    )
     # Put the file in the right source group if defined
     get_property(autogen_source_group_set GLOBAL PROPERTY AUTOGEN_SOURCE_GROUP SET)
     if(autogen_source_group_set)
@@ -724,7 +752,9 @@ macro(YARP_ADD_PLUGIN_YARPDEV_EXECUTABLE exename bundle_name)
   add_executable(${exename})
   target_sources(${exename} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/${bundle_name}_yarpdev.cpp)
   target_link_libraries(${exename} PRIVATE ${bundle_name})
-  target_link_libraries(${exename} PRIVATE YARP::YARP_os
-                                           YARP::YARP_init
-                                           YARP::YARP_dev)
+  target_link_libraries(${exename} PRIVATE
+    YARP::YARP_os
+    YARP::YARP_init
+    YARP::YARP_dev
+  )
 endmacro()

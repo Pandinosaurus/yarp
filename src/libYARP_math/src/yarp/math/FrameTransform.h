@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_MATH_TRANSFORM_H
@@ -11,34 +8,26 @@
 
 #include <yarp/sig/Vector.h>
 #include <yarp/sig/Matrix.h>
+
 #include <yarp/math/api.h>
-#include <yarp/math/Quaternion.h>
+#include <yarp/math/FrameTransformData.h>
 
-namespace yarp {
-namespace math {
+namespace yarp::math {
 
-class YARP_math_API FrameTransform
+class YARP_math_API FrameTransform : public yarp::math::FrameTransformData
 {
+/*
 public:
     YARP_SUPPRESS_DLL_INTERFACE_WARNING_ARG(std::string) src_frame_id;
     YARP_SUPPRESS_DLL_INTERFACE_WARNING_ARG(std::string) dst_frame_id;
-    double timestamp;
+    double timestamp = 0;
+    bool   isStatic  = false;
+    yarp::math::Translation translation;
+    yarp::math::Quaternion rotation;
+*/
 
-    struct Translation_t
-    {
-        double tX;
-        double tY;
-        double tZ;
-
-        void set(double x, double y, double z)
-        {
-            tX = x;
-            tY = y;
-            tZ = z;
-        }
-    } translation;
-
-    Quaternion rotation;
+public:
+    bool isValid() const;
 
     FrameTransform();
 
@@ -67,10 +56,10 @@ public:
        rotation_as_matrix=1,
        rotation_as_rpy=2
     };
+
     std::string toString(display_transform_mode_t format= rotation_as_quaternion) const;
 };
 
-} // namespace sig
-} // namespace yarp
+} // namespace yarp::math
 
 #endif // YARP_MATH_TRANSFORM_H

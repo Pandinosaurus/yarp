@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <robottestingframework/dll/Plugin.h>
@@ -91,8 +88,9 @@ bool YarpFixManager::setup(int argc, char** argv) {
 void YarpFixManager::tearDown() {
     ROBOTTESTINGFRAMEWORK_FIXTURE_REPORT("yarpmanager is tearing down the fixture...");
     bool ret = manager->stop();
-    if(!ret)
+    if (!ret) {
         ret = manager->kill();
+    }
     const char* szerror = manager->getLogger()->getLastError();
     ROBOTTESTINGFRAMEWORK_ASSERT_ERROR_IF_FALSE(ret,
                         "yarpmanager cannot teardown the fixture because " +

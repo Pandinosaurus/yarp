@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_IMPLEMENTREMOTEVARIABLES_H
@@ -11,19 +8,18 @@
 
 #include <yarp/dev/IRemoteVariables.h>
 
-namespace yarp {
-    namespace dev {
-        class ImplementRemoteVariables;
-    }
+namespace yarp::dev {
+class ImplementRemoteVariables;
 }
 
 class YARP_dev_API yarp::dev::ImplementRemoteVariables: public IRemoteVariables
 {
 protected:
-    IRemoteVariablesRaw *ivar;
-    void *helper;
-    double *temp1;
-    double *temp2;
+    IRemoteVariablesRaw*     m_iraw=nullptr;
+    void*                    m_helper=nullptr;
+    std::vector<int>         m_buffer_ints;
+    std::vector<double>      m_buffer_doubles;
+    std::mutex               m_imp_mutex;
 
 
     /**
@@ -49,11 +45,11 @@ public:
 
     virtual ~ImplementRemoteVariables();
 
-    bool getRemoteVariable(std::string key, yarp::os::Bottle& val) override;
+    yarp::dev::ReturnValue getRemoteVariable(std::string key, yarp::os::Bottle& val) override;
 
-    bool setRemoteVariable(std::string key, const yarp::os::Bottle& val) override;
+    yarp::dev::ReturnValue setRemoteVariable(std::string key, const yarp::os::Bottle& val) override;
 
-    bool getRemoteVariablesList(yarp::os::Bottle* listOfKeys) override;
+    yarp::dev::ReturnValue getRemoteVariablesList(yarp::os::Bottle* listOfKeys) override;
 };
 
 #endif // YARP_DEV_IMPLEMENTREMOTEVARIABLES_H

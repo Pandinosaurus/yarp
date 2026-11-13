@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/companion/impl/Companion.h>
@@ -28,7 +25,7 @@ void writeBottleAsFile(const char *fileName, const Bottle& bot)
     fclose(fout);
     fout = nullptr;
 }
-}
+} // namespace
 
 int Companion::cmdCMake(int argc, char *argv[])
 {
@@ -42,7 +39,7 @@ int Companion::cmdCMake(int argc, char *argv[])
     f.addString("# the current directory.");
     f.addString("# Replace \"yarpy\" with whatever your executable should be called.");
     f.addString("");
-    f.addString("cmake_minimum_required(VERSION 3.12)");
+    f.addString("cmake_minimum_required(VERSION 3.16)");
     f.addString("project(yarpy)");
     f.addString("");
     f.addString("# Find YARP.  Point the YARP_DIR environment variable at your build.");

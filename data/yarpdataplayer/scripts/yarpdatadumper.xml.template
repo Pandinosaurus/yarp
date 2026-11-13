@@ -1,3 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!--
+  SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+  SPDX-License-Identifier: BSD-3-Clause
+-->
+
 <application>
 <name>yarpdatadumper recording example</name>
 <dependencies>
@@ -6,13 +13,6 @@
     <module>
         <name>yarpdatadumper</name>
         <parameters>--name /data/head</parameters>
-        <node>computer1</node>
-        <stdio></stdio>
-        <tag>yarpdatadumper</tag>
-    </module>
-    <module>
-        <name>yarpdatadumper</name>
-        <parameters>--name /data/inertial</parameters>
         <node>computer1</node>
         <stdio></stdio>
         <tag>yarpdatadumper</tag>
@@ -66,11 +66,6 @@
         <stdio></stdio>
         <tag>yarpdatadumper</tag>
     </module>
-    <connection>
-        <from>/icub/inertial</from>
-        <to>/data/inertial</to>
-        <protocol>udp</protocol>
-    </connection>
     <connection>
         <from>/icub/head/state:o</from>
         <to>/data/head</to>

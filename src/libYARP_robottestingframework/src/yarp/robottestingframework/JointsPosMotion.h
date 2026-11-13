@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_ROBOTTESTINGFRAMEWORK_JOINTSPOSMOVE_H
@@ -14,8 +11,7 @@
 #include <yarp/dev/PolyDriver.h>
 #include <string>
 
-namespace yarp {
-namespace robottestingframework {
+namespace yarp::robottestingframework {
 
 /**
  * \brief The JointPosMotion class is used
@@ -116,7 +112,6 @@ private:
     Private * const mPriv;
 };
 
-} // namespace robottestingframework
-} // namespace yarp
+} // namespace yarp::robottestingframework
 
 #endif // YARP_ROBOTTESTINGFRAMEWORK_JOINTSPOSMOVE_H

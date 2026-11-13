@@ -1,10 +1,7 @@
 #!/usr/bin/lua
 
--- Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
--- All rights reserved.
---
--- This software may be modified and distributed under the terms of the
--- BSD-3-Clause license. See the accompanying LICENSE file for details.
+-- SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+-- SPDX-License-Identifier: BSD-3-Clause
 
 
 -- LUA_CPATH should have the path to yarp-lua binding library (i.e. yarp.so, yarp.dll)
@@ -14,7 +11,7 @@ require("yarp")
 yarp.Network()
 
 options = yarp.Property()
-options:put("device", "remote_controlboard")
+options:put("device", "controlBoard_nwc_yarp")
 options:put("local", "/motor/lua/right_arm")
 options:put("remote", "/icubSim/right_arm")
 
@@ -44,9 +41,9 @@ if ipos == nil then
     os.exit()
 end
 
-icm = driver:viewIControlMode2()
+icm = driver:viewIControlMode()
 if icm == nil then
-    print("Cannot open the IControlMode2 interface");
+    print("Cannot open the IControlMode interface");
     driver:close()
     os.exit()
 end

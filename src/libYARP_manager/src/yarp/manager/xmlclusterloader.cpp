@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/manager/xmlclusterloader.h>
@@ -21,13 +18,12 @@
 
 
 
-using namespace std;
 using namespace yarp::manager;
 
 /**
  * load only one application indicated by its xml file name
  */
-XmlClusterLoader::XmlClusterLoader(string szFileName) : confFile(std::move(szFileName))
+XmlClusterLoader::XmlClusterLoader(std::string szFileName) : confFile(std::move(szFileName))
 {
 }
 
@@ -129,6 +125,21 @@ bool XmlClusterLoader::parseXmlFile(Cluster &_cluster)
         if (node->Attribute("ssh-options"))
         {
             c_node.ssh_options = node->Attribute("ssh-options");
+        }
+
+        if (node->Attribute("docker"))
+        {
+            c_node.docker = node->Attribute("docker");
+        }
+
+        if (node->Attribute("conda"))
+        {
+            c_node.conda = node->Attribute("conda");
+        }
+
+        if (node->Attribute("pixi"))
+        {
+            c_node.pixi = node->Attribute("pixi");
         }
 
         if (node->Attribute("address"))

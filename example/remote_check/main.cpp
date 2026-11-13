@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <stdio.h>
@@ -18,7 +15,8 @@
 #include <yarp/os/Vocab.h>
 #include <yarp/sig/Image.h>
 #include <yarp/dev/PolyDriver.h>
-#include <yarp/dev/FrameGrabberInterfaces.h>
+#include <yarp/dev/IFrameGrabberImage.h>
+#include <yarp/dev/IFrameGrabberControls.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
 
 using namespace yarp::os;
@@ -36,15 +34,15 @@ public:
         Bottle cmd, response;
         cmd.read(connection);
         printf("command received: %s\n", cmd.toString().c_str());
-        int code = cmd.get(0).asVocab();
+        int code = cmd.get(0).asVocab32();
         switch (code) {
-        case yarp::os::createVocab('s','e','t'):
+        case yarp::os::createVocab32('s','e','t'):
             printf("set command received\n");
             prop.put(cmd.get(1).asString().c_str(),cmd.get(2));
             break;
-        case yarp::os::createVocab('g','e','t'):
+        case yarp::os::createVocab32('g','e','t'):
             printf("get command received\n");
-            response.addVocab(yarp::os::createVocab('i','s'));
+            response.addVocab32('i','s');
             response.add(cmd.get(1));
             response.add(prop.find(cmd.get(1).asString().c_str()));
             break;

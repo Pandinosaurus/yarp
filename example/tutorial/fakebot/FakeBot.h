@@ -1,16 +1,13 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/dev/DeviceDriver.h>
 
 #include <yarp/dev/ControlBoardInterfaces.h>
-#include <yarp/dev/FrameGrabberInterfaces.h>
+#include <yarp/dev/IFrameGrabberImage.h>
 #include <yarp/sig/Vector.h>
 #include <yarp/sig/Image.h>
 #include <yarp/os/Time.h>
@@ -26,8 +23,7 @@ class yarp::dev::FakeBot : public DeviceDriver,
             public IVelocityControl,
             public IAmplifierControl,
             public IEncoders,
-            public IFrameGrabberImage,
-            public DeviceResponder
+            public IFrameGrabberImage
 {
 private:
     int njoints;
@@ -85,8 +81,8 @@ public:
 
     // IPositionControl etc.
 
-    virtual bool getAxes(int *ax) {
-        *ax = njoints;
+    virtual bool getAxes(size_t& ax) {
+        ax = njoints;
         return true;
     }
 
@@ -132,7 +128,7 @@ public:
     }
 
 
-    virtual bool setRefSpeed(int j, double sp) {
+    virtual bool setTrajSpeed(int j, double sp) {
         if (j<njoints) {
             speed[j] = sp;
         }
@@ -140,7 +136,7 @@ public:
     }
 
 
-    virtual bool setRefSpeeds(const double *spds) {
+    virtual bool setTrajSpeeds(const double *spds) {
         for (int i=0; i<njoints; i++) {
             speed[i] = spds[i];
         }
@@ -148,7 +144,7 @@ public:
     }
 
 
-    virtual bool setRefAcceleration(int j, double acc) {
+    virtual bool setTrajAcceleration(int j, double acc) {
         if (j<njoints) {
             this->acc[j] = acc;
         }
@@ -156,7 +152,7 @@ public:
     }
 
 
-    virtual bool setRefAccelerations(const double *accs) {
+    virtual bool setTrajAccelerations(const double *accs) {
         for (int i=0; i<njoints; i++) {
             acc[i] = accs[i];
         }
@@ -164,7 +160,7 @@ public:
     }
 
 
-    virtual bool getRefSpeed(int j, double *ref) {
+    virtual bool getTrajSpeed(int j, double *ref) {
         if (j<njoints) {
             (*ref) = speed[j];
         }
@@ -172,7 +168,7 @@ public:
     }
 
 
-    virtual bool getRefSpeeds(double *spds) {
+    virtual bool getTrajSpeeds(double *spds) {
         for (int i=0; i<njoints; i++) {
             spds[i] = speed[i];
         }
@@ -180,7 +176,7 @@ public:
     }
 
 
-    virtual bool getRefAcceleration(int j, double *acc) {
+    virtual bool getTrajAcceleration(int j, double *acc) {
         if (j<njoints) {
             (*acc) = this->acc[j];
         }
@@ -188,7 +184,7 @@ public:
     }
 
 
-    virtual bool getRefAccelerations(double *accs) {
+    virtual bool getTrajAccelerations(double *accs) {
         for (int i=0; i<njoints; i++) {
             accs[i] = acc[i];
         }

@@ -1,23 +1,60 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_ICONTROLMODE_H
 #define YARP_DEV_ICONTROLMODE_H
 
+#include <vector>
 #include <yarp/os/Vocab.h>
 #include <yarp/dev/api.h>
+#include <yarp/dev/ReturnValue.h>
 
-namespace yarp {
-    namespace dev {
-    class IControlModeRaw;
-    class IControlMode;
-    }
+namespace yarp::dev {
+class IControlModeRaw;
+class IControlMode;
+
+enum class SelectableControlModeEnum
+{
+    VOCAB_CM_IDLE            =   yarp::os::createVocab32('i','d','l'),
+    VOCAB_CM_TORQUE          =   yarp::os::createVocab32('t','o','r','q'),
+    VOCAB_CM_POSITION        =   yarp::os::createVocab32('p','o','s'),
+    VOCAB_CM_POSITION_DIRECT =   yarp::os::createVocab32('p','o','s','d'),
+    VOCAB_CM_VELOCITY        =   yarp::os::createVocab32('v','e','l'),
+    VOCAB_CM_VELOCITY_DIRECT =   yarp::os::createVocab32('v','e','l','d'),
+    VOCAB_CM_CURRENT         =   yarp::os::createVocab32('i','c','u','r'),
+    VOCAB_CM_PWM             =   yarp::os::createVocab32('i','p','w','m'),
+    VOCAB_CM_IMPEDANCE_POS   =   yarp::os::createVocab32('i','m','p','o'),  // deprecated
+    VOCAB_CM_IMPEDANCE_VEL   =   yarp::os::createVocab32('i','m','v','e'),  // deprecated
+    VOCAB_CM_MIXED           =   yarp::os::createVocab32('m','i','x'),
+    VOCAB_CM_FORCE_IDLE      =   yarp::os::createVocab32('f','i','d','l')
+};
+
+enum class ControlModeEnum
+{
+    VOCAB_CM_IDLE            =   yarp::os::createVocab32('i','d','l'),
+    VOCAB_CM_TORQUE          =   yarp::os::createVocab32('t','o','r','q'),
+    VOCAB_CM_POSITION        =   yarp::os::createVocab32('p','o','s'),
+    VOCAB_CM_POSITION_DIRECT =   yarp::os::createVocab32('p','o','s','d'),
+    VOCAB_CM_VELOCITY        =   yarp::os::createVocab32('v','e','l'),
+    VOCAB_CM_VELOCITY_DIRECT =   yarp::os::createVocab32('v','e','l','d'),
+    VOCAB_CM_CURRENT         =   yarp::os::createVocab32('i','c','u','r'),
+    VOCAB_CM_PWM             =   yarp::os::createVocab32('i','p','w','m'),
+    VOCAB_CM_IMPEDANCE_POS   =   yarp::os::createVocab32('i','m','p','o'),  // deprecated
+    VOCAB_CM_IMPEDANCE_VEL   =   yarp::os::createVocab32('i','m','v','e'),  // deprecated
+    VOCAB_CM_MIXED           =   yarp::os::createVocab32('m','i','x'),
+    VOCAB_CM_FORCE_IDLE      =   yarp::os::createVocab32('f','i','d','l'),
+    VOCAB_CM_HW_FAULT        =   yarp::os::createVocab32('h','w','f','a'),
+    VOCAB_CM_CALIBRATING     =   yarp::os::createVocab32('c','a','l'),     // the joint is calibrating
+    VOCAB_CM_CALIB_DONE      =   yarp::os::createVocab32('c','a','l','d'), // calibration successfully completed
+    VOCAB_CM_NOT_CONFIGURED  =   yarp::os::createVocab32('c','f','g','n'), // missing initial configuration (default value at start-up)
+    VOCAB_CM_CONFIGURED      =   yarp::os::createVocab32('c','f','g','y'), // initial configuration completed, if any
+    VOCAB_CM_UNKNOWN         =   yarp::os::createVocab32('u','n','k','w')
+};
 }
+
+#define ALLOW_OLD_CONTROL_MODE_INTERFACE 1
 
 /**
  * @ingroup dev_iface_motor
@@ -30,19 +67,36 @@ public:
     virtual ~IControlMode(){}
 
     /**
+    * Return a list of available control mode for the given joint.
+    * @param j joint number
+    * @param avail a vector that will contain the list of available control modes for joint j.
+    * @return: true/false success failure.
+    */
+    virtual yarp::dev::ReturnValue getAvailableControlModes(int j, std::vector<yarp::dev::SelectableControlModeEnum>& avail)=0;
+
+    /**
     * Get the current control mode.
     * @param j joint number
     * @param mode a vocab of the current control mode for joint j.
     * @return: true/false success failure.
     */
-    virtual bool getControlMode(int j, int *mode)=0;
+    virtual yarp::dev::ReturnValue getControlMode(int j, yarp::dev::ControlModeEnum& mode)=0;
+#if ALLOW_OLD_CONTROL_MODE_INTERFACE
+    virtual yarp::dev::ReturnValue getControlMode(int j, int *mode)
+    {
+        yarp::dev::ControlModeEnum mode_e;
+        yarp::dev::ReturnValue ret = getControlMode(j, mode_e);
+        *mode = static_cast<int>(mode_e);
+        return ret;
+    }
+#endif
 
     /**
     * Get the current control mode (multiple joints).
     * @param modes a vector containing vocabs for the current control modes of the joints.
     * @return: true/false success failure.
     */
-    virtual bool getControlModes(int *modes)=0;
+    virtual yarp::dev::ReturnValue getControlModes(std::vector<yarp::dev::ControlModeEnum>& mode)=0;
 
     /**
     * Get the current control mode for a subset of axes.
@@ -56,7 +110,7 @@ public:
     *          modes    VOCAB_CM_POSITION VOCAB_CM_VELOCITY VOCAB_CM_POSITION
     * @return true/false success failure.
     */
-    virtual bool getControlModes(const int n_joint, const int *joints, int *modes)=0;
+    virtual yarp::dev::ReturnValue getControlModes(const std::vector<int>& joints, std::vector<yarp::dev::ControlModeEnum>& mode)=0;
 
     /**
     * Set the current control mode.
@@ -65,7 +119,15 @@ public:
     * @return true if the new controlMode was successfully set, false if the message was not received or
     *         the joint was unable to switch to the desired controlMode
     *         (e.g. the joint is on a fault condition or the desired mode is not implemented).    */
-    virtual bool setControlMode(const int j, const int mode)=0;
+    virtual yarp::dev::ReturnValue setControlMode(int j, yarp::dev::SelectableControlModeEnum mode)=0;
+#if ALLOW_OLD_CONTROL_MODE_INTERFACE
+    virtual yarp::dev::ReturnValue setControlMode(const int j, const int mode)
+    {
+        yarp::dev::SelectableControlModeEnum emode = static_cast<yarp::dev::SelectableControlModeEnum>(mode);
+        yarp::dev::ReturnValue ret = setControlMode(j, emode);
+        return ret;
+    }
+#endif
 
     /**
     * Set the current control mode for a subset of axes.
@@ -81,7 +143,7 @@ public:
     *         the joint was unable to switch to the desired controlMode
     *         (e.g. the joint is on a fault condition or the desired mode is not implemented).
     */
-    virtual bool setControlModes(const int n_joint, const int *joints, int *modes)=0;
+    virtual yarp::dev::ReturnValue setControlModes(const std::vector<int>& joints, const std::vector<yarp::dev::SelectableControlModeEnum>& mode)=0;
 
     /**
     * Set the current control mode (multiple joints).
@@ -90,12 +152,13 @@ public:
     *         the joint was unable to switch to the desired controlMode
     *         (e.g. the joint is on a fault condition or the desired mode is not implemented).
     */
-    virtual bool setControlModes(int *modes)=0;
+    virtual yarp::dev::ReturnValue setControlModes(const std::vector<yarp::dev::SelectableControlModeEnum>& mode)=0;
+
 };
 
 
 /**
- * @ingroup dev_iface_motor
+ * @ingroup dev_iface_motor_raw
  *
  * Interface for setting control mode in control board. See IControlMode for
  * more documentation.
@@ -104,50 +167,54 @@ class YARP_dev_API yarp::dev::IControlModeRaw
 {
 public:
     virtual ~IControlModeRaw(){}
-    virtual bool getControlModeRaw(int j, int *mode)=0;
-    virtual bool getControlModesRaw(int* modes)=0;
-    virtual bool getControlModesRaw(const int n_joint, const int *joints, int *modes)=0;
-    virtual bool setControlModeRaw(const int j, const int mode)=0;
-    virtual bool setControlModesRaw(const int n_joint, const int *joints, int *modes)=0;
-    virtual bool setControlModesRaw(int *modes)=0;
+    virtual yarp::dev::ReturnValue getAvailableControlModesRaw(int j, std::vector<yarp::dev::SelectableControlModeEnum>& avail)=0;
+
+    virtual yarp::dev::ReturnValue getControlModeRaw(int j, yarp::dev::ControlModeEnum& mode)=0;
+    virtual yarp::dev::ReturnValue getControlModesRaw(std::vector<yarp::dev::ControlModeEnum>& mode)=0;
+    virtual yarp::dev::ReturnValue getControlModesRaw(const std::vector<int>& joints, std::vector<yarp::dev::ControlModeEnum>& mode)=0;
+
+    virtual yarp::dev::ReturnValue setControlModeRaw(int j, yarp::dev::SelectableControlModeEnum mode)=0;
+    virtual yarp::dev::ReturnValue setControlModesRaw(const std::vector<int>& joints, const std::vector<yarp::dev::SelectableControlModeEnum>& mode)=0;
+    virtual yarp::dev::ReturnValue setControlModesRaw(const std::vector<yarp::dev::SelectableControlModeEnum>& mode)=0;
 };
 
 
 // new style VOCABS
 // Interface
-constexpr yarp::conf::vocab32_t VOCAB_ICONTROLMODE = yarp::os::createVocab('i','c','m','d');
+constexpr yarp::conf::vocab32_t VOCAB_ICONTROLMODE = yarp::os::createVocab32('i','c','m','d');
 // Methods
-constexpr yarp::conf::vocab32_t VOCAB_CM_CONTROL_MODE       =   yarp::os::createVocab('c','m','o','d');
-constexpr yarp::conf::vocab32_t VOCAB_CM_CONTROL_MODE_GROUP =   yarp::os::createVocab('c','m','o','g');
-constexpr yarp::conf::vocab32_t VOCAB_CM_CONTROL_MODES      =   yarp::os::createVocab('c','m','d','s');
+constexpr yarp::conf::vocab32_t VOCAB_CM_CONTROL_MODE       =   yarp::os::createVocab32('c','m','o','d');
+constexpr yarp::conf::vocab32_t VOCAB_CM_CONTROL_MODE_GROUP =   yarp::os::createVocab32('c','m','o','g');
+constexpr yarp::conf::vocab32_t VOCAB_CM_CONTROL_MODES      =   yarp::os::createVocab32('c','m','d','s');
 
 // Values
 // Read / Write
-constexpr yarp::conf::vocab32_t VOCAB_CM_IDLE            =   yarp::os::createVocab('i','d','l');
-constexpr yarp::conf::vocab32_t VOCAB_CM_TORQUE          =   yarp::os::createVocab('t','o','r','q');
-constexpr yarp::conf::vocab32_t VOCAB_CM_POSITION        =   yarp::os::createVocab('p','o','s');
-constexpr yarp::conf::vocab32_t VOCAB_CM_POSITION_DIRECT =   yarp::os::createVocab('p','o','s','d');
-constexpr yarp::conf::vocab32_t VOCAB_CM_VELOCITY        =   yarp::os::createVocab('v','e','l');
-constexpr yarp::conf::vocab32_t VOCAB_CM_CURRENT         =   yarp::os::createVocab('i','c','u','r');
-constexpr yarp::conf::vocab32_t VOCAB_CM_PWM             =   yarp::os::createVocab('i','p','w','m');
-constexpr yarp::conf::vocab32_t VOCAB_CM_IMPEDANCE_POS   =   yarp::os::createVocab('i','m','p','o');  // deprecated
-constexpr yarp::conf::vocab32_t VOCAB_CM_IMPEDANCE_VEL   =   yarp::os::createVocab('i','m','v','e');  // deprecated
+constexpr yarp::conf::vocab32_t VOCAB_CM_IDLE            =   yarp::os::createVocab32('i','d','l');
+constexpr yarp::conf::vocab32_t VOCAB_CM_TORQUE          =   yarp::os::createVocab32('t','o','r','q');
+constexpr yarp::conf::vocab32_t VOCAB_CM_POSITION        =   yarp::os::createVocab32('p','o','s');
+constexpr yarp::conf::vocab32_t VOCAB_CM_POSITION_DIRECT =   yarp::os::createVocab32('p','o','s','d');
+constexpr yarp::conf::vocab32_t VOCAB_CM_VELOCITY        =   yarp::os::createVocab32('v','e','l');
+constexpr yarp::conf::vocab32_t VOCAB_CM_VELOCITY_DIRECT =   yarp::os::createVocab32('v','e','l','d');
+constexpr yarp::conf::vocab32_t VOCAB_CM_CURRENT         =   yarp::os::createVocab32('i','c','u','r');
+constexpr yarp::conf::vocab32_t VOCAB_CM_PWM             =   yarp::os::createVocab32('i','p','w','m');
+constexpr yarp::conf::vocab32_t VOCAB_CM_IMPEDANCE_POS   =   yarp::os::createVocab32('i','m','p','o');  // deprecated
+constexpr yarp::conf::vocab32_t VOCAB_CM_IMPEDANCE_VEL   =   yarp::os::createVocab32('i','m','v','e');  // deprecated
 
 // Values
 // Read / Write
-constexpr yarp::conf::vocab32_t  VOCAB_CM_MIXED = yarp::os::createVocab('m','i','x');
+constexpr yarp::conf::vocab32_t  VOCAB_CM_MIXED = yarp::os::createVocab32('m','i','x');
 
 // Write only (only from high level toward the joint)
-constexpr yarp::conf::vocab32_t  VOCAB_CM_FORCE_IDLE =   yarp::os::createVocab('f','i','d','l');
+constexpr yarp::conf::vocab32_t  VOCAB_CM_FORCE_IDLE =   yarp::os::createVocab32('f','i','d','l');
 
 // Read only (imposed by the board on special events)
-constexpr yarp::conf::vocab32_t  VOCAB_CM_HW_FAULT       =    yarp::os::createVocab('h','w','f','a');
-constexpr yarp::conf::vocab32_t  VOCAB_CM_CALIBRATING    =    yarp::os::createVocab('c','a','l');     // the joint is calibrating
-constexpr yarp::conf::vocab32_t  VOCAB_CM_CALIB_DONE     =    yarp::os::createVocab('c','a','l','d'); // calibration successfully completed
-constexpr yarp::conf::vocab32_t  VOCAB_CM_NOT_CONFIGURED =    yarp::os::createVocab('c','f','g','n'); // missing initial configuration (default value at start-up)
-constexpr yarp::conf::vocab32_t  VOCAB_CM_CONFIGURED     =    yarp::os::createVocab('c','f','g','y'); // initial configuration completed, if any
+constexpr yarp::conf::vocab32_t  VOCAB_CM_HW_FAULT       =    yarp::os::createVocab32('h','w','f','a');
+constexpr yarp::conf::vocab32_t  VOCAB_CM_CALIBRATING    =    yarp::os::createVocab32('c','a','l');     // the joint is calibrating
+constexpr yarp::conf::vocab32_t  VOCAB_CM_CALIB_DONE     =    yarp::os::createVocab32('c','a','l','d'); // calibration successfully completed
+constexpr yarp::conf::vocab32_t  VOCAB_CM_NOT_CONFIGURED =    yarp::os::createVocab32('c','f','g','n'); // missing initial configuration (default value at start-up)
+constexpr yarp::conf::vocab32_t  VOCAB_CM_CONFIGURED     =    yarp::os::createVocab32('c','f','g','y'); // initial configuration completed, if any
 
 // Read only (cannot be set from user)
-constexpr yarp::conf::vocab32_t VOCAB_CM_UNKNOWN =   yarp::os::createVocab('u','n','k','w');
+constexpr yarp::conf::vocab32_t VOCAB_CM_UNKNOWN =   yarp::os::createVocab32('u','n','k','w');
 
 #endif // YARP_DEV_ICONTROLMODE_H

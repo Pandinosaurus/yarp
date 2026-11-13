@@ -1,26 +1,24 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include "yarp/dev/ControlBoardInterfacesImpl.h"
 #include <yarp/dev/ControlBoardHelper.h>
-#include <yarp/dev/impl/FixedSizeBuffersManager.h>
+#include <yarp/dev/ControlBoardHelpers.h>
 
 #include <cstdio>
 using namespace yarp::dev;
 
-#define JOINTIDCHECK if (m >= castToMapper(helper)->axes()){yError("motor id out of bound"); return false;}
+namespace {
+YARP_LOG_COMPONENT(IMPLEMENT_LAYER_COMPONENT, "yarp.ImplementMotor")
+}
 
 ////////////////////////
 // Encoder Interface Timed Implementation
 ImplementMotor::ImplementMotor(IMotorRaw *y) :
-    imotor(y),
-    helper(nullptr),
-    doubleBuffManager(nullptr)
+    m_iraw(y),
+    m_helper(nullptr)
 { }
 
 ImplementMotor::~ImplementMotor()
@@ -30,14 +28,15 @@ ImplementMotor::~ImplementMotor()
 
 bool ImplementMotor:: initialize (int size, const int *amap)
 {
-    if (helper!=nullptr)
+    if (m_helper != nullptr) {
         return false;
+    }
 
-    helper=(void *)(new ControlBoardHelper(size, amap));
-    yAssert (helper != nullptr);
+    m_helper=(void *)(new ControlBoardHelper(size, amap));
+    yAssert (m_helper != nullptr);
 
-    doubleBuffManager = new yarp::dev::impl::FixedSizeBuffersManager<double> (size);
-    yAssert (doubleBuffManager != nullptr);
+    m_buffer_ints.resize   (size);
+    m_buffer_doubles.resize(size);
 
     return true;
 }
@@ -48,91 +47,102 @@ bool ImplementMotor:: initialize (int size, const int *amap)
 */
 bool ImplementMotor::uninitialize ()
 {
-    if (helper!=nullptr)
+    if (m_helper!=nullptr)
     {
-        delete castToMapper(helper);
-        helper=nullptr;
-    }
-
-    if(doubleBuffManager)
-    {
-        delete doubleBuffManager;
-        doubleBuffManager=nullptr;
+        delete castToMapper(m_helper);
+        m_helper=nullptr;
     }
 
     return true;
 }
 
-bool ImplementMotor::getNumberOfMotors(int *num)
+ReturnValue ImplementMotor::getNumberOfMotors(int *num)
 {
-    (*num)=castToMapper(helper)->axes();
-    return true;
+    std::lock_guard lock(m_imp_mutex);
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,num)
+
+    (*num)=castToMapper(m_helper)->axes();
+    return ReturnValue_ok;
 }
 
-bool ImplementMotor::getTemperature(int m, double* value)
+ReturnValue ImplementMotor::getTemperature(int m, double* value)
 {
-    JOINTIDCHECK
-    bool ret;
-    int k=castToMapper(helper)->toHw(m);
+    std::lock_guard lock(m_imp_mutex);
+    JOINTIDCHECK(IMPLEMENT_LAYER_COMPONENT,m)
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,value)
 
-    ret=imotor->getTemperatureRaw(k, value);
+    ReturnValue ret;
+    int k=castToMapper(m_helper)->toHw(m);
+
+    ret=m_iraw->getTemperatureRaw(k, value);
 
     return ret;
 }
 
-bool ImplementMotor::getTemperatureLimit(int m, double* value)
+ReturnValue ImplementMotor::getTemperatureLimit(int m, double* value)
 {
-    JOINTIDCHECK
-    bool ret;
-    int k=castToMapper(helper)->toHw(m);
+    std::lock_guard lock(m_imp_mutex);
+    JOINTIDCHECK(IMPLEMENT_LAYER_COMPONENT,m)
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,value)
 
-    ret=imotor->getTemperatureLimitRaw(k, value);
+    ReturnValue ret;
+    int k=castToMapper(m_helper)->toHw(m);
+
+    ret=m_iraw->getTemperatureLimitRaw(k, value);
 
     return ret;
 }
 
-bool ImplementMotor::setTemperatureLimit(int m, const double value)
+ReturnValue ImplementMotor::setTemperatureLimit(int m, const double value)
 {
-    JOINTIDCHECK
-    bool ret;
-    int k=castToMapper(helper)->toHw(m);
+    std::lock_guard lock(m_imp_mutex);
+    JOINTIDCHECK(IMPLEMENT_LAYER_COMPONENT,m)
 
-    ret=imotor->setTemperatureLimitRaw(k, value);
+    ReturnValue ret;
+    int k=castToMapper(m_helper)->toHw(m);
+
+    ret=m_iraw->setTemperatureLimitRaw(k, value);
 
     return ret;
 }
 
-bool ImplementMotor::getGearboxRatio(int m, double* value)
+ReturnValue ImplementMotor::getGearboxRatio(int m, double* value)
 {
-    JOINTIDCHECK
-    bool ret;
-    int k = castToMapper(helper)->toHw(m);
+    std::lock_guard lock(m_imp_mutex);
+    JOINTIDCHECK(IMPLEMENT_LAYER_COMPONENT,m)
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,value)
 
-    ret = imotor->getGearboxRatioRaw(k, value);
+    ReturnValue ret;
+    int k = castToMapper(m_helper)->toHw(m);
+
+    ret = m_iraw->getGearboxRatioRaw(k, value);
 
     return ret;
 }
 
-bool ImplementMotor::setGearboxRatio(int m, const double value)
+ReturnValue ImplementMotor::setGearboxRatio(int m, const double value)
 {
-    JOINTIDCHECK
-    bool ret;
-    int k = castToMapper(helper)->toHw(m);
+    std::lock_guard lock(m_imp_mutex);
+    JOINTIDCHECK(IMPLEMENT_LAYER_COMPONENT,m)
 
-    ret = imotor->setGearboxRatioRaw(k, value);
+    ReturnValue ret;
+    int k = castToMapper(m_helper)->toHw(m);
+
+    ret = m_iraw->setGearboxRatioRaw(k, value);
 
     return ret;
 }
 
-bool ImplementMotor::getTemperatures(double *v)
+ReturnValue ImplementMotor::getTemperatures(double *v)
 {
-    yarp::dev::impl::Buffer<double> buffValues = doubleBuffManager->getBuffer();
+    std::lock_guard lock(m_imp_mutex);
+    POINTERCHECK(IMPLEMENT_LAYER_COMPONENT,v)
 
-    bool ret = imotor->getTemperaturesRaw(buffValues.getData());
-    for (size_t i=0; i< buffValues.getSize(); i++)
+    ReturnValue ret = m_iraw->getTemperaturesRaw(m_buffer_doubles.data());
+    for (size_t i=0; i< castToMapper(m_helper)->axes(); i++)
     {
-        int k = castToMapper(helper)->toHw(i);
-        v[i] = buffValues[k];
+        int k = castToMapper(m_helper)->toHw(i);
+        v[i] = m_buffer_doubles[k];
     }
     return ret;
 }

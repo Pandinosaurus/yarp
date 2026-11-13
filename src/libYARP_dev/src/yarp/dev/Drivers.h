@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DRIVERS_H
@@ -14,14 +11,13 @@
 #include <yarp/os/Property.h>
 #include <yarp/dev/DeviceDriver.h>
 
-namespace yarp {
-    namespace dev {
-        template <class T> class DriverCreatorOf;
-        class DriverCreator;
-        class Drivers;
-        class PolyDriver;
-        class StubDriverCreator;
-    }
+namespace yarp::dev {
+template <class T>
+class DriverCreatorOf;
+class DriverCreator;
+class Drivers;
+class PolyDriver;
+class StubDriverCreator;
 }
 
 /**
@@ -99,7 +95,7 @@ public:
      * code documentation.
      *
      */
-    DriverCreatorOf(const char *name, const char *wrap, const char *code) :
+    DriverCreatorOf(const std::string& name, const std::string& wrap, const std::string& code) :
         desc(name), wrap(wrap), code(code)
     {
     }
@@ -134,8 +130,8 @@ class YARP_dev_API yarp::dev::StubDriverCreator : public DriverCreator {
 private:
     YARP_SUPPRESS_DLL_INTERFACE_WARNING_ARG(std::string) desc, wrap, code, libname, fnname;
 public:
-    StubDriverCreator(const char *name, const char *wrap, const char *code,
-                      const char *libname, const char *fnname) :
+    StubDriverCreator(const std::string& name, const std::string& wrap, const std::string& code,
+                      const std::string& libname, const std::string& fnname) :
         desc(name), wrap(wrap), code(code), libname(libname), fnname(fnname)
     {
     }
@@ -190,7 +186,7 @@ public:
      * otherwise NULL. The user is responsible for deallocating the
      * device.
      */
-    DeviceDriver *open(const char *device) {
+    DeviceDriver *open(const std::string& device) {
         yarp::os::Property p;
         p.put("device",device);
         return open(p);
@@ -236,14 +232,24 @@ public:
      * @param name The name of the device
      * @return a pointer to the factory, or NULL if there is none
      */
-    DriverCreator *find(const char *name);
+    DriverCreator *find(const std::string& name);
 
     /**
      * Remove a factory for a named device.
      * @param name The name of the device
      * @return true if the factory was found and removed
      */
-    bool remove(const char *name);
+    bool remove(const std::string& name);
+
+    /**
+     * Register a deprecated alias for a device name.
+     * When the alias is requested, an error message is printed and the
+     * canonical device is opened instead.
+     *
+     * @param alias        The deprecated name (e.g. "rgbdSensor_nwc_yarp").
+     * @param canonical    The correct, official name (e.g. "RGBDSensor_nwc_yarp").
+     */
+    void addDeprecatedAlias(const std::string& alias, const std::string& canonical);
 
     /**
      * Body of the yarpdev program for starting device wrappers.

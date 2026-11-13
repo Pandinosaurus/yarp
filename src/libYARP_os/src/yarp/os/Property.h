@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_OS_PROPERTY_H
@@ -16,8 +13,7 @@
 
 #include <string>
 
-namespace yarp {
-namespace os {
+namespace yarp::os {
 
 /**
  * \ingroup key_class
@@ -32,8 +28,7 @@ namespace os {
  * Property objects can be searched efficiently.
  */
 class YARP_os_API Property :
-        public Searchable,
-        public Portable
+        public Searchable
 {
 public:
     using Searchable::check;
@@ -43,21 +38,6 @@ public:
      * Constructor.
      */
     Property();
-
-#ifndef YARP_NO_DEPRECATED // Since YARP 3.3
-    /**
-     * Constructor.
-     *
-     * @param hash_size a scalar controlling efficiency of the
-     * hash map storing the data.  Set to 0 for default size.
-     * The bigger this number, the more memory used, but the
-     * more efficient the map.
-     *
-     * @deprecated Since YARP 3.3
-     */
-    YARP_DEPRECATED_MSG("Use default constructor instead")
-    Property(int hash_size);
-#endif
 
     /**
      * Initialize from a string, using fromString().
@@ -447,11 +427,6 @@ public:
     // documented in Searchable
     std::string toString() const override;
 
-    // documented in Portable
-    bool read(ConnectionReader& reader) override;
-
-    // documented in Portable
-    bool write(ConnectionWriter& writer) const override;
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 private:
@@ -460,7 +435,6 @@ private:
 #endif // DOXYGEN_SHOULD_SKIP_THIS
 };
 
-} // namespace os
-} // namespace yarp
+} // namespace yarp::os
 
 #endif // YARP_OS_PROPERTY_H

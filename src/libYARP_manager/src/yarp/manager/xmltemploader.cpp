@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/manager/xmltemploader.h>
@@ -19,7 +16,6 @@
 #include <tinyxml.h>
 
 
-using namespace std;
 using namespace yarp::manager;
 
 
@@ -30,16 +26,17 @@ using namespace yarp::manager;
  */
 XmlTempLoader::XmlTempLoader(const char* szPath, const char* szAppName)
 {
-    if(szAppName)
+    if (szAppName) {
         strAppName = szAppName;
+    }
 
     if(strlen(szPath))
     {
         const std::string directorySeparator{yarp::conf::filesystem::preferred_separator};
         strPath = szPath;
-        if((strPath.rfind(directorySeparator)==string::npos) ||
-            (strPath.rfind(directorySeparator)!=strPath.size()-1))
-            strPath = strPath + string(directorySeparator);
+        if ((strPath.rfind(directorySeparator) == std::string::npos) || (strPath.rfind(directorySeparator) != strPath.size() - 1)) {
+            strPath = strPath + std::string(directorySeparator);
+        }
     }
 }
 
@@ -48,8 +45,9 @@ XmlTempLoader::XmlTempLoader(const char* szPath, const char* szAppName)
  */
 XmlTempLoader::XmlTempLoader(const char* szFileName)
 {
-    if(szFileName)
+    if (szFileName) {
         strFileName = szFileName;
+    }
 }
 
 
@@ -89,12 +87,13 @@ bool XmlTempLoader::init()
     /* we need to load all xml app templates */
     while((entry = readdir(dir)))
     {
-        string name = entry->d_name;
+        std::string name = entry->d_name;
         if(name.size() > 12)
         {
-            string ext = name.substr(name.size()-12,12);
-            if(compareString(ext.c_str(), "xml.template"))
-                fileNames.push_back(strPath+name);
+            std::string ext = name.substr(name.size()-12,12);
+            if (compareString(ext.c_str(), "xml.template")) {
+                fileNames.push_back(strPath + name);
+            }
         }
     }
     closedir(dir);
@@ -121,9 +120,10 @@ AppTemplate* XmlTempLoader::getNextAppTemplate()
         AppTemplate* app = nullptr;
         while(!app)
         {
-            if(fileNames.empty())
+            if (fileNames.empty()) {
                 return nullptr;
-            string fname = fileNames.back();
+            }
+            std::string fname = fileNames.back();
             fileNames.pop_back();
             app = parsXml(fname.c_str());
         }
@@ -131,12 +131,13 @@ AppTemplate* XmlTempLoader::getNextAppTemplate()
     }
     else
     {
-        vector<string>::iterator itr;
+        std::vector<std::string>::iterator itr;
         for(itr=fileNames.begin(); itr<fileNames.end(); itr++)
         {
          AppTemplate* app = parsXml((*itr).c_str());
-         if(app && (app->name==strAppName))
-            return app;
+         if (app && (app->name == strAppName)) {
+             return app;
+         }
         }
     }
  return nullptr;
@@ -191,10 +192,12 @@ AppTemplate* XmlTempLoader::parsXml(const char* szFile)
     }
     else
     {
-        string strname = name->GetText();
-        for(char& i : strname)
-            if(i == ' ')
+        std::string strname = name->GetText();
+        for (char& i : strname) {
+            if (i == ' ') {
                 i = '_';
+            }
+        }
         app.name = strname;
     }
 

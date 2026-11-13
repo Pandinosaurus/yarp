@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <cstdio>
@@ -19,7 +16,9 @@ bool StyleNameService::apply(yarp::os::Bottle& cmd,
                              yarp::os::Bottle& reply,
                              yarp::os::Bottle& event,
                              const yarp::os::Contact& remote) {
-    if (cmd.get(0).asString()!="web") return false;
+    if (cmd.get(0).asString() != "web") {
+        return false;
+    }
 
     if (!content.check("main.css")) {
         if (!options.check("web")) {
@@ -67,13 +66,23 @@ a:hover{\n\
             bool first = true;
             for (size_t i=0; i<fileName.length(); i++) {
                 char ch = fileName[i];
-                if (ch == '.' && !first) continue;
+                if (ch == '.' && !first) {
+                    continue;
+                }
                 if (ch == '/') { first = true; continue; }
                 first = false;
-                if (ch>='a'&&ch<='z') continue;
-                if (ch>='A'&&ch<='Z') continue;
-                if (ch>='0'&&ch<='9') continue;
-                if (ch == '-' || ch == '_') continue;
+                if (ch >= 'a' && ch <= 'z') {
+                    continue;
+                }
+                if (ch >= 'A' && ch <= 'Z') {
+                    continue;
+                }
+                if (ch >= '0' && ch <= '9') {
+                    continue;
+                }
+                if (ch == '-' || ch == '_') {
+                    continue;
+                }
                 ((char*)fileName.c_str())[i] = '_';
             }
             if (fileName == "") {

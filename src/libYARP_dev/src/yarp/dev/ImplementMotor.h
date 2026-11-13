@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_IMPLEMENTMOTOR_H
@@ -11,31 +8,26 @@
 
 #include <yarp/dev/IMotor.h>
 
-namespace yarp {
-    namespace dev {
-        class ImplementMotor;
-    }
+namespace yarp::dev {
+class ImplementMotor;
 }
 
-namespace yarp {
-namespace dev {
-namespace impl {
+namespace yarp::dev::impl {
 
 template <typename T>
 class FixedSizeBuffersManager;
 
-} // namespace impl
-} // namespace dev
-} // namespace yarp
+} // namespace yarp::dev::impl
 
 
 class YARP_dev_API yarp::dev::ImplementMotor: public IMotor
 {
 protected:
-    IMotorRaw *imotor;
-    void *helper;
-
-    yarp::dev::impl::FixedSizeBuffersManager<double> *doubleBuffManager;
+    yarp::dev::IMotorRaw*      m_iraw=nullptr;
+    void*                      m_helper=nullptr;
+    std::vector<int>           m_buffer_ints;
+    std::vector<double>        m_buffer_doubles;
+    std::mutex                 m_imp_mutex;
 
     /**
      * Initialize the internal data and alloc memory.
@@ -61,14 +53,13 @@ public:
 
     virtual ~ImplementMotor();
 
-    bool getNumberOfMotors(int *num) override;
-
-    bool getTemperature      (int m, double* val) override;
-    bool getTemperatures     (double *vals) override;
-    bool getTemperatureLimit (int m, double* val) override;
-    bool setTemperatureLimit (int m, const double val) override;
-    bool getGearboxRatio     (int m, double* val) override;
-    bool setGearboxRatio     (int m, const double val) override;
+    yarp::dev::ReturnValue getNumberOfMotors   (int *num) override;
+    yarp::dev::ReturnValue getTemperature      (int m, double* val) override;
+    yarp::dev::ReturnValue getTemperatures     (double *vals) override;
+    yarp::dev::ReturnValue getTemperatureLimit (int m, double* val) override;
+    yarp::dev::ReturnValue setTemperatureLimit (int m, const double val) override;
+    yarp::dev::ReturnValue getGearboxRatio     (int m, double* val) override;
+    yarp::dev::ReturnValue setGearboxRatio     (int m, const double val) override;
 };
 
 #endif // YARP_DEV_IMPLEMENTMOTOR_H

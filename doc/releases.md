@@ -3,10 +3,51 @@ YARP ChangeLog                                                      {#changelog}
 
 This page lists the main changes introduced in YARP at each release.
 
-## Next YARP Release                                              {#yarp_master}
-* \subpage master
+## YARP 4.0 Series                                            {#yarp_4_0_series}
+* \subpage yarp_4_0
+* \subpage v4_0_2
+* \subpage v4_0_1
+* \subpage v4_0_0
+
+## YARP 3.12 Series                                           {#yarp_3_12_series}
+* \subpage v3_12_3
+* \subpage v3_12_2
+* \subpage v3_12_1
+* \subpage v3_12_0
+
+## YARP 3.11 Series                                           {#yarp_3_11_series}
+* \subpage v3_11_2
+* \subpage v3_11_1
+* \subpage v3_11_0
+
+## YARP 3.10 Series                                           {#yarp_3_10_series}
+* \subpage v3_10_1
+* \subpage v3_10_0
+
+## YARP 3.9 Series                                            {#yarp_3_9_series}
+* \subpage v3_9_1
+* \subpage v3_9_0
+
+## YARP 3.8 Series                                            {#yarp_3_8_series}
+* \subpage v3_8_1
+* \subpage v3_8_0
+
+## YARP 3.7 Series                                            {#yarp_3_7_series}
+* \subpage v3_7_2
+* \subpage v3_7_1
+* \subpage v3_7_0
+
+## YARP 3.6 Series                                            {#yarp_3_6_series}
+* \subpage v3_6_0
+
+## YARP 3.5 Series                                            {#yarp_3_5_series}
+* \subpage v3_5_1
+* \subpage v3_5_0
 
 ## YARP 3.4 Series                                            {#yarp_3_4_series}
+* \subpage v3_4_6
+* \subpage v3_4_5
+* \subpage v3_4_4
 * \subpage v3_4_3
 * \subpage v3_4_2
 * \subpage v3_4_1

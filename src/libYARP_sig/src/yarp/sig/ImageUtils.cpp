@@ -1,13 +1,20 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/sig/ImageUtils.h>
 #include <cstring>
+#include <algorithm> // std::math
+#include <yarp/os/Log.h>
+#include <yarp/os/LogStream.h>
+
+#if defined (YARP_HAS_OPENCV)
+#include <yarp/cv/Cv.h>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/videoio/videoio.hpp>
+#endif
 
 using namespace yarp::sig;
 
@@ -110,4 +117,200 @@ bool utils::vertConcat(const Image& inImgUp, const Image& inImgDown, Image& outI
     memcpy(outImg.getRawImage(), inImgUp.getRawImage(), imgSize);
     memcpy(outImg.getRawImage() + imgSize, inImgDown.getRawImage(), imgSize);
     return true;
+}
+
+bool utils::cropRect(const yarp::sig::Image& inImg,
+                     const std::pair<unsigned int, unsigned int>& vertex1,
+                     const std::pair<unsigned int, unsigned int>& vertex2,
+                     yarp::sig::Image& outImg)
+{
+    if (inImg.getPixelCode() != outImg.getPixelCode()) {
+        return false;
+    }
+
+    // Normalize vertices: upper-left (tlx,tly) and bottom-right (brx,bry) corners
+    auto tlx = std::min(vertex1.first, vertex2.first);
+    auto tly = std::min(vertex1.second, vertex2.second);
+    auto brx = std::max(vertex1.first, vertex2.first);
+    auto bry = std::max(vertex1.second, vertex2.second);
+
+    if (!inImg.isPixel(brx, bry)) {
+        return false;
+    }
+
+    outImg.resize(brx - tlx + 1, bry - tly + 1); // width, height
+
+    auto * pixelOut = outImg.getRawImage();
+
+    for (unsigned int row = 0; row < outImg.height(); row++) {
+        const auto * pixelIn = inImg.getPixelAddress(tlx, tly + row);
+        memcpy(pixelOut, pixelIn, outImg.getRowSize());
+        pixelOut += outImg.getRowSize();
+    }
+
+    return true;
+}
+
+bool utils::sum(Image& OutImg, const Image& InImg, bool enable_colorkey, int colorkey, bool enable_alpha, float alpha, size_t offset_x, size_t offset_y)
+{
+    if (OutImg.getPixelCode() != InImg.getPixelCode())
+    {
+        yError() << "utils::sum() Input and Output images must have the same pixelcode";
+        return false;
+     }
+
+    if (InImg.getPixelCode() != VOCAB_PIXEL_RGB)
+    {
+        yError() << "utils::sum() Unimplemented pixelcode";
+        return false;
+    }
+
+    yarp::sig::PixelRgb ColorkeyRGB;
+    ColorkeyRGB = *reinterpret_cast<yarp::sig::PixelRgb*>(&colorkey);
+
+    size_t yis = InImg.height();
+    size_t xis = InImg.width();
+    size_t yos = OutImg.height();
+    size_t xos = OutImg.width();
+
+    for (size_t y = 0; y < yis; ++y)
+    {
+        for (size_t x = 0; x < xis; ++x)
+        {
+            size_t xo = x + offset_x;
+            size_t yo = y + offset_y;
+            if (xo > xos) {
+                xo = xos;
+            }
+            if (yo > yos) {
+                yo = yos;
+            }
+
+            unsigned char* layer_pointer = InImg.getPixelAddress(x, y);
+            unsigned char* outimg_pointer = OutImg.getPixelAddress(xo, yo);
+
+            yarp::sig::PixelRgb* layer_pointer_rgb = reinterpret_cast<yarp::sig::PixelRgb*>(layer_pointer);
+            yarp::sig::PixelRgb* outimg_pointer_rgb = reinterpret_cast<yarp::sig::PixelRgb*>(outimg_pointer);
+
+            if (enable_colorkey && layer_pointer_rgb->r == ColorkeyRGB.r && layer_pointer_rgb->g == ColorkeyRGB.g && layer_pointer_rgb->b == ColorkeyRGB.b)
+            {
+                continue;
+            }
+            else if (enable_alpha)
+            {
+                outimg_pointer_rgb->r = layer_pointer_rgb->r * alpha + outimg_pointer_rgb->r * (1 - alpha);
+                outimg_pointer_rgb->g = layer_pointer_rgb->g * alpha + outimg_pointer_rgb->g * (1 - alpha);
+                outimg_pointer_rgb->b = layer_pointer_rgb->b * alpha + outimg_pointer_rgb->b * (1 - alpha);
+            }
+            else
+            {
+                outimg_pointer_rgb->r = layer_pointer_rgb->r;
+                outimg_pointer_rgb->g = layer_pointer_rgb->g;
+                outimg_pointer_rgb->b = layer_pointer_rgb->b;
+            }
+        }
+    }
+
+    return true;
+}
+
+bool utils::rotate(yarp::sig::Image& OutImg,
+                      const yarp::sig::Image& InImg,
+                      RotateOption rotateflag,
+                      FlipOption flipflag)
+{
+#if !defined (YARP_HAS_OPENCV)
+    yError() << "libopencv not available";
+    return false;
+#else
+
+    // Resolve rotation flag locally from enum
+    const bool doRotate = (rotateflag != RotateOption::rotate_none);
+    ::cv::RotateFlags rot_flags = ::cv::ROTATE_90_CLOCKWISE; // default, overridden below
+    if (doRotate)
+    {
+        switch (rotateflag)
+        {
+            case RotateOption::rotate_cw:  rot_flags = ::cv::ROTATE_90_CLOCKWISE;        break;
+            case RotateOption::rotate_ccw: rot_flags = ::cv::ROTATE_90_COUNTERCLOCKWISE; break;
+            case RotateOption::rotate_180: rot_flags = ::cv::ROTATE_180;                 break;
+            default: break;
+        }
+    }
+
+    // Resolve flip code locally from enum
+    const bool doFlip = (flipflag != FlipOption::flip_none);
+    int flip_code = 0; // default, overridden below
+    if (doFlip)
+    {
+        switch (flipflag)
+        {
+            case FlipOption::flip_x:  flip_code =  0; break;
+            case FlipOption::flip_y:  flip_code =  1; break;
+            case FlipOption::flip_xy: flip_code = -1; break;
+            default: break;
+        }
+    }
+
+    // Beware in the following code, OutImg.copy() is required because
+    // cv::Mat is a temporary object and will be destroyed at the end of the statement.
+    // Also notice that OutImg = yarp::cv::fromCvMat(...) is not enough because it will not copy the data,
+    // will call the Move assignment operator, since yarp::cv::fromCvMat() is an rvalue.
+    if (InImg.getPixelCode() == VOCAB_PIXEL_RGB)
+    {
+        ::cv::Mat cvInImage = yarp::cv::toCvMat(InImg);
+        ::cv::Mat cvOutImage1;
+        ::cv::Mat cvOutImage2;
+
+        if (!doFlip && doRotate) {
+            // just rotation
+            ::cv::rotate(cvInImage, cvOutImage1, rot_flags);
+            OutImg.copy(yarp::cv::fromCvMat<yarp::sig::PixelRgb>(cvOutImage1));
+        } else if (doFlip && !doRotate) {
+            // just flip
+            ::cv::flip(cvInImage, cvOutImage1, flip_code);
+            OutImg.copy(yarp::cv::fromCvMat<yarp::sig::PixelRgb>(cvOutImage1));
+        } else if (!doFlip && !doRotate) {
+            // just copy
+            OutImg.copy(yarp::cv::fromCvMat<yarp::sig::PixelRgb>(cvInImage));
+        } else {
+            // first a rotation, then a flip
+            ::cv::rotate(cvInImage, cvOutImage1, rot_flags);
+            ::cv::flip(cvOutImage1, cvOutImage2, flip_code);
+            OutImg.copy(yarp::cv::fromCvMat<yarp::sig::PixelRgb>(cvOutImage2));
+        }
+    }
+    else if (InImg.getPixelCode() == VOCAB_PIXEL_MONO_FLOAT)
+    {
+        ::cv::Mat cvInImage = yarp::cv::toCvMat(InImg);
+        ::cv::Mat cvOutImage1;
+        ::cv::Mat cvOutImage2;
+
+        if (!doFlip && doRotate) {
+            // just rotation
+            ::cv::rotate(cvInImage, cvOutImage1, rot_flags);
+            OutImg.copy(yarp::cv::fromCvMat<yarp::sig::PixelFloat>(cvOutImage1));
+        } else if (doFlip && !doRotate) {
+            // just flip
+            ::cv::flip(cvInImage, cvOutImage1, flip_code);
+            OutImg.copy(yarp::cv::fromCvMat<yarp::sig::PixelFloat>(cvOutImage1));
+        } else if (!doFlip && !doRotate)
+        {
+            // just copy
+            OutImg.copy(yarp::cv::fromCvMat<yarp::sig::PixelFloat>(cvInImage));
+        } else
+        {
+            // first a rotation, then a flip
+            ::cv::rotate(cvInImage, cvOutImage1, rot_flags);
+            ::cv::flip(cvOutImage1, cvOutImage2, flip_code);
+            OutImg.copy(yarp::cv::fromCvMat<yarp::sig::PixelFloat>(cvOutImage2));
+        }
+    }
+    else
+    {
+        yError("Invalid Image type!");
+        return false;
+    }
+    return true;
+#endif
 }

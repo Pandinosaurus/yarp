@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_COMPANION_IMPL_COMPANION_H
@@ -23,9 +20,7 @@
 
 YARP_DECLARE_LOG_COMPONENT(COMPANION);
 
-namespace yarp {
-namespace companion {
-namespace impl {
+namespace yarp::companion::impl {
 
 /**
  * Implementation of a standard set of YARP utilities.
@@ -39,6 +34,12 @@ public:
 
     int dispatch(const char *name, int argc, char *argv[]);
 
+    enum showEnvelopeEnum
+    {
+        do_not_show = 0,
+        show_inline = 1,
+        show_two_lines = 2
+    };
 
     // Defined in Companion.cmdCheck.cpp
     int cmdCheck(int argc, char *argv[]);
@@ -66,7 +67,6 @@ public:
     int cmdDisconnect(int argc, char *argv[]);
 
     // Defined in Companion.cmdDetect.cpp
-    int detectRos(bool write);
     int cmdDetect(int argc, char *argv[]);
 
     // Defined in Companion.cmdEnv.cpp
@@ -97,9 +97,6 @@ public:
     // Defined in Companion.cmdPlugin.cpp
     int cmdPlugin(int argc, char *argv[]);
 
-    // Defined in Companion.cmdPray.cpp
-    int cmdPray(int argc, char *argv[]);
-
     // Defined in Companion.cmdPriorityQos.cpp
     int cmdPriorityQos(int argc, char *argv[]);
 
@@ -107,7 +104,7 @@ public:
     int cmdPrioritySched(int argc, char *argv[]);
 
     // Defined in Companion.cmdRead.cpp
-    int read(const char *name, const char *src = nullptr, bool showEnvelope = false, int trim = -1);
+    int read(const char *name, const char *src = nullptr, showEnvelopeEnum showEnvelope = showEnvelopeEnum::do_not_show, bool justOnce = false, int trim = -1);
     int cmdRead(int argc, char *argv[]);
 
     // Defined in Companion.cmdReadWrite.cpp
@@ -133,6 +130,9 @@ public:
     // Defined in Companion.cmdStats.cpp
     int cmdStats(int argc, char* argv[]);
 
+    // Defined in Companion.cmdSplit.cpp
+    int cmdSplit(int argc, char* argv[]);
+
     // Defined in Companion.cmdTerminate.cpp
     int cmdTerminate(int argc, char *argv[]);
 
@@ -156,7 +156,7 @@ public:
     int cmdWhere(int argc, char *argv[]);
 
     // Defined in Companion.cmdWrite.cpp
-    int write(const char *name, int ntargets, char *targets[]);
+    int write(const char *name, int ntargets, char *targets[], double period = 0);
     int cmdWrite(int argc, char *argv[]);
 
     static yarp::os::Contactable* getActivePort() { return getInstance().active_port; }
@@ -204,9 +204,7 @@ private:
 
 };
 
-} // namespace impl
-} // namespace companion
-} // namespace yarp
+} // namespace yarp::companion::impl
 
 
 #endif // YARP_COMPANION_IMPL_COMPANION_H

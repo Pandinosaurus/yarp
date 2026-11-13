@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/SharedLibrary.h>
@@ -92,7 +89,21 @@ bool SharedLibrary::open(const char* filename)
     }
     return true;
 #else
-    implementation->dll = yarp::os::impl::dlopen(filename, RTLD_LAZY);
+    // NOTE: RTLD_NODELETE is required to work around a known glibc issue
+    // (see e.g. glibc bugzilla #24773 and related reports) where a real
+    // dlclose() of a library that pulled in NSS modules (via
+    // getaddrinfo()/gethostbyname(), used internally by YARP for name
+    // resolution) or that registered thread-specific data destructors,
+    // can lead to a SIGSEGV in __nptl_deallocate_tsd() when a thread
+    // that used those symbols terminates *after* the library has been
+    // unmapped. RTLD_NODELETE keeps the reference counting semantics of
+    // dlopen/dlclose (so open()/close() still behave correctly), but
+    // guarantees the library is never actually unmapped from memory,
+    // sidestepping the glibc bug entirely.
+#ifndef RTLD_NODELETE
+#    define RTLD_NODELETE 0
+#endif
+    implementation->dll = yarp::os::impl::dlopen(filename, RTLD_LAZY | RTLD_NODELETE);
     if (!implementation->dll) {
         implementation->error = implementation->getError();
         return false;

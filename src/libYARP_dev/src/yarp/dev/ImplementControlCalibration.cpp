@@ -1,14 +1,12 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/dev/DeviceDriver.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
+#include <yarp/dev/ControlBoardHelpers.h>
 #include <yarp/dev/ImplementControlCalibration.h>
 #include <yarp/os/Log.h>
 
@@ -16,62 +14,68 @@
 
 using namespace yarp::dev;
 
+namespace {
+YARP_LOG_COMPONENT(IMPLEMENT_LAYER_COMPONENT, "yarp.IControlCalibration")
+}
+
 IControlCalibration::IControlCalibration()
 {
     calibrator=nullptr;
 }
 
-bool IControlCalibration::setCalibrator(ICalibrator *c)
+ReturnValue IControlCalibration::setCalibrator(ICalibrator *c)
 {
     if (c!=nullptr)
     {
         calibrator=c;
-        return true;
+        return ReturnValue_ok;
     }
 
-    return false;
+    return ReturnValue::return_code::return_value_error_input_out_of_bounds;
 }
 
-bool IControlCalibration::calibrateRobot()
+ReturnValue IControlCalibration::calibrateRobot()
 {
-    bool ret = false;
+    ReturnValue ret = ReturnValue::return_code::return_value_error_not_ready;
     if (calibrator!=nullptr)
     {
         yDebug("Going to call calibrator\n");
         ret=calibrator->calibrate(dynamic_cast<DeviceDriver *>(this));
-    }
-    else
+    } else {
         yWarning("Warning called calibrate but no calibrator was set\n");
+    }
 
     return ret;
 }
 
-bool IControlCalibration::abortCalibration()
+ReturnValue IControlCalibration::abortCalibration()
 {
-    bool ret=false;
-    if (calibrator!=nullptr)
-        ret=calibrator->quitCalibrate();
+    ReturnValue ret=ReturnValue::return_code::return_value_error_not_ready;
+    if (calibrator != nullptr) {
+        ret = calibrator->quitCalibrate();
+    }
     return ret;
 }
 
-bool IControlCalibration::abortPark()
+ReturnValue IControlCalibration::abortPark()
 {
-    bool ret=false;
-    if (calibrator!=nullptr)
-        ret=calibrator->quitPark();
+    ReturnValue ret=ReturnValue::return_code::return_value_error_not_ready;
+    if (calibrator != nullptr) {
+        ret = calibrator->quitPark();
+    }
     return ret;
 }
 
-bool IControlCalibration::park(bool wait)
+ReturnValue IControlCalibration::park(bool wait)
 {
-    bool ret=false;
+    ReturnValue ret=ReturnValue::return_code::return_value_error_not_ready;
     if (calibrator!=nullptr)
     {
         yDebug("Going to call calibrator\n");
         ret=calibrator->park(dynamic_cast<DeviceDriver *>(this), wait);
-    }
-    else
+    } else {
         yWarning("Warning called park but no calibrator was set\n");
+    }
 
     return ret;
 }
@@ -80,9 +84,8 @@ bool IControlCalibration::park(bool wait)
 // ControlCalibration Interface Implementation
 ImplementControlCalibration::ImplementControlCalibration(yarp::dev::IControlCalibrationRaw *y)
 {
-    iCalibrate = dynamic_cast<IControlCalibrationRaw *> (y);
-    helper = nullptr;
-    temp = nullptr;
+    m_iraw = dynamic_cast<IControlCalibrationRaw *> (y);
+    m_helper = nullptr;
 }
 
 ImplementControlCalibration::~ImplementControlCalibration()
@@ -92,13 +95,16 @@ ImplementControlCalibration::~ImplementControlCalibration()
 
 bool ImplementControlCalibration::initialize(int size, const int *amap, const double *enc, const double *zos)
 {
-    if (helper != nullptr)
+    if (m_helper != nullptr) {
         return false;
+    }
 
-    helper = (void *)(new ControlBoardHelper(size, amap, enc, zos));
-    yAssert(helper != nullptr);
-    temp = new double[size];
-    yAssert(temp != nullptr);
+    m_helper = (void *)(new ControlBoardHelper(size, amap, enc, zos));
+    yAssert(m_helper != nullptr);
+
+    m_buffer_ints.resize   (size);
+    m_buffer_doubles.resize(size);
+
     return true;
 }
 
@@ -108,34 +114,41 @@ bool ImplementControlCalibration::initialize(int size, const int *amap, const do
 */
 bool ImplementControlCalibration::uninitialize()
 {
-    if (helper != nullptr)
+    if (m_helper != nullptr)
     {
-        delete castToMapper(helper);
-        helper = nullptr;
+        delete castToMapper(m_helper);
+        m_helper = nullptr;
     }
-
-    checkAndDestroy(temp);
 
     return true;
 }
 
-bool ImplementControlCalibration::calibrationDone(int j)
+ReturnValue ImplementControlCalibration::calibrationDone(int j)
 {
-    int k = castToMapper(helper)->toHw(j);
+    std::lock_guard lock(m_imp_mutex);
+    JOINTIDCHECK(IMPLEMENT_LAYER_COMPONENT,j);
 
-    return iCalibrate->calibrationDoneRaw(k);
+    int k = castToMapper(m_helper)->toHw(j);
+
+    return m_iraw->calibrationDoneRaw(k);
 }
 
-bool ImplementControlCalibration::calibrateAxisWithParams(int axis, unsigned int type, double p1, double p2, double p3)
+ReturnValue ImplementControlCalibration::calibrateAxisWithParams(int axis, unsigned int type, double p1, double p2, double p3)
 {
-    int k = castToMapper(helper)->toHw(axis);
+    std::lock_guard lock(m_imp_mutex);
+    JOINTIDCHECK(IMPLEMENT_LAYER_COMPONENT,axis);
 
-    return iCalibrate->calibrateAxisWithParamsRaw(k, type, p1, p2, p3);
+    int k = castToMapper(m_helper)->toHw(axis);
+
+    return m_iraw->calibrateAxisWithParamsRaw(k, type, p1, p2, p3);
 }
 
-bool ImplementControlCalibration::setCalibrationParameters(int axis, const CalibrationParameters& params)
+ReturnValue ImplementControlCalibration::setCalibrationParameters(int axis, const CalibrationParameters& params)
 {
-    int k = castToMapper(helper)->toHw(axis);
+    std::lock_guard lock(m_imp_mutex);
+    JOINTIDCHECK(IMPLEMENT_LAYER_COMPONENT,axis);
 
-    return iCalibrate->setCalibrationParametersRaw(k, params);
+    int k = castToMapper(m_helper)->toHw(axis);
+
+    return m_iraw->setCalibrationParametersRaw(k, params);
 }

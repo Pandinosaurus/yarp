@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/os/impl/Protocol.h>
@@ -158,6 +155,11 @@ std::string Protocol::getSenderSpecifier() const
     // name.  Ideally, we wouldn't need to bundle that in with
     // the sender name, but we do it for now in the name of
     // backwards compatibility.
+
+    //This is an example string:
+    //fast_tcp+send.portmonitor+file.bottle_compression_zlib+type.dll
+    //will be splitted into:
+    //(fast_tcp) (send portmonitor) (file bottle_compression_zlib) (type dll)
     std::string carrier = r.getCarrierName();
     size_t start = carrier.find('+');
     if (start != std::string::npos) {
@@ -258,7 +260,7 @@ void Protocol::interrupt()
         sendAck();
     }
     // Break the input stream.
-    shift.getInputStream().interrupt();
+    shift.interruptInputStream();
     active = false;
 }
 

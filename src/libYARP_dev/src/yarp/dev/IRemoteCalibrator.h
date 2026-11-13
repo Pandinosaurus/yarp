@@ -1,21 +1,20 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_DEV_REMOTECALIBRATOR_H
 #define YARP_DEV_REMOTECALIBRATOR_H
 
 #include <yarp/dev/DeviceDriver.h>
+#include <yarp/dev/ReturnValue.h>
 
-namespace yarp {
-namespace dev {
+namespace yarp::dev {
 
 /**
+ * @ingroup dev_iface_motor
+ *
  * IRemoteCalibrator interface is meant to remotize the access of the calibration device
  * in order to allow users to remotely call the calibration procedure for
  * a single joint or the whole device and let the calibrator do the job.
@@ -45,7 +44,7 @@ public:
      * @return true on success
      */
 
-    virtual bool setCalibratorDevice(yarp::dev::IRemoteCalibrator* dev);
+    virtual yarp::dev::ReturnValue setCalibratorDevice(yarp::dev::IRemoteCalibrator* dev);
 
     /**
      * @brief getCalibratorDevice: return the pointer stored with the setCalibratorDevice
@@ -57,65 +56,64 @@ public:
      * @brief isCalibratorDevicePresent: check if a calibrator device has been set
      * @return true if a valid calibrator device has been found
      */
-    virtual bool isCalibratorDevicePresent(bool* isCalib);
+    virtual yarp::dev::ReturnValue isCalibratorDevicePresent(bool* isCalib);
 
     /**
      * @brief releaseCalibratorDevice: reset the internal pointer to NULL when stop using the calibrator
      */
-    virtual void releaseCalibratorDevice();
+    virtual yarp::dev::ReturnValue releaseCalibratorDevice();
 
     /**
      * @brief calibrateSingleJoint: call the calibration procedure for the single joint
      * @param j: joint to be calibrated
      * @return true if calibration was successful
      */
-    virtual bool calibrateSingleJoint(int j) = 0;
+    virtual yarp::dev::ReturnValue calibrateSingleJoint(int j) = 0;
 
     /**
      * @brief calibrateWholePart: call the procedure for calibrating the whole device
      * @return true if calibration was successful
      */
-    virtual bool calibrateWholePart() = 0;
+    virtual yarp::dev::ReturnValue calibrateWholePart() = 0;
 
     /**
      * @brief homingSingleJoint: call the homing procedure for a single joint
      * @param j: joint to be calibrated
      * @return true if homing was successful, false otherwise
      */
-    virtual bool homingSingleJoint(int j) = 0;
+    virtual yarp::dev::ReturnValue homingSingleJoint(int j) = 0;
 
     /**
      * @brief homingWholePart: call the homing procedure for a the whole part/device
      * @return true if homing was successful, false otherwise
      */
-    virtual bool homingWholePart() = 0;
+    virtual yarp::dev::ReturnValue homingWholePart() = 0;
 
     /**
      * @brief parkSingleJoint(): start the parking procedure for the single joint
      * @return true if successful
      */
-    virtual bool parkSingleJoint(int j, bool _wait = true) = 0;
+    virtual yarp::dev::ReturnValue parkSingleJoint(int j, bool _wait = true) = 0;
 
     /**
      * @brief parkWholePart: start the parking procedure for the whole part
      * @return true if successful
      */
-    virtual bool parkWholePart() = 0;
+    virtual yarp::dev::ReturnValue parkWholePart() = 0;
 
     /**
      * @brief quitCalibrate: interrupt the calibration procedure
      * @return true if successful
      */
-    virtual bool quitCalibrate() = 0;
+    virtual yarp::dev::ReturnValue quitCalibrate() = 0;
 
     /**
      * @brief quitPark: interrupt the park procedure
      * @return true if successful
      */
-    virtual bool quitPark() = 0;
+    virtual yarp::dev::ReturnValue quitPark() = 0;
 };
 
-} // namespace dev
-} // namespace yarp
+} // namespace yarp::dev
 
 #endif // YARP_DEV_REMOTECALIBRATOR_H

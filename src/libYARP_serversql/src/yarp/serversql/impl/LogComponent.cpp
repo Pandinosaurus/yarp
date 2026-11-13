@@ -1,9 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <yarp/serversql/impl/LogComponent.h>
@@ -24,12 +21,13 @@ void yarp::serversql::impl::LogComponent::print_callback(yarp::os::Log::LogType 
                                                          double systemtime,
                                                          double networktime,
                                                          double externaltime,
-                                                         const char* comp_name)
+                                                         const char* comp_name,
+                                                         const char* id)
 {
     auto minlev = minimumServersqlPrintLevel.load();
     if (type >= minlev) {
         if (minlev <= yarp::os::Log::DebugType) {
-            yarp::os::Log::printCallback()(type, msg, file, line, func, systemtime, networktime, externaltime, comp_name);
+            yarp::os::Log::printCallback()(type, msg, file, line, func, systemtime, networktime, externaltime, comp_name, id);
         } else {
             static const char* err_str = "[ERROR] ";
             static const char* warn_str = "[WARNING] ";

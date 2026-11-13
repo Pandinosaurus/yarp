@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_OS_CONNECTIONWRITER_H
@@ -16,20 +13,17 @@
 
 #include <string>
 
-namespace yarp {
-namespace os {
+namespace yarp::os {
 class ConnectionReader;
 class PortReader;
 class PortWriter;
 class Portable;
 class SizedWriter;
 class OutputStream;
-} // namespace os
-} // namespace yarp
+} // namespace yarp::os
 
 
-namespace yarp {
-namespace os {
+namespace yarp::os {
 
 /**
  * An interface for writing to a network connection.
@@ -57,17 +51,6 @@ public:
     virtual void appendBlock(const char* data, size_t len) = 0;
 
     /**
-     * Send a representation of an integer to the network connection.
-     * @param data the integer to send
-     * @warning Unsafe, sizeof(int) is platform dependent. Use appendInt32 instead.
-     */
-    YARP_DEPRECATED_INTERNAL_MSG("Use appendInt32 instead") // Since YARP 3.0.0
-    virtual void appendInt(int data) final
-    {
-        appendInt32(static_cast<std::int32_t>(data));
-    }
-
-    /**
      * Send a representation of a 8-bit integer to the network connection.
      * @param data the integer to send
      */
@@ -92,19 +75,6 @@ public:
     virtual void appendInt64(std::int64_t data) = 0;
 
     /**
-     * Send a representation of a floating point number to the network
-     * connection.
-     *
-     * @param data the floating point number to send
-     * @warning Unsafe, sizeof(double) is platform dependent. Use appendFloat64 instead.
-     */
-    YARP_DEPRECATED_INTERNAL_MSG("Use appendFloat64 instead") // Since YARP 3.0.0
-    virtual void appendDouble(double data)
-    {
-        appendFloat64(static_cast<yarp::conf::float64_t>(data));
-    }
-
-    /**
      * Send a representation of a 32-bit floating point number to the network
      * connection.
      *
@@ -120,20 +90,6 @@ public:
      */
     virtual void appendFloat64(yarp::conf::float64_t data) = 0;
 
-#ifndef YARP_NO_DEPRECATED // Since YARP 3.2
-    /**
-     * Send a character sequence to the network connection.
-     * @param str the character sequence to send
-     * @param terminate the terminating character to use
-     * @deprecated since YARP 3.2
-     */
-    YARP_DEPRECATED_MSG("Use appendText() instead")
-    virtual void appendString(const char* str, const char terminate = '\n') final
-    {
-        appendText({str}, terminate);
-    }
-#endif
-
     /**
      * Send a terminated string to the network connection.
      *
@@ -144,14 +100,6 @@ public:
      * @param terminate the terminating character to use
      */
     virtual void appendText(const std::string& str, const char terminate = '\n') = 0;
-
-#ifndef YARP_NO_DEPRECATED // Since YARP 3.2
-    YARP_DEPRECATED_MSG("Use appendString() instead")
-    virtual void appendRawString(const std::string& str) final
-    {
-        appendString(str);
-    }
-#endif
 
     /**
      * Send a string to the network connection.
@@ -265,11 +213,14 @@ public:
 
 
     /**
-     *
      * @return a buffer if one is present.
-     *
      */
-    virtual SizedWriter* getBuffer() const = 0;
+    virtual SizedWriter* getBuffer() = 0;
+
+    /**
+     * @return a buffer if one is present (const version).
+     */
+    virtual const SizedWriter* getBuffer() const = 0;
 
     /**
      *
@@ -282,7 +233,6 @@ public:
     static bool writeToStream(PortWriter& portable, OutputStream& os);
 };
 
-} // namespace os
-} // namespace yarp
+} // namespace yarp::os
 
 #endif // YARP_OS_CONNECTIONWRITER_H

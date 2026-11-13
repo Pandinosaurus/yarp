@@ -1,19 +1,6 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
 #define _USE_MATH_DEFINES
@@ -34,7 +21,7 @@
 #define DEG2RAD M_PI/180.0
 #endif
 
-using namespace std;
+using namespace yarp::sig;
 
 namespace {
 YARP_LOG_COMPONENT(LASERHOKUYO, "yarp.devices.laserHokuyo")
@@ -44,7 +31,7 @@ bool laserHokuyo::open(yarp::os::Searchable& config)
 {
     internal_status = HOKUYO_STATUS_NOT_READY;
     info = "Hokuyo Laser";
-    device_status = DEVICE_OK_STANBY;
+    device_status = DEVICE_OK_STANDBY;
 
     yCTrace(LASERHOKUYO, "%s", config.toString().c_str());
 
@@ -104,7 +91,7 @@ bool laserHokuyo::open(yarp::os::Searchable& config)
         return false;
     }
     yarp::os::Searchable& serial_config = config.findGroup("SERIAL_PORT_CONFIGURATION");
-    string ss = serial_config.toString();
+    std::string ss = serial_config.toString();
     Property prop;
     prop.fromString(ss);
     prop.put("device", "serialport");
@@ -127,7 +114,7 @@ bool laserHokuyo::open(yarp::os::Searchable& config)
 
     Bottle b;
     Bottle b_ans;
-    string ans;
+    std::string ans;
 
     // *** Check if the URG device is present ***
     b.addString("SCIP2.0\n");
@@ -198,21 +185,37 @@ bool laserHokuyo::open(yarp::os::Searchable& config)
     //parsing the answer
     size_t found;
     found = ans.find("MODL");
-    if (found!=string::npos) sensor_properties.MODL = string(ans.c_str()+found+5);
+    if (found != std::string::npos) {
+        sensor_properties.MODL = std::string(ans.c_str() + found + 5);
+    }
     found = ans.find("DMIN");
-    if (found!=string::npos) sensor_properties.DMIN = atoi(ans.c_str()+found+5);
+    if (found != std::string::npos) {
+        sensor_properties.DMIN = atoi(ans.c_str() + found + 5);
+    }
     found = ans.find("DMAX");
-    if (found!=string::npos) sensor_properties.DMAX = atoi(ans.c_str()+found+5);
+    if (found != std::string::npos) {
+        sensor_properties.DMAX = atoi(ans.c_str() + found + 5);
+    }
     found = ans.find("ARES");
-    if (found!=string::npos) sensor_properties.ARES = atoi(ans.c_str()+found+5);
+    if (found != std::string::npos) {
+        sensor_properties.ARES = atoi(ans.c_str() + found + 5);
+    }
     found = ans.find("AMIN");
-    if (found!=string::npos) sensor_properties.AMIN = atoi(ans.c_str()+found+5);
+    if (found != std::string::npos) {
+        sensor_properties.AMIN = atoi(ans.c_str() + found + 5);
+    }
     found = ans.find("AMAX");
-    if (found!=string::npos) sensor_properties.AMAX = atoi(ans.c_str()+found+5);
+    if (found != std::string::npos) {
+        sensor_properties.AMAX = atoi(ans.c_str() + found + 5);
+    }
     found = ans.find("AFRT");
-    if (found!=string::npos) sensor_properties.AFRT = atoi(ans.c_str()+found+5);
+    if (found != std::string::npos) {
+        sensor_properties.AFRT = atoi(ans.c_str() + found + 5);
+    }
     found = ans.find("SCAN");
-    if (found!=string::npos) sensor_properties.SCAN = atoi(ans.c_str()+found+5);
+    if (found != std::string::npos) {
+        sensor_properties.SCAN = atoi(ans.c_str() + found + 5);
+    }
     b.clear();
     b_ans.clear();
 
@@ -277,59 +280,59 @@ bool laserHokuyo::close()
     return true;
 }
 
-bool laserHokuyo::getDistanceRange(double& min, double& max)
+ReturnValue laserHokuyo::getDistanceRange(double& min, double& max)
 {
     //should return range 0.1-30m (or 100, 30000mm depending on the measurement units)
     min = 0.1;
     max = 30;
-    return true;
+    return ReturnValue_ok;
 }
 
-bool laserHokuyo::setDistanceRange(double min, double max)
+ReturnValue laserHokuyo::setDistanceRange(double min, double max)
 {
     yCError(LASERHOKUYO, "setDistanceRange NOT YET IMPLEMENTED");
-    return false;
+    return ReturnValue::return_code::return_value_error_not_implemented_by_device;
 }
 
-bool laserHokuyo::getScanLimits(double& min, double& max)
+ReturnValue laserHokuyo::getScanLimits(double& min, double& max)
 {
     //degrees
     min = min_angle;
     max = max_angle;
-    return true;
+    return ReturnValue_ok;
 }
 
-bool laserHokuyo::setScanLimits(double min, double max)
+ReturnValue laserHokuyo::setScanLimits(double min, double max)
 {
     yCError(LASERHOKUYO, "setScanLimits NOT YET IMPLEMENTED");
-    return false;
+    return ReturnValue::return_code::return_value_error_not_implemented_by_device;
 }
 
-bool laserHokuyo::getHorizontalResolution(double& step)
+ReturnValue laserHokuyo::getHorizontalResolution(double& step)
 {
     step = 0.25; //deg //1080*0.25=270
-    return true;
+    return ReturnValue_ok;
 }
 
-bool laserHokuyo::setHorizontalResolution(double step)
+ReturnValue laserHokuyo::setHorizontalResolution(double step)
 {
     yCError(LASERHOKUYO, "setHorizontalResolution NOT YET IMPLEMENTED");
-    return false;
+    return ReturnValue::return_code::return_value_error_not_implemented_by_device;
 }
 
-bool laserHokuyo::getScanRate(double& rate)
+ReturnValue laserHokuyo::getScanRate(double& rate)
 {
     rate = 20; //20 Hz = 50 ms
-    return true;
+    return ReturnValue_ok;
 }
 
-bool laserHokuyo::setScanRate(double rate)
+ReturnValue laserHokuyo::setScanRate(double rate)
 {
     yCError(LASERHOKUYO, "setScanRate NOT YET IMPLEMENTED");
-    return false;
+    return ReturnValue::return_code::return_value_error_not_implemented_by_device;
 }
 
-bool laserHokuyo::getRawData(yarp::sig::Vector &out)
+ReturnValue laserHokuyo::getRawData(yarp::sig::Vector &out, double* timestamp)
 {
     if (internal_status != HOKUYO_STATUS_NOT_READY)
     {
@@ -338,13 +341,13 @@ bool laserHokuyo::getRawData(yarp::sig::Vector &out)
         out = laser_data;
         mutex.unlock();
         device_status = yarp::dev::IRangefinder2D::DEVICE_OK_IN_USE;
-        return true;
+        return ReturnValue_ok;
     }
     device_status = yarp::dev::IRangefinder2D::DEVICE_GENERAL_ERROR;
-    return false;
+    return ReturnValue::return_code::return_value_error_not_ready;
 }
 
-bool laserHokuyo::getLaserMeasurement(std::vector<LaserMeasurementData> &data)
+ReturnValue laserHokuyo::getLaserMeasurement(std::vector<LaserMeasurementData> &data, double* timestamp)
 {
     if (internal_status != HOKUYO_STATUS_NOT_READY)
     {
@@ -356,7 +359,7 @@ bool laserHokuyo::getLaserMeasurement(std::vector<LaserMeasurementData> &data)
         {
             yCError(LASERHOKUYO) << "getLaserMeasurement failed";
             mutex.unlock();
-            return false;
+            return ReturnValue::return_code::return_value_error_method_failed;
         }
 
         double laser_angle_of_view = max_angle - min_angle;
@@ -367,18 +370,18 @@ bool laserHokuyo::getLaserMeasurement(std::vector<LaserMeasurementData> &data)
         }
         mutex.unlock();
         device_status = yarp::dev::IRangefinder2D::DEVICE_OK_IN_USE;
-        return true;
+        return ReturnValue_ok;
     }
 
     device_status = yarp::dev::IRangefinder2D::DEVICE_GENERAL_ERROR;
-    return false;
+    return ReturnValue::return_code::return_value_error_not_ready;
 }
-bool laserHokuyo::getDeviceStatus(Device_status &status)
+ReturnValue laserHokuyo::getDeviceStatus(Device_status &status)
 {
     mutex.lock();
     status = device_status;
     mutex.unlock();
-    return true;
+    return ReturnValue_ok;
 }
 
 bool laserHokuyo::threadInit()
@@ -453,9 +456,9 @@ int laserHokuyo::readData(const Laser_mode_type laser_mode, const char* text_dat
             {
                 yCTrace(LASERHOKUYO, "Invalid answer to a MD command: %s", text_data);
                 return HOKUYO_STATUS_ERROR_INVALID_COMMAND;
-            }
-            else
-                return  HOKUYO_STATUS_OK;
+        } else {
+            return HOKUYO_STATUS_OK;
+        }
     }
 
     // check in the second line if the status of the sensor is ok
@@ -466,9 +469,9 @@ int laserHokuyo::readData(const Laser_mode_type laser_mode, const char* text_dat
             {
                 yCTrace(LASERHOKUYO, "Invalid sensor status: %s", text_data);
                 return HOKUYO_STATUS_ERROR_BUSY;
-            }
-            else
-                return HOKUYO_STATUS_OK;
+        } else {
+            return HOKUYO_STATUS_OK;
+        }
     }
 
     // verify the checksum for all the following lines
@@ -511,7 +514,7 @@ void laserHokuyo::run()
     static double old;
     yarp::sig::Vector data_vector;
 
-    string data_text;
+    std::string data_text;
     double t1 = yarp::os::SystemClock::nowSystem();
     double t2 = 0;
     bool timeout = false;
@@ -536,7 +539,9 @@ void laserHokuyo::run()
             rx_completed = true;
         }
         t2 = yarp::os::SystemClock::nowSystem();
-        if (t2-t1>maxtime) timeout = true;
+        if (t2 - t1 > maxtime) {
+            timeout = true;
+        }
     }
     while (rx_completed == false && timeout == false && error == false);
 
@@ -575,10 +580,10 @@ void laserHokuyo::threadRelease()
     yCTrace(LASERHOKUYO, "... done.");
 }
 
-bool laserHokuyo::getDeviceInfo(std::string &device_info)
+ReturnValue laserHokuyo::getDeviceInfo(std::string &device_info)
 {
     this->mutex.lock();
     device_info = info;
     this->mutex.unlock();
-    return true;
+    return ReturnValue_ok;
 }

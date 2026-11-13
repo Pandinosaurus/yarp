@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!--
+  SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+  SPDX-License-Identifier: BSD-3-Clause
+-->
+
+<!DOCTYPE robot PUBLIC "-//YARP//DTD yarprobotinterface 3.0//EN" "http://www.yarp.it/DTD/yarprobotinterfaceV3.0.dtd">
+
+<robot name="ftc_local_only" build="2" portprefix="test" xmlns:xi="http://www.w3.org/2001/XInclude">
+    <param name="getDeviceName"> ftc_storage </param>
+    <param name="setDeviceName"> ftc_storage </param>
+    <devices>
+        <param extern-name="FrameTransform_verbose_debug" name="FrameTransform_verbose_debug">0</param>
+        <device name="ftc_storage" type="frameTransformStorage">
+            <param extern-name="ftc_storage_timeout" name="FrameTransform_container_timeout"> 0.2 </param>
+        </device>
+    </devices>
+</robot>

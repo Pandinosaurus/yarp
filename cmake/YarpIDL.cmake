@@ -1,8 +1,5 @@
-# Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
-# All rights reserved.
-#
-# This software may be modified and distributed under the terms of the
-# BSD-3-Clause license. See the accompanying LICENSE file for details.
+# SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+# SPDX-License-Identifier: BSD-3-Clause
 
 # yarp_idl_to_dir
 # ---------------
@@ -24,7 +21,6 @@
 #                   [THRIFT_INCLUDE_PREFIX]
 #                   [THRIFT_NO_NAMESPACE_PREFIX]
 #                   [THRIFT_NO_COPYRIGHT}
-#                   [THRIFT_NO_EDITOR]
 #                   [THRIFT_NO_DOC]
 #                   [THRIFT_DEBUG_GENERATOR]
 #                   [VERBOSE])
@@ -60,12 +56,13 @@ endif()
 function(_YARP_IDL_THRIFT_ARGS _prefix _out_dir _verbose _out_var)
   unset(_args)
   unset(_extra_args)
-  foreach(_ARG INCLUDE_PREFIX
-               NO_NAMESPACE_PREFIX
-               NO_COPYRIGHT
-               NO_EDITOR
-               NO_DOC
-               DEBUG_GENERATOR)
+  foreach(_ARG
+    INCLUDE_PREFIX
+    NO_NAMESPACE_PREFIX
+    NO_COPYRIGHT
+    NO_DOC
+    DEBUG_GENERATOR
+  )
     if(${_prefix}_THRIFT_${_ARG})
       string(TOLOWER "${_ARG}" _arg)
       list(APPEND _extra_args ${_arg})
@@ -79,19 +76,6 @@ function(_YARP_IDL_THRIFT_ARGS _prefix _out_dir _verbose _out_var)
   list(APPEND _args --I "${CMAKE_CURRENT_SOURCE_DIR}")
   if(_verbose)
     list(APPEND _args -v)
-  endif()
-  list(APPEND _args --out "${_out_dir}")
-
-  set(${_out_var} ${_args} PARENT_SCOPE)
-endfunction()
-
-# Internal function.
-function(_YARP_IDL_ROSMSG_ARGS _prefix _out_dir _verbose _out_var)
-  unset(_args)
-  list(APPEND _args --no-ros true)
-  list(APPEND _args --no-cache)
-  if(_verbose)
-    list(APPEND _args --verbose)
   endif()
   list(APPEND _args --out "${_out_dir}")
 
@@ -119,16 +103,17 @@ function(_YARP_IDL_TO_DIR_GENERATE _family _file _name _index_file_name _output_
 
   # Generate code at configuration time, so we know filenames.
   find_program(YARPIDL_${_family}_LOCATION
-                NAMES yarpidl_${_family}
-                HINTS ${YARP_IDL_BINARY_HINT} # This is a list of directories defined
-                                              # in YarpOptions.cmake (for YARP) or in
-                                              # YARPConfig.cmake for dependencies
-                NO_DEFAULT_PATH)
+    NAMES yarpidl_${_family}
+    HINTS ${YARP_IDL_BINARY_HINT} # This is a list of directories defined
+                                  # in YarpOptions.cmake (for YARP) or in
+                                  # YARPConfig.cmake for dependencies
+    NO_DEFAULT_PATH
+  )
 
   if("${_family}" STREQUAL "thrift")
     _yarp_idl_thrift_args(_YITD "${_temp_dir}" ${_verbose} _args)
   else()
-    _yarp_idl_rosmsg_args(_YITD "${_temp_dir}" ${_verbose} _args)
+      message(ERROR "Unknown family")
   endif()
 
   set(_output_quiet OUTPUT_QUIET)
@@ -145,10 +130,12 @@ function(_YARP_IDL_TO_DIR_GENERATE _family _file _name _index_file_name _output_
   endif()
 
   # Go ahead and generate files.
-  execute_process(COMMAND ${_cmd}
-                  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-                  RESULT_VARIABLE res
-                  ${_output_quiet})
+  execute_process(
+    COMMAND ${_cmd}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    RESULT_VARIABLE res
+    ${_output_quiet}
+  )
   # Failure is bad news, let user know.
   if(NOT "${res}" STREQUAL "0")
     message(FATAL_ERROR "yarpidl_${_family} (${YARPIDL_${_family}_LOCATION}) failed, aborting.")
@@ -178,9 +165,11 @@ function(_YARP_IDL_TO_DIR_GENERATE _family _file _name _index_file_name _output_
     string(REGEX REPLACE "^/+" "" _dest_file "${_dest_file}")
 
     file(APPEND "${_output_dir}/${_index_file_name}" "${_dest_file}\n")
-    configure_file("${_temp_dir}/${_gen_file}"
-                   "${_output_dir}/${_dest_file}"
-                   COPYONLY)
+    configure_file(
+      "${_temp_dir}/${_gen_file}"
+      "${_output_dir}/${_dest_file}"
+      COPYONLY
+    )
   endforeach()
 endfunction()
 
@@ -190,18 +179,21 @@ function(YARP_IDL_TO_DIR)
   # Flag to control whether IDL generation is allowed.
   option(ALLOW_IDL_GENERATION "Allow YARP to (re)build IDL files as needed" OFF)
 
-  set(_options VERBOSE
-               THRIFT_INCLUDE_PREFIX
-               THRIFT_NO_NAMESPACE_PREFIX
-               THRIFT_NO_COPYRIGHT
-               THRIFT_NO_EDITOR
-               THRIFT_NO_DOC
-               THRIFT_DEBUG_GENERATOR)
-  set(_oneValueArgs OUTPUT_DIR
-                    SOURCES_VAR
-                    HEADERS_VAR
-                    INCLUDE_DIRS_VAR
-                    PLACEMENT)
+  set(_options
+    VERBOSE
+    THRIFT_INCLUDE_PREFIX
+    THRIFT_NO_NAMESPACE_PREFIX
+    THRIFT_NO_COPYRIGHT
+    THRIFT_NO_DOC
+    THRIFT_DEBUG_GENERATOR
+  )
+  set(_oneValueArgs
+    OUTPUT_DIR
+    SOURCES_VAR
+    HEADERS_VAR
+    INCLUDE_DIRS_VAR
+    PLACEMENT
+  )
   set(_multiValueArgs INPUT_FILES)
   cmake_parse_arguments(_YITD "${_options}" "${_oneValueArgs}" "${_multiValueArgs}" ${ARGN} )
 
@@ -295,14 +287,6 @@ function(YARP_IDL_TO_DIR)
     if(_ext STREQUAL ".thrift")
       set(_family thrift)
       set(_dir_add "${_name_lower}")
-    elseif("${_ext}" MATCHES "\\.(msg|srv)" OR
-           "${_file}" MATCHES "^(time|duration)$")
-      set(_family rosmsg)
-      if("${_file}" STREQUAL "time")
-        set(_name TickTime)
-      elseif("${_file}" STREQUAL "duration")
-        set(_name TickDuration)
-      endif()
     else()
       message(FATAL_ERROR "yarp_idl_to_dir does not know what to do with \"${_file}\", unrecognized extension \"${_ext}\"")
     endif()
@@ -310,20 +294,6 @@ function(YARP_IDL_TO_DIR)
     if("${_family}" STREQUAL "thrift")
       set(_target_name "${_file}")
       set(_index_file_name "${_name}_index.txt")
-    elseif("${_family}" STREQUAL "rosmsg")
-      get_filename_component(_rospkg_name "${_include_prefix}" NAME)
-      get_filename_component(_include_prefix "${_include_prefix}" DIRECTORY)
-      if(_rospkg_name MATCHES "(msg|srv)")
-        get_filename_component(_rospkg_name "${_include_prefix}" NAME)
-        get_filename_component(_include_prefix "${_include_prefix}" DIRECTORY)
-      endif()
-      if(NOT "${_rospkg_name}" STREQUAL "")
-        set(_target_name "${_rospkg_name}_${_name}${_ext}")
-        set(_index_file_name "${_rospkg_name}_${_name}_index.txt")
-      else()
-        set(_target_name "${_name}${_ext}")
-        set(_index_file_name "${_name}_index.txt")
-      endif()
     endif()
     string(REGEX REPLACE "[^a-zA-Z0-9]" "_" _target_name ${_target_name})
     set(_index_file "${_YITD_OUTPUT_DIR}/${_index_file_name}")
@@ -333,16 +303,18 @@ function(YARP_IDL_TO_DIR)
     string(REGEX REPLACE "/+$" "" _include_prefix "${_include_prefix}")
 
     if(ALLOW_IDL_GENERATION OR NOT EXISTS "${_index_file}")
-      _yarp_idl_to_dir_generate(${_family}
-                                "${_file}"
-                                ${_name}
-                                ${_index_file_name}
-                                "${_YITD_OUTPUT_DIR}"
-                                "${_include_prefix}"
-                                "${_cpp_placement_dir}"
-                                "${_h_placement_dir}"
-                                ${_cpp_placement_ns}
-                                ${_YITD_VERBOSE})
+      _yarp_idl_to_dir_generate(
+        ${_family}
+        "${_file}"
+        ${_name}
+        ${_index_file_name}
+        "${_YITD_OUTPUT_DIR}"
+        "${_include_prefix}"
+        "${_cpp_placement_dir}"
+        "${_h_placement_dir}"
+        ${_cpp_placement_ns}
+        ${_YITD_VERBOSE}
+      )
     endif()
 
     # Sanity check, it should never happen
@@ -442,56 +414,6 @@ function(_YARP_IDL_THRIFT_TO_FILE_LIST file path basename ext gen_srcs_var gen_h
   set(${gen_hdrs_var} ${gen_hdrs} PARENT_SCOPE)
 endfunction()
 
-
-# Internal function.
-# Calculate a list of sources generated from a .msg or a .srv file
-function(_YARP_IDL_ROSMSG_TO_FILE_LIST file path pkg basename ext gen_srcs_var gen_hdrs_var)
-  set(gen_srcs )
-  set(gen_hdrs )
-
-  get_filename_component(ext ${file} EXT)
-
-  unset(gen_hdrs)
-  if(NOT "${pkg}" STREQUAL "")
-    list(APPEND gen_hdrs "yarp/rosmsg/${pkg}/${basename}.h")
-  else()
-    list(APPEND gen_hdrs "yarp/rosmsg/${basename}.h")
-  endif()
-
-  if(NOT YARP_NO_DEPRECATED)
-    if(NOT "${pkg}" STREQUAL "")
-      list(APPEND gen_hdrs "${pkg}/${basename}.h"
-                           "${pkg}_${basename}.h")
-    else()
-      list(APPEND gen_hdrs "${basename}.h")
-    endif()
-  endif()
-
-  if("${ext}" STREQUAL ".srv")
-    if(NOT "${pkg}" STREQUAL "")
-      list(APPEND gen_hdrs "yarp/rosmsg/${pkg}/${basename}Reply.h")
-    else()
-      list(APPEND gen_hdrs "yarp/rosmsg/${basename}Reply.h")
-    endif()
-
-    if(NOT YARP_NO_DEPRECATED)
-      if(NOT "${pkg}" STREQUAL "")
-        list(APPEND gen_hdrs "${pkg}/${basename}Reply.h"
-                             "${pkg}_${basename}Reply.h")
-      else()
-        list(APPEND gen_hdrs "${basename}Reply.h")
-      endif()
-    endif()
-  endif()
-
-  string(REGEX REPLACE "/(/|$)" "\\1" gen_srcs "${gen_srcs}")
-  string(REGEX REPLACE "/(/|$)" "\\1" gen_hdrs "${gen_hdrs}")
-
-  set(${gen_srcs_var} ${gen_srcs} PARENT_SCOPE)
-  set(${gen_hdrs_var} ${gen_hdrs} PARENT_SCOPE)
-endfunction()
-
-
 function(YARP_ADD_IDL var)
 
   # Ensure that the output variable is empty
@@ -527,31 +449,8 @@ function(YARP_ADD_IDL var)
     if("${ext}" STREQUAL ".thrift")
       set(family thrift)
       _yarp_idl_thrift_to_file_list("${file}" "${path}" "${basename}" ${ext} gen_srcs gen_hdrs)
-    elseif("${ext}" MATCHES "^\\.(msg|srv)$")
-      set(family rosmsg)
-      get_filename_component(pkg "${path}" NAME)
-      get_filename_component(path "${path}" DIRECTORY)
-      if(pkg MATCHES "(msg|srv)")
-        get_filename_component(pkg "${path}" NAME)
-        get_filename_component(path "${path}" DIRECTORY)
-      endif()
-      _yarp_idl_rosmsg_to_file_list("${file}" "${path}" "${pkg}" "${basename}" ${ext} gen_srcs gen_hdrs)
-    elseif("${file}" STREQUAL "time")
-      set(family rosmsg)
-      set(native 1)
-      set(gen_hdrs yarp/rosmsg/TickTime.h)
-      if(NOT YARP_NO_DEPRECATED)
-        list(APPEND gen_hdrs TickTime.h)
-      endif()
-    elseif("${file}" STREQUAL "duration")
-      set(family rosmsg)
-      set(native 1)
-      set(gen_hdrs yarp/rosmsg/TickDuration.h)
-      if(NOT YARP_NO_DEPRECATED)
-        list(APPEND gen_hdrs TickDuration.h)
-      endif()
     else()
-      message(FATAL_ERROR "Unknown extension ${ext}. Supported extensions are .thrift, .msg, and .srv")
+      message(FATAL_ERROR "Unknown extension ${ext}. Supported extensions are .thrift")
     endif()
 
     # FIXME This should handle cross-compiling
@@ -564,21 +463,18 @@ function(YARP_ADD_IDL var)
     file(MAKE_DIRECTORY "${out_dir}")
 
     set(_verbose 0)
-    if(YARPIDL_rosmsg_VERBOSE)
-      set(_verbose 1)
-    endif()
 
     if("${family}" STREQUAL "thrift")
       _yarp_idl_thrift_args(YARP_ADD_IDL "${out_dir}" ${_verbose} _args)
     else()
-      _yarp_idl_rosmsg_args(YARP_ADD_IDL "${out_dir}" ${_verbose} _args)
+      message(ERROR "Unknown family")
     endif()
 
     # Prepare main command
     if("${family}" STREQUAL "thrift")
       set(cmd ${YARPIDL_thrift_COMMAND} ${_args} "${file}")
     else()
-      set(cmd ${YARPIDL_rosmsg_COMMAND} --no-index ${_args} "${file}")
+      message(ERROR "Unknown family")
     endif()
 
     # Populate output variable
@@ -596,11 +492,13 @@ function(YARP_ADD_IDL var)
       if(NOT native)
         list(APPEND depends ${file})
       endif()
-      add_custom_command(OUTPUT ${output}
-                         DEPENDS ${depends}
-                         COMMAND ${cmd}
-                         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-                         COMMENT "Generating code from ${file}")
+      add_custom_command(
+        OUTPUT ${output}
+        DEPENDS ${depends}
+        COMMAND ${cmd}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Generating code from ${file}"
+      )
 
       # Append output to return variable
       list(APPEND ${var} ${output})

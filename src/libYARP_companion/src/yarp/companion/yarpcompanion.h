@@ -1,10 +1,7 @@
 /*
- * Copyright (C) 2006-2021 Istituto Italiano di Tecnologia (IIT)
- * Copyright (C) 2006-2010 RobotCub Consortium
- * All rights reserved.
- *
- * This software may be modified and distributed under the terms of the
- * BSD-3-Clause license. See the accompanying LICENSE file for details.
+ * SPDX-FileCopyrightText: 2006-2021 Istituto Italiano di Tecnologia (IIT)
+ * SPDX-FileCopyrightText: 2006-2010 RobotCub Consortium
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #ifndef YARP_COMPANION_COMPANION_H
@@ -12,8 +9,7 @@
 
 #include <yarp/companion/api.h>
 
-namespace yarp {
-namespace companion {
+namespace yarp::companion {
 
 /**
  * The standard main method for the YARP companion utility.
@@ -24,8 +20,7 @@ namespace companion {
 YARP_companion_API
 int main(int argc, char *argv[]);
 
-} // namespace companion
-} // namespace yarp
+} // namespace yarp::companion
 
 
 #endif // YARP_COMPANION_IMPL_COMPANION_H
